@@ -1,0 +1,258 @@
+server:
+  port: 4000
+  undertow:
+    io-threads: 4
+    worker-threads: 32
+
+spring:
+  application:
+    name: pig-upms-service
+  profiles:
+    active: dev
+  http:
+    multipart:
+      max-file-size: 1000MB
+      max-request-size: 1000MB
+  zipkin:
+    rabbitmq:
+      queue: zipkin
+  sleuth:
+    sampler:
+      percentage: 0.2
+#加密配置
+jasypt:
+  encryptor:
+    password: lengleng
+
+
+#监控短点配置
+management:
+  security:
+    enabled: false
+endpoints:
+  actuator:
+    enabled: true
+  shutdown:
+    enabled: false
+eureka:
+  auth:
+    username: pig
+    password: gip6666
+    port: 1025
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 5
+    lease-expiration-duration-in-seconds: 20
+    instance-id: ${spring.cloud.client.ipAddress}:${server.port}
+  client:
+    registry-fetch-interval-seconds: 10
+redis:
+  cache:
+    expiration: 3601
+ribbon:
+  eager-load:
+    enabled: true
+    clients: pig-auth,pig-upms-service
+  Httpclient:
+    enabled: false
+  OkHttp:
+    enabled: true
+  ReadTimeout: 10000
+  ConnectTimeout: 10000
+
+feign:
+  hystrix:
+    enabled: true
+  okhttp:
+    enabled: true
+  httpclient:
+    enabled: false
+  client:
+    config:
+      feignName:
+        connectTimeout: 30000
+        readTimeout: 30000
+  compression:
+    request:
+      enabled: true
+    response:
+      enabled: true
+
+hystrix:
+  threadpool:
+    default:
+      coreSize: 500
+      maxQueueSize: 1000
+      queueSizeRejectionThreshold: 800
+  command:
+    default:
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 60000
+
+# 分库分表支持
+sharding:
+  jdbc:
+    defaultDataSourceName:
+      type: com.zaxxer.hikari.HikariDataSource
+      driver-class-name: com.mysql.jdbc.Driver
+    datasource:
+      names: ds
+      ds:
+        type: com.zaxxer.hikari.HikariDataSource
+        driver-class-name: com.mysql.jdbc.Driver
+    config:
+      sharding:
+        tables:
+          sys_log:
+            actual-data-nodes: ds.sys_log_${0..9}
+            table-strategy:
+              inline:
+                sharding-column: id
+                algorithm-expression: sys_log_${id % 10}
+            key-generator-column-name: id
+
+#mybaits-plus配置，修改主键类型，mapper.xml、type 别名等
+mybatis-plus:
+  mapper-locations: classpath:/mapper/*Mapper.xml
+  typeAliasesPackage: com.zhidianfan.pig.admin.model.entity
+  global-config:
+    #主键类型  0:"数据库ID自增", 1:"用户输入ID",2:"全局唯一ID (数字类型唯一ID)", 3:"全局唯一ID UUID";
+    id-type: 0
+    #字段策略 0:"忽略判断",1:"非 NULL 判断"),2:"非空判断"
+    field-strategy: 1
+    #驼峰下划线转换
+    db-column-underline: true
+    #刷新mapper 调试神器
+    refresh-mapper: true
+    #数据库大写下划线转换
+    #capital-mode: true
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: true
+fdfs:
+  file-host: http://127.0.0.1:22121/
+  tracker-list:
+  - 127.0.0.1:22122
+
+qiniu:
+  accessKey: hM2cBDEM0FTYzpXbigRW90kV12NhhzhFM3jCzurJ
+  secretKey: ENC(HM/K0KmtFoZSBhGDEA0Ez71ePTncZlQ954DfLNMZuOftKZq+2WR+dCXH9QEsf768q9wwd92RXLE=)
+  bucket: pigcloud
+  qiniuHost: http://p0hpm86wj.bkt.clouddn.com/
+
+
+### 开发环境 ###
+---
+spring:
+  profiles: dev
+  redis:
+    remote: false        #cachecloud 获取
+    host: 127.0.0.1
+    port: 6379
+    password:
+    pool:
+      max-active: 100
+      max-idle: 20
+  rabbitmq:
+    host: 127.0.0.1
+    port: 5672
+    username: pig
+    password: pig
+eureka:
+  environment: ${spring.profiles}
+  client:
+    serviceUrl:
+      defaultZone: http://${eureka.auth.username}:${eureka.auth.password}@localhost:${eureka.auth.port}/eureka
+
+# 分库分表支持
+sharding:
+  jdbc:
+    defaultDataSourceName:
+      username: root
+      password: 123456
+      jdbc-url: jdbc:mysql://127.0.0.1:3306/pig?characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false
+      minimumIdle: 30
+    datasource:
+      ds:
+        username: root
+        password: 123456
+        jdbc-url: jdbc:mysql://127.0.0.1:3306/pig?characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false
+        minimumIdle: 30
+
+### 测试环境 ###
+---
+spring:
+  profiles: test
+  redis:
+    remote: false        #cachecloud 获取
+    host: redishost
+    port: 6379
+    password:
+    pool:
+      max-active: 100
+      max-idle: 20
+  rabbitmq:
+    host: rabbithost
+    port: 5672
+    username: guest
+    password: guest
+
+eureka:
+  environment: ${spring.profiles}
+  client:
+    serviceUrl:
+      defaultZone: http://${eureka.auth.username}:${eureka.auth.password}@server1:${eureka.auth.port}/eureka/,http://${eureka.auth.username}:${eureka.auth.password}@server2:${eureka.auth.port}/eureka/,http://${eureka.auth.username}:${eureka.auth.password}@server3:${eureka.auth.port}/eureka/
+
+# 分库分表支持
+sharding:
+  jdbc:
+    defaultDataSourceName:
+      username: root
+      password: 123456
+      jdbc-url: jdbc:mysql://mysqlhost:3306/pig?characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false
+    datasource:
+      ds:
+        username: root
+        password: 123456
+        jdbc-url: jdbc:mysql://mysqlhost:3306/pig?characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false
+
+### 生产环境 ###
+
+---
+
+spring:
+  profiles: prod
+  redis:
+    remote: false        #cachecloud 获取
+    host: yd-cloud.redis.rds.aliyuncs.com
+    port: 6379
+    password: FCfpyZBb6421
+    pool:
+      max-active: 100
+      max-idle: 20
+  rabbitmq:
+    host: 47.97.41.1
+    port: 5672
+    username: pig
+    password: 7tm5Uo7Pi0mk
+
+eureka:
+  environment: ${spring.profiles}
+  client:
+    serviceUrl:
+      defaultZone: http://${eureka.auth.username}:${eureka.auth.password}@server1:${eureka.auth.port}/eureka/,http://${eureka.auth.username}:${eureka.auth.password}@server2:${eureka.auth.port}/eureka/,http://${eureka.auth.username}:${eureka.auth.password}@server3:${eureka.auth.port}/eureka/
+
+# 分库分表支持
+sharding:
+  jdbc:
+    defaultDataSourceName:
+      username: pig
+      password: s33ycHywIqa7
+      jdbc-url: jdbc:mysql://10.81.63.30:3306/pig?characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false
+    datasource:
+      ds:
+        username: pig
+        password: s33ycHywIqa7
+        jdbc-url: jdbc:mysql://10.81.63.30:3306/pig?characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false

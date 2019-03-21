@@ -1,0 +1,326 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhidianfan.pig.yd.moduler.common.dao.mapper.BusinessOrderStatisticsDayMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zhidianfan.pig.yd.moduler.common.dao.entity.BusinessOrderStatisticsDay">
+        <id column="id" property="id" />
+        <result column="business_id" property="businessId" />
+        <result column="cal_date" property="calDate" />
+        <result column="meal_type_id" property="mealTypeId" />
+        <result column="meal_type_name" property="mealTypeName" />
+        <result column="checktable_num" property="checktableNum" />
+        <result column="eating_num" property="eatingNum" />
+        <result column="payamount" property="payamount" />
+        <result column="new_vip" property="newVip" />
+        <result column="repeat_vip" property="repeatVip" />
+        <result column="travelers_num" property="travelersNum" />
+        <result column="business_table_num" property="businessTableNum" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+    </resultMap>
+
+    <select id="getYesterdayBusninessData" parameterType="integer" resultMap="BaseResultMap">
+            SELECT
+                IFNULL(E.checktable_num,0) checktable_num,
+                IFNULL( E.eating_num, 0 ) eating_num,
+                IFNULL( payamount, 0 ) payamount,
+                IFNULL(E.batchNum,0) batchNum ,
+                IFNULL( E.travelers_num, 0 ) travelers_num,
+                ( SELECT count( 1 ) FROM `table` WHERE business_id = #{businessId} AND `status` = 1 ) business_table_num,
+                H.business_id,
+                H.meal_type_id,
+                IFNULL(H.meal_type_name,"未知餐别")  as meal_type_name
+            FROM
+                (
+                SELECT
+                    G.business_id AS business_id,
+                    G.id AS meal_type_id,
+                    G.meal_type_name
+                FROM
+                     ( SELECT id, business_id, meal_type_name FROM meal_type WHERE `status` = 1 and business_id = #{businessId}) G
+                ) H
+                LEFT JOIN (
+                SELECT
+                    checktable_num,
+                    eating_num,
+                    payamount,
+                    batchNum,
+                    D.travelers_num,
+                    C.business_id,
+                    C.meal_type_id
+                FROM
+                    (
+                    SELECT
+                        checktable_num,
+                        eating_num,
+                        payamount,
+                        batchNum,
+                        A.business_id,
+                        A.meal_type_id
+                    FROM
+                        (
+                        SELECT
+                            count( 1 ) AS checktable_num,
+                            sum( actual_num ) AS eating_num,
+                            sum( payamount ) AS payamount,
+                            business_id,
+                            meal_type_id
+                        FROM
+                            resv_order_android
+                        WHERE
+                            resv_date = date_sub( CURDATE( ), INTERVAL 1 DAY )
+                            AND STATUS = '3'
+                            AND business_id = #{businessId}
+                        GROUP BY
+                            business_id,
+                            meal_type_id
+                        ) A /*A表查询结账桌数,与就餐人数*/
+                        LEFT JOIN (
+                        SELECT
+                            COUNT( A.batch_no ) AS batchNum,
+                            A.business_id,
+                            A.meal_type_id
+                        FROM
+                            (
+                            SELECT
+                                batch_no,
+                                business_id,
+                                meal_type_id
+                            FROM
+                                resv_order_android
+                            WHERE
+                                resv_date = date_sub( CURDATE( ), INTERVAL 1 DAY )
+                                AND business_id = #{businessId}
+                                AND STATUS = '3'
+                            GROUP BY
+                                batch_no,
+                                business_id,
+                                meal_type_id
+                            ) A
+                        GROUP BY
+                            A.business_id,
+                            A.meal_type_id
+                        ) B /*B表查询 批次号数*/
+                        ON A.meal_type_id = B.meal_type_id
+                    ) C
+                    LEFT JOIN (
+                    SELECT
+                        COUNT( A.batch_no ) AS travelers_num,
+                        A.business_id,
+                        A.meal_type_id
+                    FROM
+                        (
+                        SELECT
+                            batch_no,
+                            business_id,
+                            meal_type_id
+                        FROM
+                            resv_order_android
+                        WHERE
+                            resv_date = date_sub( CURDATE( ), INTERVAL 1 DAY )
+                            AND vip_phone = ''
+                            AND business_id = #{businessId}
+                            AND STATUS = '3'
+                        GROUP BY
+                            batch_no,
+                            business_id,
+                            meal_type_id
+                        ) A /*这个A表查询散客订单批次号数*/
+
+                    GROUP BY
+                        A.business_id,
+                        A.meal_type_id
+                    ) D ON C.meal_type_id = D.meal_type_id
+                ) E ON H.meal_type_id = E.meal_type_id
+    </select>
+
+
+    <select id="countNewVip" resultType="integer">
+        select count(1) from (
+        SELECT
+        B.vip_id,
+        IFNULL( C.times, 0 ) as times
+        FROM
+        (
+        SELECT
+        vip_id
+        FROM
+        resv_order_android
+        WHERE
+        resv_date = date_sub( CURDATE( ), INTERVAL 1 DAY )
+        AND business_id = #{businessId}
+        AND meal_type_id = #{mealTypeId}
+        AND vip_phone != ''
+        AND `status` = 3
+        GROUP BY
+        vip_id
+        ) B
+        LEFT JOIN (
+        SELECT
+        count( 1 ) AS times,
+        vip_id
+        FROM
+        (
+        SELECT
+        resv_order,
+        resv_date,
+        meal_type_id,
+        vip_id,
+        `status`,
+        order_time
+        FROM
+        (
+        SELECT
+        resv_order,
+        resv_date,
+        meal_type_id,
+        vip_id,
+        `status`,
+        DATE_FORMAT( CONCAT( resv_date, " ", IFNULL( resv_start_time, '00:00:00' ) ), '%Y-%m-%d %H:%i:%s' ) AS order_time
+        FROM
+        ( SELECT resv_order, resv_date, meal_type_id, vip_id, `status` FROM resv_order_android where  business_id = #{businessId} ) A
+        LEFT JOIN ( SELECT id, resv_start_time FROM meal_type ) B ON A.meal_type_id = B.id
+        ) F
+        WHERE
+        `status` = 3
+        /*这个订单时间小于昨日这个餐别开始时间的订单*/
+        AND order_time &lt; (
+        SELECT
+        DATE_FORMAT( CONCAT( date_sub( CURDATE( ), INTERVAL 1 DAY ), " ", IFNULL( resv_start_time, '00:00:00' ) ), '%Y-%m-%d %H:%i:%s' ) AS order_time
+        FROM
+        meal_type
+        WHERE
+        id = #{mealTypeId}
+        )
+        ) A
+        GROUP BY
+        vip_ID
+        ) C ON B.vip_ID = C.vip_id) E where E.times = 0
+    </select>
+
+    <select id="countRepeatVip" resultType="integer">
+        select count(1) from (
+        SELECT
+        B.vip_id,
+        IFNULL( C.times, 0 ) as times
+        FROM
+        (
+        SELECT
+        vip_id
+        FROM
+        resv_order_android
+        WHERE
+        resv_date = date_sub( CURDATE( ), INTERVAL 1 DAY )
+        AND business_id = #{businessId}
+        AND meal_type_id = #{mealTypeId}
+        AND vip_phone != ''
+        AND `status` = 3
+        GROUP BY
+        vip_id
+        ) B
+        LEFT JOIN (
+        SELECT
+        count( 1 ) AS times,
+        vip_id
+        FROM
+        (
+        SELECT
+        resv_order,
+        resv_date,
+        meal_type_id,
+        vip_id,
+        `status`,
+        order_time
+        FROM
+        (
+        SELECT
+        resv_order,
+        resv_date,
+        meal_type_id,
+        vip_id,
+        `status`,
+        DATE_FORMAT( CONCAT( resv_date, " ", IFNULL( resv_start_time, '00:00:00' ) ), '%Y-%m-%d %H:%i:%s' ) AS order_time
+        FROM
+        ( SELECT resv_order, resv_date, meal_type_id, vip_id, `status` FROM resv_order_android where  business_id = #{businessId} ) A
+        LEFT JOIN ( SELECT id, resv_start_time FROM meal_type ) B ON A.meal_type_id = B.id
+        ) F
+        WHERE
+        `status` = 3
+        /*这个订单时间小于昨日这个餐别开始时间的订单*/
+        AND order_time &lt; (
+        SELECT
+        DATE_FORMAT( CONCAT( date_sub( CURDATE( ), INTERVAL 1 DAY ), " ", IFNULL( resv_start_time, '00:00:00' ) ), '%Y-%m-%d %H:%i:%s' ) AS order_time
+        FROM
+        meal_type
+        WHERE
+        id = #{mealTypeId}
+        )
+        ) A
+        GROUP BY
+        vip_ID
+        ) C ON B.vip_ID = C.vip_id) E where E.times > 0
+    </select>
+
+    <select id="getBusinessMonthdata" resultType="com.zhidianfan.pig.yd.moduler.resv.dto.BusinessMonthDataDTO">
+
+        SELECT
+            IFNULL (SUM( checktable_num ),0) as checktableNum,
+            IFNULL (SUM( eating_num ),0) as eatingNum,
+            IFNULL (SUM( business_table_num ),0) as businessTableNum,
+            IFNULL (SUM( new_vip ),0) as newVip,
+            #{dataMonth} as  dataMonth
+        FROM
+            business_order_statistics_day
+        WHERE
+            business_id = #{businessId}
+            AND cal_date LIKE concat(#{dataMonth},"-__")
+    </select>
+
+    <select id="getConsumptionFrequency" resultType="com.zhidianfan.pig.yd.moduler.resv.dto.ConsumptionFrequencyDTO">
+        SELECT
+            IFNULL (count( A.vip_id ),0) AS vip_num,
+            IFNULL (eat_times,0) AS eat_times
+        FROM
+            (
+            SELECT
+                count( 1 ) AS eat_times,
+                vip_id
+            FROM
+                resv_order_android
+            WHERE
+                `status` = 3
+                AND resv_date >=  #{dataMonth}
+                AND business_id = #{businessId}
+            GROUP BY
+                vip_id
+            ) A
+        GROUP BY
+            eat_times
+    </select>
+
+    <select id="getRepeatVipByMonth" resultType="com.zhidianfan.pig.yd.moduler.resv.dto.RepeatVipDTO">
+        SELECT
+            IFNULL (count( 1 ),0) as repeatVipNum,
+            #{dataMonth} as  dataMonth
+        FROM
+            (
+            SELECT
+                count( 1 ) AS eat_times,
+                vip_id
+            FROM
+                resv_order_android
+            WHERE
+                resv_date  LIKE concat(#{dataMonth},"-__")
+                AND business_id = #{businessId}
+                AND vip_phone != ''
+                AND `status` = 3
+            GROUP BY
+                vip_id
+            ) A
+        WHERE
+        eat_times > 1
+    </select>
+
+
+</mapper>

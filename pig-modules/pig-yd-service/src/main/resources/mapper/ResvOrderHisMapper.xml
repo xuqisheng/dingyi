@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhidianfan.pig.yd.moduler.common.dao.mapper.ResvOrderHisMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zhidianfan.pig.yd.moduler.common.dao.entity.ResvOrderHis">
+        <id column="id" property="id" />
+        <result column="batch_no" property="batchNo" />
+        <result column="resv_order" property="resvOrder" />
+        <result column="business_id" property="businessId" />
+        <result column="business_name" property="businessName" />
+        <result column="app_user_id" property="appUserId" />
+        <result column="app_user_phone" property="appUserPhone" />
+        <result column="vip_id" property="vipId" />
+        <result column="vip_phone" property="vipPhone" />
+        <result column="vip_name" property="vipName" />
+        <result column="vip_sex" property="vipSex" />
+        <result column="vip_company" property="vipCompany" />
+        <result column="table_area_id" property="tableAreaId" />
+        <result column="table_area_name" property="tableAreaName" />
+        <result column="table_id" property="tableId" />
+        <result column="table_name" property="tableName" />
+        <result column="max_people_num" property="maxPeopleNum" />
+        <result column="resv_num" property="resvNum" />
+        <result column="actual_num" property="actualNum" />
+        <result column="resv_date" property="resvDate" />
+        <result column="meal_type_id" property="mealTypeId" />
+        <result column="meal_type_name" property="mealTypeName" />
+        <result column="meal_type_id_a" property="mealTypeIdA" />
+        <result column="meal_type_name_a" property="mealTypeNameA" />
+        <result column="meal_type_id_b" property="mealTypeIdB" />
+        <result column="meal_type_name_b" property="mealTypeNameB" />
+        <result column="remark" property="remark" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+        <result column="status" property="status" />
+        <result column="confirm" property="confirm" />
+        <result column="app_user_name" property="appUserName" />
+        <result column="device_user_id" property="deviceUserId" />
+        <result column="device_user_name" property="deviceUserName" />
+        <result column="device_user_phone" property="deviceUserPhone" />
+        <result column="peicai" property="peicai" />
+        <result column="pic_url" property="picUrl" />
+        <result column="payamount" property="payamount" />
+        <result column="unorder_reason" property="unorderReason" />
+        <result column="deposit" property="deposit" />
+        <result column="locked" property="locked" />
+        <result column="receipt_no" property="receiptNo" />
+        <result column="deposit_amount" property="depositAmount" />
+        <result column="pay_type" property="payType" />
+        <result column="resv_order_type" property="resvOrderType" />
+        <result column="locked_type" property="lockedType" />
+        <result column="resv_meeting_order_no" property="resvMeetingOrderNo" />
+        <result column="external_source_name" property="externalSourceName" />
+        <result column="external_source_id" property="externalSourceId" />
+        <result column="istirdparty" property="isTirdparty" />
+        <result column="isChangeTable" property="isChangeTable" />
+        <result column="isKbc" property="isKbc" />
+        <result column="tag" property="tag" />
+        <result column="peicai_amt" property="peicaiAmt" />
+        <result column="peicai_type" property="peicaiType" />
+        <result column="dest_time" property="destTime" />
+        <result column="property_id" property="propertyId" />
+        <result column="property_name" property="propertyName" />
+        <result column="isrank" property="isRank" />
+        <result column="issendmsg" property="isSendMsg" />
+        <result column="re_vip_phone" property="reVipPhone" />
+        <result column="re_vip_name" property="reVipName" />
+        <result column="re_vip_sex" property="reVipSex" />
+        <result column="open_is_sync" property="openIsSync" />
+        <result column="order_status" property="orderStatus" />
+        <result column="deposit_status" property="depositStatus" />
+        <result column="deposit_desc" property="depositDesc" />
+        <result column="is_dish" property="isDish" />
+    </resultMap>
+
+    <insert id="copyResvOrders" parameterType="com.zhidianfan.pig.yd.moduler.resv.dto.ResvOrderDTO">
+        INSERT INTO resv_order_his
+        select o.*
+        from resv_order o
+        left join resv_order_logs l on o.resv_order = l.resv_order AND  l.`status` = 4
+        where o.business_id=#{businessId} and o.resv_date <![CDATA[<=]]> date_format(#{resvDateEndLimit},'%Y-%m-%d')
+        <if test="unorderReason != null and unorderReason != ''">
+            <if test="unorderReason != '其他原因'">
+                and o.`unorder_reason` = #{unorderReason}
+            </if>
+            <if test="unorderReason == '其他原因'">
+                and o.`unorder_reason` not in (select name from unorder_reason where name != '其他原因')
+            </if>
+        </if>
+        <if test="status == null and status == ''">
+            and (o.vip_name !='' or locked='0')
+        </if>
+        <if test="vipNameOrPhone != null and vipNameOrPhone != ''">
+            and (vip_name like CONCAT('%', #{vipNameOrPhone}, '%') or vip_phone like CONCAT('%',#{vipNameOrPhone},'%'))
+        </if>
+        <if test=" status != 5 and status != null and status != '' and status != 0 and status != 1">
+            and o.status = #{status} and (o.vip_name !='')
+            <if test="status == 4">
+                <!--and l.status = '4' 日志不需要判断-->
+                <if test="unorderDateStart != null">
+                    and l.created_at >= date_format(#{unorderDateStart},'%Y-%m-%d')
+                </if>
+                <if test="unorderDateEnd != null">
+                    and l.created_at <![CDATA[<=]]> date_format(#{unorderDateEnd},'%Y-%m-%d')
+                </if>
+            </if>
+        </if>
+        <if test=" status == 5">
+            and ( o.vip_name ='')
+        </if>
+        <if test=" status == 1 or status == 2 or status == 3">
+            and ( o.vip_name !='') and o.status=#{status}
+        </if>
+        <if test="tableAreaId!= null and tableAreaId!= ''">
+            and table_area_id =#{tableAreaId}
+        </if>
+        <if test="mealTypeId!= null and mealTypeId!= ''">
+            and meal_type_id=#{mealTypeId}
+        </if>
+        <if test="appUserId!= null and appUserId!= ''">
+            and o.app_user_id=#{appUserId}
+        </if>
+        <if test="resvOrderType!= null and resvOrderType!= ''">
+            and resv_order_type=#{resvOrderType}
+        </if>
+        <if test="deviceUserId!= null and deviceUserId!= ''">
+            and o.device_user_id=#{deviceUserId}
+        </if>
+        <if test="resvDateStart!= null">
+            <![CDATA[ and  DATE_FORMAT(#{resvDateStart},'%Y-%m-%d') <= resv_date ]]>
+        </if>
+        <if test="resvDateEnd!= null">
+            <![CDATA[ and  DATE_FORMAT(#{resvDateEnd},'%Y-%m-%d') >= resv_date ]]>
+        </if>
+        <if test="operateDateStart!= null">
+            <![CDATA[ and  DATE_FORMAT(#{operateDateStart},'%Y-%m-%d %H:%i') <= o.created_at ]]>
+        </if>
+        <if test="operateDateEnd!= null">
+            <![CDATA[ and  DATE_FORMAT(#{operateDateEnd},'%Y-%m-%d %H:%i') >= o.created_at ]]>
+        </if>
+        <if test="source== '01'">
+            and o.device_user_id is not null and o.device_user_id !='' and
+            o.device_user_id !='0'
+        </if>
+        <if test="source== '02'">
+            and (o.device_user_id is null or o.device_user_id ='' or o.device_user_id
+            ='0')
+        </if>
+        <if test="source != null and source != '' and source != '01' and source != '02'">
+            and external_source_id = #{source}
+        </if>
+        AND NOT EXISTS (select 1 from resv_order_his h where h.id=o.id)
+
+    </insert>
+
+</mapper>

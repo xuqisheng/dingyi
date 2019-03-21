@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhidianfan.pig.yd.moduler.common.dao.mapper.ResvOrderThirdMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zhidianfan.pig.yd.moduler.common.dao.entity.ResvOrderThird">
+        <id column="id" property="id"/>
+        <result column="batch_no" property="batchNo"/>
+        <result column="business_id" property="businessId"/>
+        <result column="third_order_no" property="thirdOrderNo"/>
+        <result column="vip_name" property="vipName"/>
+        <result column="vip_phone" property="vipPhone"/>
+        <result column="vip_sex" property="vipSex"/>
+        <result column="table_type" property="tableType"/>
+        <result column="table_type_name" property="tableTypeName"/>
+        <result column="remark" property="remark"/>
+        <result column="resv_date" property="resvDate"/>
+        <result column="resv_num" property="resvNum"/>
+        <result column="status" property="status"/>
+        <result column="flag" property="flag"/>
+        <result column="source" property="source"/>
+        <result column="result" property="result"/>
+        <result column="meal_type_id" property="mealTypeId"/>
+        <result column="meal_type_name" property="mealTypeName"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
+    <resultMap id="ResvOrderThirdBO" type="com.zhidianfan.pig.yd.moduler.resv.bo.ResvOrderThirdBO">
+        <result column="vip_value_id" property="vipValueId"/>
+        <result column="vip_value_name" property="vipValueName"/>
+        <result column="order_result" property="orderResult"/>
+        <result column="dest_date" property="destDate"/>
+    </resultMap>
+
+
+    <select id="getNewestOrder" parameterType="integer" resultMap="ResvOrderThirdBO">
+        SELECT	id,batch_no,business_id,third_order_no,vip_name,vip_phone,vip_sex,table_type,table_type_name,
+        remark,resv_num,status,flag,source,meal_type_id,meal_type_name,source AS resv_source,
+        DATE_FORMAT(resv_date,"%Y-%m-%d") resv_date,
+        DATE_FORMAT(resv_date,"%H:%i") dest_date,
+        created_at,
+        updated_at,
+        CASE
+        WHEN r.status = '10' THEN '未处理'
+        WHEN r.status = '20' OR r.status = '70' OR r.status = '80'  THEN '客户取消'
+        WHEN r.status = '30' THEN '已拒单'
+        WHEN r.status = '40' OR r.status = '50' OR r.status = '60' THEN '已接单'
+        END  order_result
+        FROM resv_order_third r
+        WHERE
+            flag = 0
+            AND business_id = #{businessId}
+        ORDER BY
+            created_at DESC
+            LIMIT 1
+
+    </select>
+
+
+    <select id="getThirdOrder" parameterType="com.zhidianfan.pig.yd.moduler.resv.dto.ThirdQueryDTO" resultMap="ResvOrderThirdBO">
+        select id,batch_no,business_id,third_order_no,vip_name,vip_phone,vip_sex,table_type,table_type_name,
+        remark,resv_num,status,flag,source,meal_type_id,meal_type_name,resv_source,resv_date,dest_date, created_at,
+        updated_at,order_result
+        from (SELECT
+                id,batch_no,business_id,third_order_no,vip_name,vip_phone,vip_sex,table_type,table_type_name,
+                remark,resv_num,status,flag,source,meal_type_id,meal_type_name,source AS resv_source,
+                DATE_FORMAT(resv_date,"%Y-%m-%d") resv_date,
+                DATE_FORMAT(resv_date,"%H:%i") dest_date,
+                created_at,
+                updated_at,
+                CASE
+                WHEN r.status = '10' THEN '未处理'
+                WHEN r.status = '20' OR r.status = '70' OR r.status = '80'  THEN '客户取消'
+                WHEN r.status = '30' THEN '已拒单'
+                WHEN r.status = '40' OR r.status = '50' OR r.status = '60' THEN '已接单'
+                WHEN r.status = '45' THEN '已接单未选座'
+        END  order_result
+                FROM resv_order_third r
+        ) A
+        WHERE  A.business_id = #{businessId}
+        <if test="null!=source and ''!=source">
+            AND  A.source = #{source}
+        </if>
+        <if test="null!=orderResult and ''!=orderResult">
+            AND  A.order_result = #{orderResult}
+        </if>
+        <if test="null!=createtime and ''!=createtime">
+            AND  SUBSTR(A.created_at,1,10) = #{createtime}
+        </if>
+        ORDER BY A.created_at DESC
+
+    </select>
+
+
+</mapper>

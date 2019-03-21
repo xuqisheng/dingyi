@@ -1,0 +1,446 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhidianfan.pig.yd.moduler.common.dao.mapper.VipMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zhidianfan.pig.yd.moduler.common.dao.entity.Vip">
+        <id column="id" property="id"/>
+        <result column="business_id" property="businessId"/>
+        <result column="business_name" property="businessName"/>
+        <result column="vip_name" property="vipName"/>
+        <result column="vip_phone" property="vipPhone"/>
+        <result column="vip_phone2" property="vipPhone2"/>
+        <result column="vip_company" property="vipCompany"/>
+        <result column="vip_sex" property="vipSex"/>
+        <result column="vip_birthday" property="vipBirthday"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="vip_address" property="vipAddress"/>
+        <result column="remark" property="remark"/>
+        <result column="short_phone_num" property="shortPhoneNum"/>
+        <result column="telephone" property="telephone"/>
+        <result column="hobby" property="hobby"/>
+        <result column="detest" property="detest"/>
+        <result column="spells" property="spells"/>
+        <result column="family_name_spell" property="familyNameSpell"/>
+        <result column="vip_value_id" property="vipValueId"/>
+        <result column="vip_value_name" property="vipValueName"/>
+        <result column="vip_class_id" property="vipClassId"/>
+        <result column="vip_class_name" property="vipClassName"/>
+        <result column="app_user_id" property="appUserId"/>
+        <result column="image_url" property="imageUrl"/>
+        <result column="tag" property="tag"/>
+        <result column="vip_birthday_nl" property="vipBirthdayNl"/>
+        <result column="target_id" property="targetId"/>
+        <result column="vip_brand_class_id" property="vipBrandClassId"/>
+        <result column="vip_brand_class_name" property="vipBrandClassName"/>
+        <result column="vip_postion" property="vipPostion"/>
+        <result column="birth_flag" property="birthFlag"/>
+        <result column="hide_birthday_year" property="hideBirthdayYear"/>
+        <result column="next_vip_birthday" property="nextVipBirthday"/>
+        <result column="is_leap" property="isLeap"/>
+    </resultMap>
+
+
+    <select id="findVipNumByOrderTime" resultType="java.lang.Integer">
+        select
+        count(vip_id)
+        from
+        ( select
+        count(o.batch_no) order_num, vip_id
+        from
+        resv_sys.resv_order_android o
+        where
+        o.business_id = #{businessId}
+        <if test="status!=null">
+            and o.status=#{status}
+        </if>
+        group by
+        o.vip_id ) t
+        where
+        order_num
+        <if test="symbol==1"> <![CDATA[>]]> </if>
+        <if test="symbol==0"> <![CDATA[<]]> </if>
+
+        #{orderTime}
+
+    </select>
+    <select id="findVipNumByOrderDate" resultType="java.lang.Integer">
+
+        select
+        count(vip_id)
+        from
+        ( select
+        max(resv_date) as resv_date, vip_id
+        from
+        resv_sys.resv_order_android o
+        where
+        o.business_id = #{businessId}
+
+        group by
+        o.vip_id ) t
+
+        where resv_date
+        <if test="symbol==1"> <![CDATA[>]]> </if>
+        <if test="symbol==0"> <![CDATA[<]]> </if>
+        #{orderDate}
+
+    </select>
+    <select id="findVipNumByAVGExpense" resultType="java.lang.Integer">
+        select
+        count( vip_id )
+        from
+        ( select
+        AVG( payamount ) payamount, vip_id
+
+        from
+        resv_sys.resv_order_android o
+        where
+        o.business_id = #{businessId}
+        group by
+        o.vip_id ) t
+        where
+        payamount
+        <if test="symbol==1"> <![CDATA[>]]> </if>
+        <if test="symbol==0"> <![CDATA[<]]> </if>
+        #{expense}
+
+    </select>
+    <select id="findStatisticsViplist" resultType="com.zhidianfan.pig.yd.moduler.resv.dto.StatisticsVipDTO">
+        select
+        v.id vipId,v.vip_name vipName,v.vip_phone vipPhone,v.vip_value_id vipValueId,v.vip_value_name vipValueName,
+        vs.resv_batch_count resvBatchCount,vs.resv_order_count resvOrderCount,vs.resv_people_num resvPeopleNum,
+        vs.meal_batch_count mealBatchCount,vs.meal_order_count mealOrderCount,vs.meal_people_num
+        mealPeopleNum,vs.last_meal_date lastMealDate
+        from
+        vip v left join vip_statistics vs on v.id = vs.vip_id
+        <where>
+            v.business_id=#{businessId}
+            <if test="@org.apache.commons.lang.StringUtils@isNotBlank(queryVal)">
+                and (v.vip_name like concat('%',#{queryVal},'%') or v.vip_phone like concat('%',#{queryVal},'%'))
+            </if>
+        </where>
+    </select>
+
+
+    <select id="conditionFindVips" parameterType="com.zhidianfan.pig.yd.moduler.resv.dto.VipInfoDTO"
+            resultType="com.zhidianfan.pig.yd.moduler.resv.dto.VipTableDTO">
+        SELECT
+        E.id as id,E.vip_name as vipName ,E.vip_sex as vipSex,E.vip_phone as vipPhone,E.vip_value_name as
+        vipValueName,E.vip_class_name as vipClassName,
+        E.actResvTimes as actResvTimes,E.paySum,
+        DATE_FORMAT( E.eattime, '%Y-%m-%d' ) AS lastEatTime,vip_company as vipCompany,vip_postion as
+        vipPostion,created_at as createdAt
+        FROM
+        (
+        SELECT
+        C.id,C.vip_name,C.vip_sex,C.vip_phone,C.vip_value_name,C.vip_class_name,C.actResvTimes,C.paySum,
+        D.eattime,vip_company,vip_postion,created_at
+        FROM
+        (
+        SELECT
+        A.id,A.vip_name,A.vip_sex,A.vip_phone,A.vip_value_name,A.vip_class_name,
+        ifnull( B.times , 0 ) AS actResvTimes,B.paySum,vip_company,vip_postion,created_at
+        FROM
+        ( SELECT id,vip_name,vip_sex,vip_phone,vip_value_name,vip_class_name,vip_company,vip_postion,created_at FROM vip
+        WHERE
+        business_id = #{businessId}
+        /*加客户普通查询条件*/
+        <if test="vipName != null and vipName != ''">
+            AND vip_name like CONCAT('%',#{vipName},'%')
+        </if>
+        <if test="vipPhone != null and vipPhone != ''">
+            AND vip_phone like CONCAT('%',#{vipPhone},'%')
+        </if>
+        <if test="vipValueId != null and vipValueId != ''">
+            AND vip_value_id = #{vipValueId}
+        </if>
+        <if test="vipClassId != null and vipClassId != ''">
+            AND vip_class_name = #{vipClassId}
+        </if>
+        ) A
+        LEFT JOIN ( SELECT ifnull( COUNT( DISTINCT batch_no ), 0 ) AS times,ifnull( SUM(payamount), 0 ) AS paySum,
+        vip_id FROM resv_order_android where status = 3 AND business_id = #{businessId} GROUP BY vip_id ) B ON A.id = B.vip_id
+        ) C
+        LEFT JOIN ( SELECT Max( updated_at ) eattime, vip_id FROM resv_order_android where status = 3 AND business_id =
+        #{businessId} GROUP BY vip_id ) D ON C.id = D.vip_id
+        ) E
+        WHERE
+        1=1
+        /*加计算所得条件*/
+        /*实际就餐次数几次以上*/
+        <if test="actResvTimes != null and actResvTimes != ''">
+            AND actResvTimes >= #{actResvTimes}
+        </if>
+        /*实际就餐次数几次以内*/
+        <if test="actResvTimesLt != null and actResvTimesLt != ''">
+            AND actResvTimes &lt;= #{actResvTimesLt}
+        </if>
+        /*就餐日期多少天以内*/
+        <if test="lastEatTime != null">
+            AND eattime >= #{lastEatTime}
+        </if>
+        /*就餐日期多少天以外*/
+        <if test="lastEatTimeLt != null">
+            AND eattime &lt;= #{lastEatTimeLt}
+        </if>
+        /*支付金额多少以上*/
+        <if test="paySum != null">
+            AND paySum >= #{paySum}
+        </if>
+        /*支付金额多少以内*/
+        <if test="paySumLt != null">
+            AND paySum &lt;= #{paySumLt}
+        </if>
+
+    </select>
+
+
+    <update id="updateVipClassNULL" parameterType="com.zhidianfan.pig.yd.moduler.common.dao.entity.VipClass">
+        update vip
+        set vip_class_id = null,
+            vip_class_name = ""
+        where
+            business_id = #{businessId}
+            and vip_class_id = #{id}
+    </update>
+
+
+    <select id="excelConditionFindVips" parameterType="com.zhidianfan.pig.yd.moduler.resv.dto.VipInfoDTO"
+            resultType="com.zhidianfan.pig.yd.moduler.resv.dto.VipTableDTO">
+        SELECT
+        E.id as id,E.vip_name as vipName ,E.vip_sex as vipSex,E.vip_phone as vipPhone,
+        E.vip_value_name as vipValueName,E.vip_class_name as vipClassName,
+        E.actResvTimes as actResvTimes,
+        DATE_FORMAT( E.eattime, '%Y-%m-%d' ) AS lastEatTime,
+        E.vip_company as vipCompany,E.vip_postion as vipPostion
+        FROM
+        (
+        SELECT
+        C.id,C.vip_name,C.vip_sex,C.vip_phone,C.vip_value_name,C.vip_class_name,C.actResvTimes,
+        D.eattime,C.vip_company,C.vip_postion
+        FROM
+        (
+        SELECT
+        A.id,A.vip_name,A.vip_sex,A.vip_phone,A.vip_value_name,A.vip_class_name,
+        ifnull( B.times, 0 ) AS actResvTimes,A.vip_company ,A.vip_postion
+        FROM
+        ( SELECT id,vip_name,vip_sex,vip_phone,vip_value_name,vip_class_name,vip_company ,vip_postion
+        FROM vip
+        WHERE
+        business_id = #{businessId}
+        /*加客户普通查询条件*/
+        <if test="vipName != null and vipName != ''">
+            AND vip_name like CONCAT('%',#{vipName},'%')
+        </if>
+        <if test="vipPhone != null and vipPhone != ''">
+            AND vip_phone like CONCAT('%',#{vipPhone},'%')
+        </if>
+        <if test="vipValueId != null and vipValueId != ''">
+            AND vip_value_id = #{vipValueId}
+        </if>
+        <if test="vipClassId != null and vipClassId != ''">
+            AND vip_class_name = #{vipClassId}
+        </if>
+        ) A
+        LEFT JOIN ( SELECT ifnull( COUNT( DISTINCT batch_no ), 0 ) AS times, vip_id FROM resv_order_android where status = 3 AND
+        business_id = #{businessId} GROUP BY vip_id ) B ON A.id = B.vip_id
+        ) C
+        LEFT JOIN ( SELECT Max( updated_at ) eattime, vip_id FROM resv_order_android where status = 3 AND business_id =
+        #{businessId} GROUP BY vip_id ) D ON C.id = D.vip_id
+        ) E
+        WHERE
+        1=1
+        /*加计算所得条件*/
+        <if test="actResvTimes != null and actResvTimes != ''">
+            AND actResvTimes >= #{actResvTimes}
+        </if>
+        <if test="lastEatTime != null">
+            AND eattime >= #{lastEatTime}
+        </if>
+        Order by
+        lastEatTime
+
+
+    </select>
+
+
+    <insert id="excelInsertVIPInfo" parameterType="com.zhidianfan.pig.yd.moduler.common.dao.entity.Vip">
+        INSERT INTO vip(
+        business_id
+        ,business_name
+        ,vip_name
+        ,vip_phone
+        ,vip_company
+        ,vip_sex
+        ,created_at
+        ,updated_at
+        ,vip_postion
+        ,vip_birthday
+        ,vip_phone2
+        ,hobby
+        ,detest
+        ,tag)
+        VALUES
+        <foreach collection="vips" item="item" separator=",">
+            (#{item.businessId}
+            ,#{item.businessName}
+            ,#{item.vipName}
+            ,#{item.vipPhone}
+            ,#{item.vipCompany}
+            ,#{item.vipSex}
+            ,NOW()
+            ,NOW()
+            ,#{item.vipPostion}
+            ,#{item.vipBirthday}
+            ,#{item.vipPhone2}
+            ,#{item.hobby}
+            ,#{item.detest}
+            , #{item.tag})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        vip_name = VALUES(vip_name)
+        ,vip_phone = VALUES(vip_phone)
+        ,vip_company = VALUES(vip_company)
+        ,vip_sex = VALUES(vip_sex)
+        ,updated_at = VALUES(updated_at)
+        ,vip_postion = VALUES(vip_postion)
+        ,vip_birthday = VALUES(vip_birthday)
+        ,vip_phone2 = VALUES(vip_phone2)
+        ,hobby = VALUES(hobby)
+        ,detest = VALUES(detest)
+        ,tag = VALUES(tag)
+    </insert>
+
+    <select id="getNewVipNum" parameterType="integer" resultType="integer">
+        SELECT
+            count( * )
+        FROM
+            vip
+        WHERE
+           created_at LIKE CONCAT( '%', ( SELECT date_sub( curdate( ), INTERVAL 1 DAY ) ), '%' )
+           AND  business_id = #{businessId}
+    </select>
+
+    <select id="getConditionVipPage" parameterType="com.zhidianfan.pig.yd.moduler.resv.dto.VipConditionCountDTO"
+            resultType="com.zhidianfan.pig.yd.moduler.resv.dto.VipTableDTO">
+        SELECT
+        A.id,A.vip_name as vipName,A.vip_sex as vipSex,A.vip_phone as vipPhone,A.vip_value_name as
+        vipValueName,A.vip_class_name as vipClassName,
+        DATE_FORMAT( B.eattime, '%Y-%m-%d' ) AS lastEatTime , A.vip_company as vipCompany,A.vip_postion as vipPostion
+        FROM
+        (SELECT id,vip_name,vip_sex,vip_phone,vip_value_name,vip_class_name,vip_company ,vip_postion
+        FROM vip
+        WHERE
+        business_id = #{businessId}
+        <if test="keyword != null and keyword != ''">
+            AND (vip_name like   CONCAT('%',#{keyword},'%')  or vip_phone like CONCAT('%',#{keyword},'%'))
+        </if>
+        <if test="vipValueName != null and vipValueName != ''">
+            AND vip_value_name = #{vipValueName}
+        </if>
+        ORDER BY
+        created_at
+        ) A
+        LEFT JOIN
+        ( SELECT Max( updated_at ) eattime, vip_id FROM resv_order_android where status = 3 AND business_id = #{businessId}
+        GROUP BY vip_id ) B ON A.id = B.vip_id
+
+    </select>
+
+    <select id="getPastBirthdayVip" resultMap="BaseResultMap" >
+        select
+        id,vip_birthday,vip_birthday_nl,birth_flag,next_vip_birthday
+        from vip  v
+        where
+        vip_birthday  like '____-__-__'
+        AND
+        vip_birthday_nl  like '____-__-__'
+        AND
+        ( next_vip_birthday is null or CURDATE() > next_vip_birthday  )
+        and vip_birthday not like '____-02-29'
+    </select>
+
+    <select id="selectBirthType1" resultMap="BaseResultMap"  >
+        select
+        id,vip_birthday,birth_flag,hide_birthday_year
+        from vip
+        where vip_birthday is not null
+        and vip_birthday !=''
+        and   vip_birthday not like '____-__-__'
+        and vip_birthday  like '____.__.__ 00:00:00'
+        limit 0,1000
+    </select>
+
+    <select id="selectBirthType2" resultMap="BaseResultMap" >
+        select id,vip_birthday,birth_flag,hide_birthday_year
+        from vip
+        where vip_birthday is not null
+        and vip_birthday !=''
+        and (vip_birthday  like '____._.__'
+             or vip_birthday  like '____._._'
+             or vip_birthday  like '____.__._'
+             or vip_birthday  like '____.__.__'
+             )
+        limit 0,1000
+    </select>
+
+    <select id="selectBirthType3" resultMap="BaseResultMap" >
+        select id,vip_birthday,birth_flag,hide_birthday_year
+        from vip
+        where vip_birthday is not null
+        and vip_birthday !=''
+        and (vip_birthday  like '____-_-_'
+              or vip_birthday  like '____-_-__'
+              or vip_birthday  like '____-__-_')
+        limit 0,1000
+    </select>
+
+    <select id="selectBirthLunarType1" resultMap="BaseResultMap" >
+        select id,vip_birthday_nl,birth_flag,hide_birthday_year
+        from vip
+        where
+        vip_birthday_nl is not null
+        and vip_birthday_nl != ''
+        and  vip_birthday_nl  like '__,_,__,__'
+        limit 0,1000
+    </select>
+
+    <select id="selectBirthLunarType2" resultMap="BaseResultMap" >
+        select id,vip_birthday_nl,birth_flag,hide_birthday_year
+        from vip
+        where
+        vip_birthday_nl is not null
+        and vip_birthday_nl != ''
+        and  vip_birthday_nl  like '__,_,闰__,__'
+        limit 0,1000
+    </select>
+
+    <select id="selectBirthType4" resultMap="BaseResultMap" >
+        select id,business_id,vip_birthday,birth_flag,hide_birthday_year
+        from vip
+        where vip_birthday is not null and vip_birthday !='' and   vip_birthday not like '____-__-__'
+        and vip_birthday not like '____.__.__ 00:00:00' and vip_birthday not like '____._.__' and vip_birthday not like '____._._' and vip_birthday not like '____.__._'
+        and vip_birthday not like '____.__.__' and vip_birthday not like '____-_-_' and  vip_birthday  not like '____-_-__' and vip_birthday  not like '____-__-_'
+        limit 0,1000
+    </select>
+
+    <select id="selectBirthLunarType3" resultMap="BaseResultMap" >
+        select id,vip_birthday_nl,birth_flag,hide_birthday_year
+        from vip
+        where vip_birthday_nl is not null and vip_birthday_nl != '' and   vip_birthday_nl not like '____-__-__'
+        and vip_birthday_nl not like '____-__-__,闰'  and vip_birthday_nl not like '__,_,__,__'
+        and vip_birthday_nl not like '__,_,闰__,__'
+        limit 0,1000
+    </select>
+
+    <select id="selectBirthByBusinessId" resultMap="BaseResultMap">
+        select id,vip_birthday,birth_flag,hide_birthday_year
+        from vip
+        where vip_birthday is not null
+        and vip_birthday !=''
+        and vip_birthday  not like '____-__-__'
+        and  business_id = #{bid}
+    </select>
+
+</mapper>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhidianfan.pig.user.dao.mapper.AgentMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zhidianfan.pig.user.dao.entity.Agent">
+        <id column="id" property="id" />
+        <result column="open_id" property="openId" />
+        <result column="agent_name" property="agentName" />
+        <result column="username" property="username" />
+        <result column="password" property="password" />
+        <result column="agent_level" property="agentLevel" />
+        <result column="contract_no" property="contractNo" />
+        <result column="province_id" property="provinceId" />
+        <result column="city_id" property="cityId" />
+        <result column="area_id" property="areaId" />
+        <result column="province_name" property="provinceName" />
+        <result column="city_name" property="cityName" />
+        <result column="area_name" property="areaName" />
+        <result column="type" property="type" />
+        <result column="agent_address" property="agentAddress" />
+        <result column="agent_phone" property="agentPhone" />
+        <result column="licence_url" property="licenceUrl" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+        <result column="agent_manager" property="agentManager" />
+        <result column="remarks" property="remarks" />
+        <result column="status" property="status" />
+        <result column="review_time" property="reviewTime" />
+        <result column="review_user" property="reviewUser" />
+        <result column="tag" property="tag" />
+    </resultMap>
+
+</mapper>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhidianfan.pig.log.dao.mapper.ConfigLogLifeCycleMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zhidianfan.pig.log.dao.entity.ConfigLogLifeCycle">
+        <id column="id" property="id" />
+        <result column="table_name" property="tableName" />
+        <result column="config_type" property="configType" />
+        <result column="config1" property="config1" />
+        <result column="config2" property="config2" />
+        <result column="data_source_name" property="dataSourceName" />
+    </resultMap>
+
+</mapper>

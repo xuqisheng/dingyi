@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhidianfan.pig.yd.moduler.common.dao.mapper.BusinessMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zhidianfan.pig.yd.moduler.common.dao.entity.Business">
+        <id column="id" property="id" />
+        <result column="business_name" property="businessName" />
+        <result column="business_type" property="businessType" />
+        <result column="brand_id" property="brandId" />
+        <result column="business_phone" property="businessPhone" />
+        <result column="phone" property="phone" />
+        <result column="business_address" property="businessAddress" />
+        <result column="business_star" property="businessStar" />
+        <result column="bussiness_manager" property="bussinessManager" />
+        <result column="open_id" property="openId" />
+        <result column="agent_id" property="agentId" />
+        <result column="agent_name" property="agentName" />
+        <result column="city_id" property="cityId" />
+        <result column="province_id" property="provinceId" />
+        <result column="area_id" property="areaId" />
+        <result column="province_name" property="provinceName" />
+        <result column="city_name" property="cityName" />
+        <result column="area_name" property="areaName" />
+        <result column="status" property="status" />
+        <result column="login_user" property="loginUser" />
+        <result column="login_password" property="loginPassword" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+        <result column="review_time" property="reviewTime" />
+        <result column="review_user" property="reviewUser" />
+        <result column="device" property="device" />
+        <result column="sms_style" property="smsStyle" />
+        <result column="local_url" property="localUrl" />
+        <result column="licence_url" property="licenceUrl" />
+        <result column="serial_port" property="serialPort" />
+        <result column="meeting_status" property="meetingStatus" />
+        <result column="device_phone_type" property="devicePhoneType" />
+        <result column="is_show_device_phone" property="isShowDevicePhone" />
+        <result column="is_show_table_vipname" property="isShowTableVipname" />
+        <result column="is_show_public_vip" property="isShowPublicVip" />
+        <result column="is_meeting_check" property="isMeetingCheck" />
+        <result column="change_table_check" property="changeTableCheck" />
+        <result column="cancel_check" property="cancelCheck" />
+        <result column="change_dish_standard_check" property="changeDishStandardCheck" />
+        <result column="change_resv_table_num_check" property="changeResvTableNumCheck" />
+        <result column="order_exemption_verify_check" property="orderExemptionVerifyCheck" />
+        <result column="is_order_query" property="isOrderQuery" />
+        <result column="is_kbc" property="isKbc" />
+        <result column="soft_title" property="softTitle" />
+        <result column="is_fcb" property="isFcb" />
+        <result column="open_date" property="openDate" />
+        <result column="price" property="price" />
+        <result column="year_price" property="yearPrice" />
+        <result column="year_price_one" property="yearPriceOne" />
+        <result column="year_price_two" property="yearPriceTwo" />
+        <result column="year_price_three" property="yearPriceThree" />
+        <result column="due_date" property="dueDate" />
+        <result column="delay_days" property="delayDays" />
+        <result column="tag" property="tag" />
+        <result column="merchant_pid" property="merchantPid" />
+        <result column="shop_id" property="shopId" />
+        <result column="is_excel_vip_phone" property="isExcelVipPhone" />
+        <result column="is_excel_check" property="isExcelCheck" />
+        <result column="is_seat_update" property="isSeatUpdate" />
+        <result column="is_re_vip_message" property="isReVipMessage" />
+        <result column="is_vip_phone_hidden" property="isVipPhoneHidden" />
+        <result column="notify_before_day" property="notifyBeforeDay" />
+        <result column="is_weixin" property="isWeixin" />
+        <result column="meeting_confirm_message" property="meetingConfirmMessage" />
+        <result column="meeting_cancel_message" property="meetingCancelMessage" />
+        <result column="meeting_unorder_message" property="meetingUnorderMessage" />
+        <result column="is_lucky_day" property="isLuckyDay" />
+        <result column="confirm_service_items" property="confirmServiceItems" />
+        <result column="is_change_table" property="isChangeTable" />
+        <result column="order_deleteable" property="orderDeleteable" />
+        <result column="enable_meeting_api" property="enableMeetingApi" />
+        <result column="app_token" property="appToken" />
+        <result column="is_meituan" property="isMeituan" />
+        <result column="cancel_seatedorder_able" property="cancelSeatedorderAble" />
+        <result column="is_online_order" property="isOnlineOrder" />
+        <result column="is_meeting_order_more" property="isMeetingOrderMore" />
+        <result column="def_meals_num" property="defMealsNum" />
+        <result column="longitude" property="longitude" />
+        <result column="latitude" property="latitude" />
+        <result column="logo_pic" property="logoPic" />
+        <result column="table_tag" property="tableTag" />
+    </resultMap>
+
+</mapper>

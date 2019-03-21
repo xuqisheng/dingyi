@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhidianfan.pig.log.dao.mapper.LogPushMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zhidianfan.pig.log.dao.entity.LogPush">
+        <result column="id" property="id" />
+        <result column="push_server" property="pushServer" />
+        <result column="client" property="client" />
+        <result column="note" property="note" />
+        <result column="push_res" property="pushRes" />
+        <result column="push_time" property="pushTime" />
+    </resultMap>
+
+</mapper>

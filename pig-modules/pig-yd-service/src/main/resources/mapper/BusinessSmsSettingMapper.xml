@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhidianfan.pig.yd.moduler.common.dao.mapper.BusinessSmsSettingMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zhidianfan.pig.yd.moduler.common.dao.entity.BusinessSmsSetting">
+        <id column="id" property="id" />
+        <result column="business_id" property="businessId" />
+        <result column="type" property="type" />
+        <result column="vip_name_type" property="vipNameType" />
+        <result column="table_name_type" property="tableNameType" />
+        <result column="area_name_type" property="areaNameType" />
+        <result column="week_name_type" property="weekNameType" />
+        <result column="map_type" property="mapType" />
+        <result column="phone_type" property="phoneType" />
+        <result column="app_user_type" property="appUserType" />
+        <result column="address_type" property="addressType" />
+        <result column="resv_num_type" property="resvNumType" />
+        <result column="deposit_type" property="depositType" />
+        <result column="pay_type_type" property="payTypeType" />
+    </resultMap>
+
+</mapper>

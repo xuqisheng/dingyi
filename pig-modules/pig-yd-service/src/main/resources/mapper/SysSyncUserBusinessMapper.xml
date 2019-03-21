@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhidianfan.pig.yd.moduler.common.dao.mapper.SysSyncUserBusinessMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zhidianfan.pig.yd.moduler.common.dao.entity.SysSyncUserBusiness">
+        <id column="user_id" property="userId" />
+        <result column="business_id" property="businessId" />
+        <result column="client_id" property="clientId" />
+        <result column="role" property="role" />
+    </resultMap>
+
+</mapper>

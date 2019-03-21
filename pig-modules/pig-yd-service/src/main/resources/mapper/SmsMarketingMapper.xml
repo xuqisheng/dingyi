@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhidianfan.pig.yd.moduler.common.dao.mapper.SmsMarketingMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zhidianfan.pig.yd.moduler.common.dao.entity.SmsMarketing">
+        <id column="id" property="id" />
+        <result column="content" property="content" />
+        <result column="variable" property="variable" />
+        <result column="business_id" property="businessId" />
+        <result column="send_type" property="sendType" />
+        <result column="status" property="status" />
+        <result column="timer" property="timer" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+        <result column="remark" property="remark" />
+        <result column="num" property="num" />
+        <result column="sms_num" property="smsNum" />
+        <result column="vip_value_id" property="vipValueId" />
+        <result column="vip_value_name" property="vipValueName" />
+        <result column="vip_class_id" property="vipClassId" />
+        <result column="vip_class_name" property="vipClassName" />
+        <result column="user_name" property="userName" />
+        <result column="campaign_id" property="campaignId" />
+        <result column="sex" property="sex" />
+    </resultMap>
+    <select id="sendSmsNum" resultType="java.lang.Integer">
+
+        select if(sum(s.sms_num) is null,0,sum(s.sms_num))
+        from sms_marketing s
+        where s.created_at &gt;= #{startDate}
+        and s.created_at &lt; #{endDate}
+        and business_id=#{businessId}
+        <!-- 排除审核不通过 -->
+        and status != '2'
+    </select>
+
+</mapper>

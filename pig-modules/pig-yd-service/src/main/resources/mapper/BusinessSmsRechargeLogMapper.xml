@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhidianfan.pig.yd.moduler.common.dao.mapper.BusinessSmsRechargeLogMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zhidianfan.pig.yd.moduler.common.dao.entity.BusinessSmsRechargeLog">
+        <id column="id" property="id" />
+        <result column="business_sms_id" property="businessSmsId" />
+        <result column="business_id" property="businessId" />
+        <result column="sms_type_id" property="smsTypeId" />
+        <result column="payamount" property="payamount" />
+        <result column="order_no" property="orderNo" />
+        <result column="alipay_order_no" property="alipayOrderNo" />
+        <result column="ispay" property="ispay" />
+        <result column="status" property="status" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+        <result column="sms_num" property="smsNum" />
+        <result column="ex_sms_num" property="exSmsNum" />
+        <result column="sms" property="sms" />
+        <result column="gift_num" property="giftNum" />
+        <result column="invoice_status" property="invoiceStatus" />
+    </resultMap>
+
+    <resultMap id="SmsRecordBO" type="com.zhidianfan.pig.yd.moduler.resv.bo.SmsRecordBO">
+        <result column="access" property="access"/>
+        <result column="order_no" property="orderNo"/>
+        <result column="smscount" property="smscount"/>
+        <result column="payamount" property="payamount"/>
+        <result column="updated_at" property="updateAt"/>
+    </resultMap>
+    <insert id="insertRechargeLog">
+         insert into
+        business_sms_recharge_log
+        (business_sms_id,business_id,sms_type_id,payamount,order_no,alipay_order_no,ispay,status,created_at,updated_at,sms_num,ex_sms_num,sms,gift_num)
+        SELECT
+        a.id,#{id},#{type},#{pay},#{orderNum},"","0","1",NOW(),NOW(),t.sms_num+a.current_sms_num,a.current_sms_num,t.sms_num,t.gift_num
+        from (select id,current_sms_num from business_sms where
+        business_id=#{id}) a ,
+        (select sms_num,gift_num from sms_type where
+        id=#{type}) t
+    </insert>
+
+    <select id="getGeneralRechargeRecord" resultType="map">
+        select
+        sum(sms) as smssum,
+        if(sum(payamount) is null ,0,sum(payamount)) as payamountsum,
+        sum(if(order_no = '00000000000000',sms_num,0))  as giftNum
+        from business_sms_recharge_log
+        where
+        business_id = #{businessId}
+        and status = 2;
+    </select>
+
+    <select id="selectSmsRechargeRecordPage"  resultMap="SmsRecordBO">
+        select
+        IF(bsrl.order_no = '00000000000000' ,'易订赠送','充值') as access,
+        bsrl.order_no,
+        bsrl.sms+ if(bsrl.gift_num is null,0,bsrl.gift_num)  as smscount,
+        bsrl.payamount,
+        bsrl.updated_at,
+        bsrl.invoice_status,
+        sir.id as invoiceRecordId,
+        bsrl.id as id
+        from
+        business_sms_recharge_log bsrl
+        left join sms_invoice_record sir on sir.recharge_log_id=bsrl.id
+        where  bsrl.business_id = #{businessId}
+        and bsrl.`status` = 2
+        order by bsrl.updated_at desc
+
+    </select>
+
+</mapper>

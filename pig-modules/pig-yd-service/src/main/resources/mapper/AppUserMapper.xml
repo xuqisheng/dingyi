@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhidianfan.pig.yd.moduler.common.dao.mapper.AppUserMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zhidianfan.pig.yd.moduler.common.dao.entity.AppUser">
+        <id column="id" property="id" />
+        <result column="app_user_name" property="appUserName" />
+        <result column="user_name" property="userName" />
+        <result column="business_id" property="businessId" />
+        <result column="business_name" property="businessName" />
+        <result column="app_type_id" property="appTypeId" />
+        <result column="app_user_phone" property="appUserPhone" />
+        <result column="app_user_password" property="appUserPassword" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+        <result column="status" property="status" />
+        <result column="app_user_code" property="appUserCode" />
+        <result column="operation_area_id" property="operationAreaId" />
+        <result column="brand_type" property="brandType" />
+        <result column="image_url" property="imageUrl" />
+        <result column="tag" property="tag" />
+    </resultMap>
+
+</mapper>

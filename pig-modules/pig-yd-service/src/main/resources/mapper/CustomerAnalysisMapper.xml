@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhidianfan.pig.yd.moduler.common.dao.mapper.CustomerAnalysisMapper">
+    <!-- 通用查询映射结果 -->
+    <resultMap id="vipResultMap" type="com.zhidianfan.pig.yd.moduler.common.dao.entity.Vip">
+        <id column="id" property="id"/>
+        <result column="business_id" property="businessId"/>
+        <result column="business_name" property="businessName"/>
+        <result column="vip_name" property="vipName"/>
+        <result column="vip_phone" property="vipPhone"/>
+    </resultMap>
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="vipValueResultMap" type="com.zhidianfan.pig.yd.moduler.common.dao.entity.VipValue">
+        <id column="id" property="id" />
+        <result column="vip_value_name" property="vipValueName" />
+        <result column="business_id" property="businessId" />
+        <result column="unorder_count" property="unorderCount" />
+        <result column="active_days" property="activeDays" />
+        <result column="flow_days" property="flowDays" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+        <result column="type" property="type" />
+        <result column="high_value_days" property="highValueDays" />
+        <result column="high_value_counts" property="highValueCounts" />
+        <result column="high_value_amount" property="highValueAmount" />
+    </resultMap>
+
+    <select id="queryVipIdsList" resultType="java.lang.Integer" parameterType="com.zhidianfan.pig.yd.moduler.resv.qo.CustomerAnalysisResvOrderQO">
+        select vip_id from resv_order
+        <where>
+            `status` BETWEEN 1 AND 3
+            <if test="businessId != null and businessId != 0">and business_id = #{businessId}</if>
+            <if test="vipId != null and vipId != 0">and vip_id = #{vipId}</if>
+            <if test="createBegin != null">and created_at &gt; #{createBegin}</if>
+            <if test="createEnd != null">and created_at &lt; #{createEnd}</if>
+        </where>
+        group by vip_id;
+    </select>
+
+    <select id="getNewVip" parameterType="java.util.Map" resultType="java.lang.Integer">
+        select id from vip v where created_at &gt; #{begin} <if test="end != null">and created_at &lt; #{end}</if> and  v.business_id = #{businessId}
+        and (select count(1) from resv_order where `status` BETWEEN 1 AND 3 and business_id = #{businessId} and vip_id = v.id and created_at &gt; #{begin} <if test="end != null">and created_at &lt; #{end}</if>) &gt;= 1
+        and (select count(1) from resv_order where `status` BETWEEN 1 AND 3 and business_id = #{businessId} and vip_id = v.id and created_at &lt; #{begin}) = 0
+    </select>
+
+    <select id="queryVipList" resultMap="vipResultMap" parameterType="com.zhidianfan.pig.yd.moduler.resv.qo.CustomerAnalysisVipQO">
+      select * from vip
+      <where>
+          <if test="businessId != null and businessId != 0">business_id = #{businessId}</if>
+          <if test="vipId != null and vipId != 0">and vip_id = #{vipId}</if>
+      </where>
+    </select>
+
+    <select id="queryVipValueByBusinessId" resultMap="vipValueResultMap" parameterType="java.util.Map">
+        select * from vip_value where business_id = #{businessId} and `type` = #{type}
+    </select>
+
+    <select id="queryBusinessIds" resultType="java.lang.Integer">
+        select id from business where `status` = 1
+    </select>
+
+    <delete id="cleanCustomerAnalysis" parameterType="java.lang.String">
+        delete from business_customer_analysis where `date` = #{date}
+    </delete>
+
+    <update id="updateByBusinessIdAndDate" parameterType="com.zhidianfan.pig.yd.moduler.common.dao.entity.BusinessCustomerAnalysis">
+        update business_customer_analysis
+        <set>
+            <if test="activeVipCount != null and activeVipCount >0">active_vip_count = #{activeVipCount},</if>
+            <if test="sleepVipCount != null and sleepVipCount >0">sleep_vip_count = #{sleepVipCount},</if>
+            <if test="flowVipCount != null and flowVipCount >0">flow_vip_count = #{flowVipCount},</if>
+            <if test="evilVipCount != null and evilVipCount >0">evil_vip_count = #{evilVipCount},</if>
+            <if test="highValueVipCount != null and highValueVipCount >0">high_value_vip_count = #{highValueVipCount},</if>
+            <if test="awakenVipCount != null and awakenVipCount >0">awaken_vip_count = #{awakenVipCount},</if>
+            <if test="newVipCount != null and newVipCount >0">new_vip_count = #{newVipCount}</if>
+        </set>
+        where business_id = #{businessId} and `date` = #{date}
+    </update>
+
+</mapper>

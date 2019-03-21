@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhidianfan.pig.yd.moduler.common.dao.mapper.ResvDishThirdMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zhidianfan.pig.yd.moduler.common.dao.entity.ResvDishThird">
+        <id column="id" property="id" />
+        <result column="dish_name" property="dishName" />
+        <result column="dish_num" property="dishNum" />
+        <result column="dish_price" property="dishPrice" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+        <result column="batch_no" property="batchNo" />
+        <result column="cmbh" property="cmbh" />
+        <result column="dlbh" property="dlbh" />
+        <result column="resv_order" property="resvOrder" />
+        <result column="dwbh" property="dwbh" />
+        <result column="dwmc" property="dwmc" />
+        <result column="remark" property="remark" />
+    </resultMap>
+
+</mapper>

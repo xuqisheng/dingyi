@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhidianfan.pig.user.dao.mapper.MealTypeMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zhidianfan.pig.user.dao.entity.MealType">
+        <id column="id" property="id" />
+        <result column="business_id" property="businessId" />
+        <result column="meal_type_name" property="mealTypeName" />
+        <result column="business_name" property="businessName" />
+        <result column="status" property="status" />
+        <result column="meal_type_code" property="mealTypeCode" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+        <result column="resv_start_time" property="resvStartTime" />
+        <result column="resv_end_time" property="resvEndTime" />
+        <result column="meal_type_id_a" property="mealTypeIdA" />
+        <result column="meal_type_name_a" property="mealTypeNameA" />
+        <result column="meal_type_id_b" property="mealTypeIdB" />
+        <result column="meal_type_name_b" property="mealTypeNameB" />
+        <result column="band_end_time" property="bandEndTime" />
+        <result column="using_date" property="usingDate" />
+        <result column="meal_start_time" property="mealStartTime" />
+    </resultMap>
+
+</mapper>

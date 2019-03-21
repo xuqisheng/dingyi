@@ -1,0 +1,419 @@
+server:
+  port: 9007
+  undertow:
+    io-threads: 4
+    worker-threads: 32
+
+spring:
+  application:
+    name: pig-yd-ydmonitor
+  profiles:
+    active: dev
+  zipkin:
+    rabbitmq:
+      queue: zipkin
+  sleuth:
+    sampler:
+      percentage: 0.2
+  http:
+    multipart:
+      max-file-size: 1000MB
+      max-request-size: 1000MB
+
+
+mybatis-plus:
+  # 如果是放在src/main/java目录下 classpath:/com/yourpackage/*/mapper/*Mapper.xml
+  # 如果是放在resource目录 classpath:/mapper/*Mapper.xml
+  mapper-locations: classpath:/mapper/*Mapper.xml
+  #实体扫描，多个package用逗号或者分号分隔
+  typeAliasesPackage: com.zhidianfan.pig.**.entity
+  global-config:
+    #主键类型  0:"数据库ID自增", 1:"用户输入ID",2:"全局唯一ID (数字类型唯一ID)", 3:"全局唯一ID UUID";
+    id-type: 0
+    #字段策略 0:"忽略判断",1:"非 NULL 判断"),2:"非空判断"
+    field-strategy: 2
+    #驼峰下划线转换
+    db-column-underline: true
+    #mp2.3+ 全局表前缀 mp_
+    #table-prefix: mp_
+    #刷新mapper 调试神器
+    #refresh-mapper: true
+    #数据库大写下划线转换
+    capital-mode: true
+    # Sequence序列接口实现类配置
+#    key-generator: com.baomidou.mybatisplus.incrementer.OracleKeyGenerator
+    #逻辑删除配置（下面3个配置）
+    logic-delete-value: 1
+    logic-not-delete-value: 0
+    sql-injector: com.baomidou.mybatisplus.mapper.LogicSqlInjector
+    #自定义填充策略接口实现
+#    meta-object-handler: com.baomidou.springboot.MyMetaObjectHandler
+  configuration:
+    #配置返回数据库(column下划线命名&&返回java实体是驼峰命名)，自动匹配无需as（没开启这个，SQL需要写as： select user_id as userId）
+    map-underscore-to-camel-case: true
+    cache-enabled: false
+    #配置JdbcTypeForNull, oracle数据库必须配置
+#    jdbc-type-for-null: 'null'
+
+
+#加密配置
+jasypt:
+  encryptor:
+    password: lengleng
+
+redis:
+  cache:
+    expiration: 3601
+
+# 易订三台服务器的阿里云内网地址
+host:
+  ydserver1: 10.81.63.30
+  ydserver2: 10.46.230.6
+  ydserver3: 10.80.228.49
+
+eureka:
+  auth:
+    username: pig
+    password: gip6666
+    port: 1025
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 5
+    lease-expiration-duration-in-seconds: 20
+    instance-id: ${spring.cloud.client.ipAddress}:${server.port}
+  client:
+    registry-fetch-interval-seconds: 10
+
+ribbon:
+  Httpclient:
+    enabled: false
+  OkHttp:
+    enabled: true
+  ReadTimeout: 10000
+  ConnectTimeout: 10000
+
+feign:
+  hystrix:
+    enabled: true
+  okhttp:
+    enabled: true
+  httpclient:
+    enabled: false
+  client:
+    config:
+      feignName:
+        connectTimeout: 30000
+        readTimeout: 30000
+  compression:
+    request:
+      enabled: true
+    response:
+      enabled: true
+
+hystrix:
+  threadpool:
+    default:
+      coreSize: 500
+      maxQueueSize: 1000
+      queueSizeRejectionThreshold: 800
+  command:
+    default:
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 60000
+
+#监控短点配置
+management:
+  security:
+#  关闭安全认证
+    enabled: false
+endpoints:
+  actuator:
+    enabled: true
+  shutdown:
+#  开启优雅关闭
+    enabled: true
+#    平常不暴露端口到外网
+    path: /shutdown
+
+
+
+### 开发环境 ###
+
+---
+spring:
+  profiles: dev
+  datasource:
+    #  使用高性能数据源
+    type: com.zaxxer.hikari.HikariDataSource
+    driver-class-name: com.mysql.jdbc.Driver
+    username: root
+    password: 123456
+    url: jdbc:mysql://localhost:3306/yiding_monitor?useSSL=false&autoReconnect=true&useUnicode=true&characterEncoding=utf8
+    hikari:
+      minimum-idle: 1
+      maximum-pool-size: 5
+      idle-timeout: 30000
+      pool-name: DatebookHikariCP
+      max-lifetime: 120000
+      connection-timeout: 30000
+      connection-test-query: SELECT 1
+      connection-init-sql: set names utf8mb4
+  redis:
+    remote: false        #cachecloud 获取
+    host: 127.0.0.1
+    port: 6379
+    password:
+  rabbitmq:
+    host: 127.0.0.1
+    port: 5672
+    username: pig
+    password: pig
+
+eureka:
+  environment: ${spring.profiles}
+  client:
+    serviceUrl:
+      defaultZone: http://${eureka.auth.username}:${eureka.auth.password}@localhost:${eureka.auth.port}/eureka
+
+
+---
+spring:
+  profiles: test
+  datasource:
+    #  使用高性能数据源
+    type: com.zaxxer.hikari.HikariDataSource
+    driver-class-name: com.mysql.jdbc.Driver
+    username: root
+    password: 123456
+    url: jdbc:mysql://localhost:3306/yiding_monitor?useSSL=false&autoReconnect=true&useUnicode=true&characterEncoding=utf8
+    hikari:
+      minimum-idle: 1
+      maximum-pool-size: 5
+      idle-timeout: 30000
+      pool-name: DatebookHikariCP
+      max-lifetime: 120000
+      connection-timeout: 30000
+      connection-test-query: SELECT 1
+      connection-init-sql: set names utf8mb4
+  redis:
+    remote: false        #cachecloud 获取
+    host: 127.0.0.1
+    port: 6379
+    password:
+  rabbitmq:
+    host: 127.0.0.1
+    port: 5672
+    username: pig
+    password: pig
+
+eureka:
+  environment: ${spring.profiles}
+  client:
+    serviceUrl:
+      defaultZone: http://${eureka.auth.username}:${eureka.auth.password}@localhost:${eureka.auth.port}/eureka
+
+
+### 生产环境 ###
+
+---
+
+spring:
+  profiles: prod
+  datasource:
+    #  使用高性能数据源
+    type: com.zaxxer.hikari.HikariDataSource
+    driver-class-name: com.mysql.jdbc.Driver
+    username: pigyiding
+    password: s7iiVjNGl2F9
+    url: jdbc:mysql://rm-bp1l550ay024yxoojrw.mysql.rds.aliyuncs.com:3306/yiding_monitor?useSSL=false&autoReconnect=true&useUnicode=true&characterEncoding=utf8
+    hikari:
+      minimum-idle: 15
+      maximum-pool-size: 50
+      idle-timeout: 30000
+      pool-name: DatebookHikariCP
+      max-lifetime: 40000
+      connection-timeout: 30000
+      connection-test-query: SELECT 1
+      connection-init-sql: set names utf8mb4
+  redis:
+    remote: false        #cachecloud 获取
+    host: yd-cloud.redis.rds.aliyuncs.com
+    port: 6379
+    password: FCfpyZBb6421
+  rabbitmq:
+    host: 47.97.41.16 #${host.ydserver1}
+    port: 5672
+    #    username: guest
+    #    password: lA8jT8N4Cq64
+    username: pig
+    password: 7tm5Uo7Pi0mk
+
+
+eureka:
+  environment: ${spring.profiles}
+  client:
+    serviceUrl:
+      defaultZone: http://${eureka.auth.username}:${eureka.auth.password}@${host.ydserver1}:${eureka.auth.port}/eureka/,http://${eureka.auth.username}:${eureka.auth.password}@${host.ydserver2}:${eureka.auth.port}/eureka/,http://${eureka.auth.username}:${eureka.auth.password}@${host.ydserver3}:${eureka.auth.port}/eureka/
+
+
+### docker环境 ###
+
+---
+spring:
+  profiles: docker-local
+  datasource:
+    #  使用高性能数据源
+    type: com.zaxxer.hikari.HikariDataSource
+    driver-class-name: com.mysql.jdbc.Driver
+    username: root
+    password: 123456
+    url: jdbc:mysql://mysqlhost:3306/yiding_monitor?useSSL=false&autoReconnect=true&useUnicode=true&characterEncoding=utf8
+    hikari:
+      minimum-idle: 1
+      maximum-pool-size: 5
+      idle-timeout: 30000
+      pool-name: DatebookHikariCP
+      max-lifetime: 120000
+      connection-timeout: 30000
+      connection-test-query: SELECT 1
+      connection-init-sql: set names utf8mb4
+  redis:
+    remote: false        #cachecloud 获取
+    host: redishost
+    port: 6379
+    password:
+  rabbitmq:
+    host: mqhost
+    port: 5672
+    username: pig
+    password: pig
+
+eureka:
+  environment: ${spring.profiles}
+  client:
+    serviceUrl:
+      defaultZone: http://${eureka.auth.username}:${eureka.auth.password}@eureka:${eureka.auth.port}/eureka
+
+### 测试环境 ###
+
+---
+
+spring:
+  profiles: docker-test
+  datasource:
+#  使用高性能数据源
+    type: com.zaxxer.hikari.HikariDataSource
+    driver-class-name: com.mysql.jdbc.Driver
+    username: root
+    password: 123456
+    url: jdbc:mysql://mysqlhost:3306/yiding_monitor?useSSL=false&autoReconnect=true&useUnicode=true&characterEncoding=utf8
+    hikari:
+      minimum-idle: 1
+      maximum-pool-size: 5
+      idle-timeout: 30000
+      pool-name: DatebookHikariCP
+      max-lifetime: 40000
+      connection-timeout: 30000
+      connection-test-query: SELECT 1
+      connection-init-sql: set names utf8mb4
+  redis:
+    remote: false        #cachecloud 获取
+    host: redishost
+    port: 6379
+  rabbitmq:
+    host: mqhost
+    port: 5672
+    username: pig
+    password: pig
+
+
+eureka:
+  environment: ${spring.profiles}
+  client:
+    serviceUrl:
+      defaultZone: http://${eureka.auth.username}:${eureka.auth.password}@eureka:${eureka.auth.port}/eureka
+
+
+### 迁移环境
+
+---
+
+spring:
+  profiles: docker-qianyi
+  datasource:
+    #  使用高性能数据源
+    type: com.zaxxer.hikari.HikariDataSource
+    driver-class-name: com.mysql.jdbc.Driver
+    username: root
+    password: 123456
+    url: jdbc:mysql://mysqlhost:3306/yiding_monitor?useSSL=false&autoReconnect=true&useUnicode=true&characterEncoding=utf8
+    hikari:
+      minimum-idle: 1
+      maximum-pool-size: 5
+      idle-timeout: 30000
+      pool-name: DatebookHikariCP
+      max-lifetime: 40000
+      connection-timeout: 30000
+      connection-test-query: SELECT 1
+      connection-init-sql: set names utf8mb4
+  redis:
+    remote: false        #cachecloud 获取
+    host: redishost
+    port: 6379
+  rabbitmq:
+    host: mqhost
+    port: 5672
+    username: pig
+    password: pig
+
+
+eureka:
+  environment: ${spring.profiles}
+  client:
+    serviceUrl:
+      defaultZone: http://${eureka.auth.username}:${eureka.auth.password}@eureka:${eureka.auth.port}/eureka
+
+
+
+# 生产环境docker
+---
+
+spring:
+  profiles: docker-prod
+  datasource:
+    #  使用高性能数据源
+    type: com.zaxxer.hikari.HikariDataSource
+    driver-class-name: com.mysql.jdbc.Driver
+    username: pigyiding
+    password: s7iiVjNGl2F9
+    url: jdbc:mysql://rm-bp1l550ay024yxoojrw.mysql.rds.aliyuncs.com:3306/yiding_monitor?useSSL=false&autoReconnect=true&useUnicode=true&characterEncoding=utf8
+    hikari:
+      minimum-idle: 15
+      maximum-pool-size: 50
+      idle-timeout: 30000
+      pool-name: DatebookHikariCP
+      max-lifetime: 40000
+      connection-timeout: 30000
+      connection-test-query: SELECT 1
+      connection-init-sql: set names utf8mb4
+  redis:
+    remote: false        #cachecloud 获取
+    host: yd-cloud.redis.rds.aliyuncs.com
+    port: 6379
+    password: FCfpyZBb6421
+  rabbitmq:
+    host: 47.97.41.16 #${host.ydserver1}
+    port: 5672
+    #    username: guest
+    #    password: lA8jT8N4Cq64
+    username: pig
+    password: 7tm5Uo7Pi0mk
+
+
+eureka:
+  environment: ${spring.profiles}
+  client:
+    serviceUrl:
+      defaultZone: http://${eureka.auth.username}:${eureka.auth.password}@${host.ydserver1}:${eureka.auth.port}/eureka/,http://${eureka.auth.username}:${eureka.auth.password}@${host.ydserver2}:${eureka.auth.port}/eureka/,http://${eureka.auth.username}:${eureka.auth.password}@${host.ydserver3}:${eureka.auth.port}/eureka/

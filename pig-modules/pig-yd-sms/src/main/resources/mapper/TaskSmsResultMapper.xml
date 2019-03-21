@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhidianfan.pig.yd.sms.dao.mapper.TaskSmsResultMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zhidianfan.pig.yd.sms.dao.entity.TaskSmsResult">
+        <id column="id" property="id" />
+        <result column="operator_name" property="operatorName" />
+        <result column="bean_name" property="beanName" />
+        <result column="operator_status" property="operatorStatus" />
+        <result column="update_time" property="updateTime" />
+        <result column="remark" property="remark" />
+    </resultMap>
+
+</mapper>

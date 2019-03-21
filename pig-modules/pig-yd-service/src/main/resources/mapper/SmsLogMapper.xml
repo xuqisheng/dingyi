@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhidianfan.pig.yd.moduler.common.dao.mapper.SmsLogMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zhidianfan.pig.yd.moduler.common.dao.entity.SmsLog">
+        <id column="id" property="id" />
+        <result column="business_id" property="businessId" />
+        <result column="business_name" property="businessName" />
+        <result column="content" property="content" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+        <result column="app_user_id" property="appUserId" />
+        <result column="vip_phone" property="vipPhone" />
+        <result column="app_user_name" property="appUserName" />
+        <result column="sms_num" property="smsNum" />
+        <result column="device_user_id" property="deviceUserId" />
+        <result column="device_user_name" property="deviceUserName" />
+        <result column="num" property="num" />
+        <result column="msgid" property="msgid" />
+        <result column="report_time" property="reportTime" />
+        <result column="status" property="status" />
+        <result column="status_desc" property="statusDesc" />
+    </resultMap>
+
+    <insert id="insertSmsLog" parameterType="java.util.List">
+        INSERT INTO sms_log(
+        business_id,
+        business_name,
+        content,
+        vip_phone,
+        sms_num,
+        app_user_id,
+        app_user_name,
+        device_user_id,
+        device_user_name,
+        msgid,
+        `status`,
+        status_desc,
+        created_at)
+        VALUES
+        <foreach collection="list"  item="item" index= "index" separator =",">
+            (#{item.businessId},
+            (SELECT
+            business_name
+            FROM
+            `business`
+            WHERE
+            id = #{item.businessId}),
+            #{item.content},
+            #{item.vipPhone},
+            #{item.smsNum},
+            #{item.appUserId},
+            #{item.appUserName},
+            #{item.deviceUserId},
+            #{item.deviceUserName},
+            #{item.msgid},
+            #{item.status},
+            #{item.statusDesc},
+            NOW())
+        </foreach>
+    </insert>
+    <select id="sendSmsNum" resultType="java.lang.Integer">
+        select if(sum(s.sms_num) is null,0,sum(s.sms_num))
+        from sms_log s
+        where s.created_at &gt;= #{startDate} and
+        s.created_at &lt; #{endDate}
+        and business_id=#{businessId}
+    </select>
+</mapper>

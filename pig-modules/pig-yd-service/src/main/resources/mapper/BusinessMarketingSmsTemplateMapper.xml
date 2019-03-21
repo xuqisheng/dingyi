@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhidianfan.pig.yd.moduler.common.dao.mapper.BusinessMarketingSmsTemplateMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zhidianfan.pig.yd.moduler.common.dao.entity.BusinessMarketingSmsTemplate">
+        <id column="id" property="id" />
+        <result column="business_id" property="businessId" />
+        <result column="template_content" property="templateContent" />
+        <result column="template_variable" property="templateVariable" />
+        <result column="create_at" property="createAt" />
+        <result column="update_at" property="updateAt" />
+        <result column="is_enable" property="isEnable" />
+        <result column="use_num" property="useNum" />
+    </resultMap>
+    <update id="UpdateAddUseNum">
+
+        update business_marketing_sms_template
+        set use_num=use_num+1
+        where id=#{id}
+
+    </update>
+
+</mapper>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhidianfan.pig.yd.moduler.common.dao.mapper.BasePushRegidMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zhidianfan.pig.yd.moduler.common.dao.entity.BasePushRegid">
+        <id column="version" property="version" />
+        <id column="id" property="id" />
+        <result column="type" property="type" />
+        <result column="username" property="username" />
+        <result column="registration_id" property="registrationId" />
+        <result column="reg_time" property="regTime" />
+        <result column="business_id" property="businessId" />
+        <result column="on_off" property="onOff" />
+    </resultMap>
+
+</mapper>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhidianfan.pig.yd.moduler.common.dao.mapper.BusinessSmsRoleMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zhidianfan.pig.yd.moduler.common.dao.entity.BusinessSmsRole">
+        <id column="id" property="id" />
+        <result column="business_id" property="businessId" />
+        <result column="resv_order_type_id" property="resvOrderTypeId" />
+        <result column="order" property="order" />
+        <result column="check_in" property="checkIn" />
+        <result column="change" property="change" />
+        <result column="cancel" property="cancel" />
+        <result column="confirm" property="confirm" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+        <result column="add_table" property="addTable" />
+        <result column="mend" property="mend" />
+    </resultMap>
+
+</mapper>

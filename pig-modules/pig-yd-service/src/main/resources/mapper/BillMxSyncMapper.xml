@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhidianfan.pig.yd.moduler.common.dao.mapper.BillMxSyncMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zhidianfan.pig.yd.moduler.common.dao.entity.BillMxSync">
+        <id column="id" property="id" />
+        <result column="business_name" property="businessName" />
+        <result column="business_id" property="businessId" />
+        <result column="zdbh" property="zdbh" />
+        <result column="cmbh" property="cmbh" />
+        <result column="cmmc" property="cmmc" />
+        <result column="sjje" property="sjje" />
+        <result column="wdbz" property="wdbz" />
+        <result column="cmsl" property="cmsl" />
+        <result column="created_at" property="createdAt" />
+    </resultMap>
+
+</mapper>

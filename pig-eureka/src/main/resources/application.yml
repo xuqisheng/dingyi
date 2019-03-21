@@ -1,0 +1,61 @@
+server:
+  port: 1025
+
+spring:
+  profiles:
+    active: dev
+  application:
+    name: pig-eureka-server
+
+security:
+  basic:
+    enabled: true # 启用身份认证
+  user:
+    name: pig # 定义用户名
+    password: gip6666 # 定义密码
+
+
+
+eureka:
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 5
+    lease-expiration-duration-in-seconds: 20
+    instance-id: ${spring.cloud.client.ipAddress}:${server.port}
+
+### 开发环境 ###
+
+---
+
+spring:
+  profiles: dev
+eureka:
+  environment: ${spring.profiles}
+  client:
+    fetch-registry: false
+    register-with-eureka: false
+    serviceUrl:
+      defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/
+  instance:
+    hostname: localhost
+  server:  #配置属性，但由于 Eureka 自我保护模式以及心跳周期长的原因，经常会遇到 Eureka Server 不剔除已关停的节点的问题
+    enable-self-preservation: false
+    eviction-interval-timer-in-ms: 5000
+
+
+
+
+# 生产环境docker
+
+---
+
+spring:
+  profiles: prod
+eureka:
+  environment: ${spring.profiles}
+  client:
+    serviceUrl:
+      defaultZone: http://${security.user.name}:${security.user.password}@server1:${server.port}/eureka/,http://${security.user.name}:${security.user.password}@server2:${server.port}/eureka/
+
+
+

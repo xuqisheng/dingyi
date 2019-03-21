@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhidianfan.pig.yd.moduler.common.dao.mapper.AppTypeMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zhidianfan.pig.yd.moduler.common.dao.entity.AppType">
+        <id column="id" property="id" />
+        <result column="app_type_name" property="appTypeName" />
+        <result column="app_module_id" property="appModuleId" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+        <result column="app_operation_id" property="appOperationId" />
+        <result column="status" property="status" />
+        <result column="operation_type" property="operationType" />
+        <result column="business_id" property="businessId" />
+        <result column="hidden_phonenum" property="hiddenPhonenum" />
+        <result column="query_type" property="queryType" />
+    </resultMap>
+
+</mapper>

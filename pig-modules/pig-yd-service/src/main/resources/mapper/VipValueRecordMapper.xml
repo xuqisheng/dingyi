@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhidianfan.pig.yd.moduler.common.dao.mapper.VipValueRecordMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zhidianfan.pig.yd.moduler.common.dao.entity.VipValueRecord">
+        <id column="id" property="id" />
+        <result column="business_id" property="businessId" />
+        <result column="active_vip_count" property="activeVipCount" />
+        <result column="sleep_vip_count" property="sleepVipCount" />
+        <result column="flow_vip_count" property="flowVipCount" />
+        <result column="created_at" property="createdAt" />
+        <result column="evil_vip_count" property="evilVipCount" />
+        <result column="high_value_vip_count" property="highValueVipCount" />
+    </resultMap>
+    <select id="countByBusinessId" resultType="com.zhidianfan.pig.yd.moduler.resv.bo.VipValueBo">
+
+        SELECT
+        vv.id AS vipValueId, vv.*,
+            (
+            SELECT
+            COUNT(*)
+            FROM (
+            SELECT v.id as vipId, v.vip_value_id AS vipValueId, v.business_id AS businessId
+            FROM vip v
+            WHERE   v.business_id = #{businessId}
+            GROUP BY v.id
+            ) t
+            ,vip_value vv1
+            WHERE
+            t.vipValueId = vv1.id AND
+            vv1.id = vv.id
+            ) AS peopleNum
+
+
+        FROM vip_value vv
+        WHERE vv.business_id = #{businessId}
+    </select>
+
+
+</mapper>

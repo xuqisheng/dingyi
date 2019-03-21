@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhidianfan.pig.yd.moduler.common.dao.mapper.TableMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zhidianfan.pig.yd.moduler.common.dao.entity.Table">
+        <id column="id" property="id" />
+        <result column="business_id" property="businessId" />
+        <result column="table_area_id" property="tableAreaId" />
+        <result column="area_code" property="areaCode" />
+        <result column="table_code" property="tableCode" />
+        <result column="table_name" property="tableName" />
+        <result column="status" property="status" />
+        <result column="max_people_num" property="maxPeopleNum" />
+        <result column="table_des" property="tableDes" />
+        <result column="remark" property="remark" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+        <result column="table_url" property="tableUrl" />
+        <result column="is_locker_room" property="isLockerRoom" />
+        <result column="table_type" property="tableType" />
+        <result column="related_table" property="relatedTable" />
+        <result column="t_type" property="tType" />
+        <result column="room_area" property="roomArea" />
+        <result column="floor_height" property="floorHeight" />
+        <result column="pillar" property="pillar" />
+        <result column="washroom" property="washroom" />
+        <result column="sofa" property="sofa" />
+        <result column="television" property="television" />
+        <result column="sort_id" property="sortId" />
+        <result column="reserved_time" property="reservedTime" />
+        <result column="min_people_num" property="minPeopleNum" />
+        <result column="timeout_time" property="timeoutTime" />
+        <result column="table_type_id" property="tableTypeId" />
+    </resultMap>
+    <update id="updateTableAreaOpen">
+        update  `table` set `status`=1  where  find_in_set(id,#{ids}) and table_area_id=#{tableAreaId}
+    </update>
+    <select id="findByTableTag" resultType="com.zhidianfan.pig.yd.moduler.common.dao.entity.Table">
+
+          select * from
+        `table`
+        where business_id=#{businessId}
+        and find_in_set(#{tag},related_table) &gt; 0
+        and status=1
+    </select>
+
+    <select id="selectFreeTable" resultMap="BaseResultMap">
+        SELECT
+        id,business_id,table_area_id,area_code,table_code,table_name,status,IFNULL(max_people_num,4) max_people_num,table_des,remark,created_at,updated_at,table_url,is_locker_room,table_type,related_table,
+        t_type,room_area,floor_height,pillar,washroom,sofa,television,sort_id,reserved_time,IFNULL(min_people_num,1) min_people_num,timeout_time,table_type_id,min_amount
+        FROM
+            `table` t
+        WHERE
+            NOT EXISTS ( SELECT table_id FROM resv_order_android r WHERE business_id = #{businessId}
+              AND (
+                r.`status` = 1
+                or r.`status` = 2 )
+              AND resv_date = DATE_FORMAT(#{resvDate},'%Y-%m-%d')  AND t.id = r.table_id )
+            AND `status` = 1
+            AND business_id = #{businessId}
+         ORDER BY id
+    </select>
+
+</mapper>

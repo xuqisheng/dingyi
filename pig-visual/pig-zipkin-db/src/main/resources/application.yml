@@ -1,0 +1,150 @@
+server:
+  port: 5003
+
+spring:
+  application:
+    name: pig-zipkin-db
+  profiles:
+    active: dev
+  boot:
+    admin:
+      turbine:
+        location: pig-monitor
+      routes:
+        endpoints: env,metrics,trace,dump,jolokia,info,configprops,trace,logfile,refresh,flyway,liquibase,heapdump,loggers,auditevents,hystrix.stream,turbine.stream
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    type: com.zaxxer.hikari.HikariDataSource
+    hikari:
+      connection-test-query: SELECT 1
+      minimum-idle: 50
+
+
+eureka:
+  auth:
+    username: pig
+    password: gip6666
+    port: 1025
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 5
+    lease-expiration-duration-in-seconds: 20
+    instance-id: ${spring.cloud.client.ipAddress}:${server.port}
+  client:
+    registry-fetch-interval-seconds: 10
+
+zipkin:
+  collector:
+    rabbitmq:
+      queue: zipkin
+  storage:
+    type: mysql
+
+
+
+
+### 开发环境 ###
+
+---
+
+spring:
+  profiles: dev
+  datasource:
+    username: root
+    password: 123456
+    url: jdbc:mysql://127.0.0.1:3306/pig?characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false
+  redis:
+    remote: false        #cachecloud 获取
+    host: 192.168.3.202
+    port: 6379
+    password:
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: pig
+    password: pig
+
+eureka:
+  environment: ${spring.profiles}
+  client:
+    serviceUrl:
+      defaultZone: http://${eureka.auth.username}:${eureka.auth.password}@localhost:${eureka.auth.port}/eureka
+zipkin:
+  collector:
+    rabbitmq:
+      addresses: 127.0.0.1:5672
+      password: pig
+      username: pig
+
+### 测试环境 ###
+
+---
+
+spring:
+  profiles: test
+  redis:
+    remote: false        #cachecloud 获取
+    host: redishost
+    port: 6379
+    password:
+  rabbitmq:
+    host: rabbithost
+    port: 5672
+    username: guest
+    password: guest
+  datasource:
+    username: root
+    password: 123456
+    url: jdbc:mysql://mysqlhost:3306/pig?characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false
+
+eureka:
+  environment: ${spring.profiles}
+  client:
+    serviceUrl:
+      defaultZone: http://${eureka.auth.username}:${eureka.auth.password}@server1:${eureka.auth.port}/eureka/,http://${eureka.auth.username}:${eureka.auth.password}@server2:${eureka.auth.port}/eureka/,http://${eureka.auth.username}:${eureka.auth.password}@server3:${eureka.auth.port}/eureka/
+
+zipkin:
+  collector:
+    rabbitmq:
+      addresses: ${spring.rabbitmq.host}:${spring.rabbitmq.port}
+      username: ${spring.rabbitmq.password}
+      password: ${spring.rabbitmq.password}
+
+### 生产环境 ###
+
+---
+
+spring:
+  profiles: prod
+  redis:
+    remote: false        #cachecloud 获取
+    host: yd-cloud.redis.rds.aliyuncs.com
+    port: 6379
+    password: FCfpyZBb6421
+  rabbitmq:
+    host: 47.97.41.16
+    port: 5672
+    username: pig
+    password: 7tm5Uo7Pi0mk
+  datasource:
+    username: pig
+    password: s33ycHywIqa7
+    url: jdbc:mysql://47.97.41.16:3306/pig?characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false
+
+eureka:
+  environment: ${spring.profiles}
+  client:
+    serviceUrl:
+      defaultZone: http://${eureka.auth.username}:${eureka.auth.password}@server1:${eureka.auth.port}/eureka/,http://${eureka.auth.username}:${eureka.auth.password}@server2:${eureka.auth.port}/eureka/,http://${eureka.auth.username}:${eureka.auth.password}@server3:${eureka.auth.port}/eureka/
+
+zipkin:
+  collector:
+    rabbitmq:
+      addresses: 47.97.41.16:5672
+      username: pig
+      password: 7tm5Uo7Pi0mk
+
+
+
+
+

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhidianfan.pig.yd.moduler.common.dao.mapper.DeviceOrderNoticeMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zhidianfan.pig.yd.moduler.common.dao.entity.DeviceOrderNotice">
+        <id column="id" property="id" />
+        <result column="resv_order" property="resvOrder" />
+        <result column="business_id" property="businessId" />
+        <result column="type" property="type" />
+        <result column="status" property="status" />
+        <result column="created_at" property="createdAt" />
+        <result column="vip_name" property="vipName" />
+        <result column="vip_phone" property="vipPhone" />
+        <result column="resv_date" property="resvDate" />
+        <result column="table_name" property="tableName" />
+        <result column="old_table_name" property="oldTableName" />
+        <result column="old_meal_type_name" property="oldMealTypeName" />
+        <result column="old_resv_date" property="oldResvDate" />
+        <result column="operater" property="operater" />
+        <result column="resv_num" property="resvNum" />
+        <result column="remark" property="remark" />
+        <result column="meal_type_name" property="mealTypeName" />
+        <result column="app_user_name" property="appUserName" />
+        <result column="sms_status" property="smsStatus" />
+    </resultMap>
+
+</mapper>

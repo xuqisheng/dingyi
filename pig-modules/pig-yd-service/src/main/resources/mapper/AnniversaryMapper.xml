@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhidianfan.pig.yd.moduler.common.dao.mapper.AnniversaryMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zhidianfan.pig.yd.moduler.common.dao.entity.Anniversary">
+        <id column="id" property="id" />
+        <result column="vip_id" property="vipId" />
+        <result column="anniversary_type" property="anniversaryType" />
+        <result column="anniversary_date" property="anniversaryDate" />
+        <result column="calendar_type" property="calendarType" />
+        <result column="anniversary_obj" property="anniversaryObj" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+        <result column="business_id" property="businessId" />
+        <result column="next_anniversary_time" property="nextAnniversaryTime" />
+        <result column="anniversary_year_flag" property="anniversaryYearFlag" />
+    </resultMap>
+
+    <select id="getPastAnniversaryVip" resultMap="BaseResultMap">
+        select
+        id,vip_id,anniversary_type,anniversary_date,calendar_type,
+        anniversary_obj,created_at,updated_at,business_id,
+        next_anniversary_time
+        from anniversary
+        where
+        anniversary_date is not null
+        and (
+        next_anniversary_time is null
+        OR CURDATE() &gt; next_anniversary_time)
+        and  calendar_type is not null
+    </select>
+
+</mapper>

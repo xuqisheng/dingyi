@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhidianfan.pig.yd.moduler.common.dao.mapper.ResvMeetingOrderMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zhidianfan.pig.yd.moduler.common.dao.entity.ResvMeetingOrder">
+        <id column="id" property="id" />
+        <result column="batch_no" property="batchNo" />
+        <result column="resv_order" property="resvOrder" />
+        <result column="business_id" property="businessId" />
+        <result column="business_name" property="businessName" />
+        <result column="app_user_id" property="appUserId" />
+        <result column="app_user_name" property="appUserName" />
+        <result column="app_user_phone" property="appUserPhone" />
+        <result column="device_user_id" property="deviceUserId" />
+        <result column="device_user_name" property="deviceUserName" />
+        <result column="device_user_phone" property="deviceUserPhone" />
+        <result column="vip_id" property="vipId" />
+        <result column="vip_phone" property="vipPhone" />
+        <result column="vip_name" property="vipName" />
+        <result column="vip_sex" property="vipSex" />
+        <result column="vip_company" property="vipCompany" />
+        <result column="table_area_id" property="tableAreaId" />
+        <result column="table_area_name" property="tableAreaName" />
+        <result column="table_id" property="tableId" />
+        <result column="table_name" property="tableName" />
+        <result column="resv_date" property="resvDate" />
+        <result column="meal_type_id" property="mealTypeId" />
+        <result column="meal_type_name" property="mealTypeName" />
+        <result column="remark" property="remark" />
+        <result column="notations" property="notations" />
+        <result column="status" property="status" />
+        <result column="resv_meeting_order_type" property="resvMeetingOrderType" />
+        <result column="deposit" property="deposit" />
+        <result column="pay_type" property="payType" />
+        <result column="resv_table_num" property="resvTableNum" />
+        <result column="backup_table_num" property="backupTableNum" />
+        <result column="actual_table_num" property="actualTableNum" />
+        <result column="vip_source" property="vipSource" />
+        <result column="worker_phone" property="workerPhone" />
+        <result column="worker_name" property="workerName" />
+        <result column="vip_sex1" property="vipSex1" />
+        <result column="groom_name" property="groomName" />
+        <result column="groom_phone" property="groomPhone" />
+        <result column="vip_sex2" property="vipSex2" />
+        <result column="bride_name" property="brideName" />
+        <result column="bride_phone" property="bridePhone" />
+        <result column="dish_standard" property="dishStandard" />
+        <result column="dish_standard_original" property="dishStandardOriginal" />
+        <result column="dish_detail" property="dishDetail" />
+        <result column="dish_detail_url" property="dishDetailUrl" />
+        <result column="dish_detail_img_url" property="dishDetailImgUrl" />
+        <result column="receipt_no" property="receiptNo" />
+        <result column="address" property="address" />
+        <result column="company" property="company" />
+        <result column="pay_amount" property="payAmount" />
+        <result column="attend_time" property="attendTime" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+        <result column="contract_no" property="contractNo" />
+        <result column="table_codes" property="tableCodes" />
+        <result column="table_ids" property="tableIds" />
+        <result column="locker_room" property="lockerRoom" />
+        <result column="actual_pay_amount" property="actualPayAmount" />
+        <result column="discount_amount" property="discountAmount" />
+        <result column="small_amount" property="smallAmount" />
+        <result column="check_status" property="checkStatus" />
+        <result column="contract_url" property="contractUrl" />
+        <result column="confirm_order_type" property="confirmOrderType" />
+        <result column="unorder_reason" property="unorderReason" />
+        <result column="kcc_time" property="kccTime" />
+        <result column="dbr_id" property="dbrId" />
+        <result column="cbf" property="cbf" />
+        <result column="wedding_company_id" property="weddingCompanyId" />
+        <result column="wedding_company_name" property="weddingCompanyName" />
+        <result column="table_type" property="tableType" />
+        <result column="meeting_title" property="meetingTitle" />
+        <result column="meeting_start" property="meetingStart" />
+        <result column="meeting_end" property="meetingEnd" />
+        <result column="deposit1" property="deposit1" />
+        <result column="pay_type1" property="payType1" />
+        <result column="deposit2" property="deposit2" />
+        <result column="pay_type2" property="payType2" />
+        <result column="peicai" property="peicai" />
+        <result column="deposit_status" property="depositStatus" />
+        <result column="deposit_desc" property="depositDesc" />
+        <result column="update_status" property="updateStatus" />
+        <result column="print_time" property="printTime" />
+        <result column="service_items" property="serviceItems" />
+        <result column="confirm_remark" property="confirmRemark" />
+        <result column="dbr_name" property="dbrName"/>
+    </resultMap>
+    <sql id="baseColumn">
+        rmo.id,
+        rmo.batch_no,
+        rmo.resv_order,
+        rmo.business_id,
+        rmo.business_name,
+        rmo.app_user_id,
+        rmo.app_user_name,
+        rmo.app_user_phone,
+        rmo.device_user_id,
+        rmo.device_user_name,
+        rmo.device_user_phone,
+        rmo.vip_id,
+        rmo.vip_phone,
+        rmo.vip_name,
+        rmo.vip_sex,
+        rmo.vip_company,
+        rmo.table_area_id,
+        rmo.table_area_name,
+        rmo.table_id,
+        rmo.`table_name`,
+        rmo.resv_date,
+        rmo.meal_type_id,
+        rmo.meal_type_name,
+        rmo.remark,
+        rmo.notations,
+        rmo.`status`,
+        rmo.resv_meeting_order_type,
+        rmo.deposit,
+        rmo.pay_type,
+        rmo.resv_table_num,
+        rmo.backup_table_num,
+        rmo.actual_table_num,
+        rmo.vip_source,
+        rmo.worker_phone,
+        rmo.worker_name,
+        rmo.groom_name,
+        rmo.groom_phone,
+        rmo.bride_name,
+        rmo.bride_phone,
+        rmo.dish_standard,
+        rmo.dish_detail,
+        rmo.dish_detail_url,
+        rmo.dish_detail_img_url,
+        rmo.receipt_no,
+        rmo.address,
+        rmo.company,
+        rmo.pay_amount,
+        rmo.contract_no,
+        rmo.table_codes,
+        rmo.table_ids,
+        rmo.locker_room,
+        rmo.actual_pay_amount,
+        rmo.discount_amount,
+        rmo.small_amount,
+        rmo.check_status,
+        rmo.contract_url,
+        rmo.confirm_order_type,
+        rmo.unorder_reason,
+        rmo.kcc_time,
+        rmo.dbr_id,
+        rmo.cbf,
+        rmo.table_type,
+        rmo.meeting_title,
+        rmo.meeting_start,
+        rmo.meeting_end,
+        rmo.deposit1,
+        rmo.pay_type1,
+        rmo.deposit2,
+        rmo.pay_type2,
+        rmo.created_at,
+        rmo.updated_at
+    </sql>
+    <delete id="deleteResvMeetingOrders" parameterType="com.zhidianfan.pig.yd.moduler.resv.dto.ResvMeetingOrderDTO">
+        DELETE FROM
+          resv_meeting_order
+        <where>
+            business_id = #{businessId} AND resv_date <![CDATA[<=]]> date_format(#{resvDateEndLimit},'%Y-%m-%d')
+            <if test="status != null and status != 0 and status != 6">
+                AND status = #{status}
+            </if>
+            <if test="status == 6">
+                AND status = 1 AND resv_date<![CDATA[<]]>CURRENT_DATE
+            </if>
+            <if test="resvMeetingOrderType != null and resvMeetingOrderType != ''">
+                AND resv_meeting_order_type = #{resvMeetingOrderType}
+            </if>
+            <if test="resvDateStart != null">
+                AND resv_date >= date_format(#{resvDateStart},'%Y-%m-%d')
+            </if>
+            <if test="appUserId!= null and appUserId!= ''">
+                and app_user_id=#{appUserId}
+            </if>
+            <if test="resvDateEnd != null">
+                AND resv_date <![CDATA[<=]]> date_format(#{resvDateEnd},'%Y-%m-%d')
+            </if>
+            <if test="callOnStatus != '' and callOnStatus != null">
+                <if test="callOnStatus == 0">
+                    AND NOT EXISTS(SELECT 1 FROM callon_list c WHERE resv_order=c.resv_order AND  batch_no=c.batch_no)
+                </if>
+                <if test="callOnStatus == 1">
+                    AND EXISTS(SELECT 1 FROM callon_list c WHERE resv_order=c.resv_order AND (c.vip_complaints IS NOT NULL AND c.vip_complaints != '') AND (c.handle_suggestion IS NULL OR c.handle_suggestion = ''))
+                </if>
+                <if test="callOnStatus == 2">
+                    AND EXISTS(SELECT 1 FROM callon_list c WHERE resv_order=c.resv_order AND ((c.vip_complaints IS NULL OR c.vip_complaints = '') OR ((c.vip_complaints IS NOT NULL AND c.vip_complaints != '') AND (c.handle_suggestion IS NOT NULL AND c.handle_suggestion != ''))))
+                </if>
+            </if>
+            <if test="vipNameOrPhone != null and vipNameOrPhone != ''">
+                AND (vip_name like CONCAT('%',#{vipNameOrPhone},'%') OR vip_phone like CONCAT('%',#{vipNameOrPhone},'%'))
+            </if>
+            <if test="luckyDayType != null and luckyDayType != ''">
+                AND resv_date in (SELECT rd.lucky_day FROM resv_lucky_day rd WHERE rd.business_id = #{businessId} AND rd.type = #{luckyDayType})
+            </if>
+            AND EXISTS (select 1 from resv_meeting_order_his h where h.id=id)
+        </where>
+
+    </delete>
+
+    <select id="queryResvMeetingOrder" parameterType="com.zhidianfan.pig.yd.moduler.sms.dto.meeting.order.ResvMeetingOrderDto" resultType="com.zhidianfan.pig.yd.moduler.sms.dto.meeting.order.ResvMeetingOrderDto">
+        SELECT
+        <include refid="baseColumn"/>,
+        a.app_user_name AS dbr_name
+        FROM
+        `resv_meeting_order` rmo
+        LEFT JOIN `app_user` a ON a.id = rmo.dbr_id
+        WHERE
+        resv_order = #{resvOrder}
+    </select>
+
+</mapper>

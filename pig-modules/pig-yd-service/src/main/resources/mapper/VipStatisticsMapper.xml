@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhidianfan.pig.yd.moduler.common.dao.test.mapper.VipStatisticsMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zhidianfan.pig.yd.moduler.common.dao.entity.VipStatistics">
+        <id column="id" property="id" />
+        <result column="business_id" property="businessId" />
+        <result column="vip_id" property="vipId" />
+        <result column="resv_batch_count" property="resvBatchCount" />
+        <result column="resv_order_count" property="resvOrderCount" />
+        <result column="resv_people_num" property="resvPeopleNum" />
+        <result column="meal_batch_count" property="mealBatchCount" />
+        <result column="meal_order_count" property="mealOrderCount" />
+        <result column="meal_people_num" property="mealPeopleNum" />
+        <result column="amount" property="amount" />
+        <result column="last_meal_date" property="lastMealDate" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+    </resultMap>
+
+</mapper>

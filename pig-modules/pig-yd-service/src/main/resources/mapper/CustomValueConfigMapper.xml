@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhidianfan.pig.yd.moduler.common.dao.mapper.CustomValueConfigMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zhidianfan.pig.yd.moduler.common.dao.entity.CustomValueConfig">
+        <id column="id" property="id" />
+        <result column="business_id" property="businessId" />
+        <result column="value_name" property="valueName" />
+        <result column="meat_day_start" property="meatDayStart" />
+        <result column="meat_day_end" property="meatDayEnd" />
+        <result column="expense_time_start" property="expenseTimeStart" />
+        <result column="expense_time_end" property="expenseTimeEnd" />
+        <result column="expense_money_start" property="expenseMoneyStart" />
+        <result column="expense_money_end" property="expenseMoneyEnd" />
+        <result column="consume_start" property="consumeStart" />
+        <result column="consume_end" property="consumeEnd" />
+        <result column="last_statistics_at" property="lastStatisticsAt" />
+        <result column="create_at" property="createAt" />
+    </resultMap>
+
+</mapper>

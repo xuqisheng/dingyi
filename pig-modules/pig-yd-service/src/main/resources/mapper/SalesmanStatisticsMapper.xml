@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhidianfan.pig.yd.moduler.common.dao.mapper.SalesmanStatisticsMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zhidianfan.pig.yd.moduler.common.dao.entity.SalesmanStatistics">
+        <id column="id" property="id" />
+        <result column="brand_id" property="brandId" />
+        <result column="app_user_id" property="appUserId" />
+        <result column="app_user_name" property="appUserName" />
+        <result column="app_user_phone" property="appUserPhone" />
+        <result column="resv_time" property="resvTime" />
+        <result column="resv_table" property="resvTable" />
+        <result column="num" property="num" />
+        <result column="resv_sum" property="resvSum" />
+        <result column="statistics_type" property="statisticsType" />
+        <result column="statistics_quarter" property="statisticsQuarter" />
+        <result column="year" property="year" />
+        <result column="month" property="month" />
+        <result column="create_at" property="createAt" />
+        <result column="update_at" property="updateAt" />
+        <result column="business_name" property="businessName" />
+        <result column="business_id" property="businessId" />
+    </resultMap>
+    <select id="queryAppUserStatistics"
+            resultType="com.zhidianfan.pig.yd.moduler.common.dao.entity.SalesmanStatistics">
+
+        SELECT
+        a.id as app_user_id,
+        a.app_user_name,
+        a.app_user_phone,
+        a.business_name,
+        a.business_id,
+        COUNT(o.batch_no) AS resv_time,
+        SUM(o.resvOrder) AS resv_table,
+        SUM(IFNULL(o.payamount, 0)) AS resv_sum,
+        SUM(IFNULL(o.num, 0)) AS num
+        FROM (
+        SELECT
+        IFNULL(actual_num, resv_num) AS num,
+        batch_no,
+        sum(table_num) AS resvOrder,
+        SUM(payamount) payamount,
+        app_user_id,
+        created_at,
+        `status`
+        FROM
+        resv_order
+        WHERE
+        `status` BETWEEN 1 AND 3
+        AND business_id in
+        <foreach collection="businessIdsList" open="(" close=")" item="id" separator=",">
+            #{id}
+        </foreach>
+        <if test="creattime!= null">
+            <![CDATA[ and  #{creattime} <= DATE_FORMAT(resv_date,'%Y-%m-%d' ) ]]>
+        </if>
+        <if test="endtime!= null">
+            <![CDATA[ and  #{endtime} > DATE_FORMAT(resv_date,'%Y-%m-%d' ) ]]>
+        </if>
+        GROUP BY
+        batch_no
+        ) o
+        JOIN (
+        SELECT
+        id,
+        app_user_name,
+        app_user_phone,
+        business_name,
+        business_id
+        FROM
+        app_user
+        where business_id in
+        <foreach collection="businessIdsList" open="(" close=")" item="id" separator=",">
+            #{id}
+        </foreach>
+        ) a ON a.id = o.app_user_id
+        GROUP BY a.id
+
+    </select>
+
+</mapper>

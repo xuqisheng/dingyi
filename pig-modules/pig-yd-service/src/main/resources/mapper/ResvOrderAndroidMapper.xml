@@ -1,0 +1,737 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhidianfan.pig.yd.moduler.common.dao.mapper.ResvOrderAndroidMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zhidianfan.pig.yd.moduler.common.dao.entity.ResvOrderAndroid">
+        <id column="id" property="id" />
+        <result column="batch_no" property="batchNo" />
+        <result column="resv_order" property="resvOrder" />
+        <result column="business_id" property="businessId" />
+        <result column="business_name" property="businessName" />
+        <result column="app_user_id" property="appUserId" />
+        <result column="app_user_phone" property="appUserPhone" />
+        <result column="vip_id" property="vipId" />
+        <result column="vip_phone" property="vipPhone" />
+        <result column="vip_name" property="vipName" />
+        <result column="vip_sex" property="vipSex" />
+        <result column="vip_company" property="vipCompany" />
+        <result column="table_area_id" property="tableAreaId" />
+        <result column="table_area_name" property="tableAreaName" />
+        <result column="table_id" property="tableId" />
+        <result column="table_name" property="tableName" />
+        <result column="max_people_num" property="maxPeopleNum" />
+        <result column="resv_num" property="resvNum" />
+        <result column="actual_num" property="actualNum" />
+        <result column="resv_date" property="resvDate" />
+        <result column="meal_type_id" property="mealTypeId" />
+        <result column="meal_type_name" property="mealTypeName" />
+        <result column="meal_type_id_a" property="mealTypeIdA" />
+        <result column="meal_type_name_a" property="mealTypeNameA" />
+        <result column="meal_type_id_b" property="mealTypeIdB" />
+        <result column="meal_type_name_b" property="mealTypeNameB" />
+        <result column="remark" property="remark" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+        <result column="status" property="status" />
+        <result column="confirm" property="confirm" />
+        <result column="app_user_name" property="appUserName" />
+        <result column="device_user_id" property="deviceUserId" />
+        <result column="device_user_name" property="deviceUserName" />
+        <result column="device_user_phone" property="deviceUserPhone" />
+        <result column="peicai" property="peicai" />
+        <result column="pic_url" property="picUrl" />
+        <result column="payamount" property="payamount" />
+        <result column="unorder_reason" property="unorderReason" />
+        <result column="deposit" property="deposit" />
+        <result column="locked" property="locked" />
+        <result column="receipt_no" property="receiptNo" />
+        <result column="deposit_amount" property="depositAmount" />
+        <result column="pay_type" property="payType" />
+        <result column="resv_order_type" property="resvOrderType" />
+        <result column="locked_type" property="lockedType" />
+        <result column="resv_meeting_order_no" property="resvMeetingOrderNo" />
+        <result column="external_source_name" property="externalSourceName" />
+        <result column="external_source_id" property="externalSourceId" />
+        <result column="isTirdparty" property="istirdparty" />
+        <result column="isChangeTable" property="ischangetable" />
+        <result column="isKbc" property="iskbc" />
+        <result column="tag" property="tag" />
+        <result column="peicai_amt" property="peicaiAmt" />
+        <result column="peicai_type" property="peicaiType" />
+        <result column="dest_time" property="destTime" />
+        <result column="property_id" property="propertyId" />
+        <result column="property_name" property="propertyName" />
+        <result column="isRank" property="isrank" />
+        <result column="isSendMsg" property="issendmsg" />
+        <result column="re_vip_phone" property="reVipPhone" />
+        <result column="re_vip_name" property="reVipName" />
+        <result column="re_vip_sex" property="reVipSex" />
+        <result column="open_is_sync" property="openIsSync" />
+        <result column="order_status" property="orderStatus" />
+        <result column="deposit_status" property="depositStatus" />
+        <result column="deposit_desc" property="depositDesc" />
+        <result column="is_dish" property="isDish" />
+        <result column="third_order_no" property="thirdOrderNo" />
+        <result column="unorder_reason_id" property="unorderReasonId" />
+        <result column="android_user_id" property="androidUserId" />
+        <result column="android_user_name" property="androidUserName" />
+    </resultMap>
+
+    <resultMap id="getMessageOrderResultMap" type="com.zhidianfan.pig.yd.moduler.resv.bo.MessageOrderBO">
+    </resultMap>
+    <resultMap id="getAllResvOrdersResultMap" type="com.zhidianfan.pig.yd.moduler.resv.bo.OrderBO">
+    </resultMap>
+
+
+    <select id="getMessageOrder" resultMap="getMessageOrderResultMap">
+        select o.resv_order,
+               o.business_id,
+               b.business_name,
+               o.app_user_id,
+               o.app_user_name,
+               o.app_user_phone,
+               o.device_user_id,
+               o.device_user_name,
+               o.vip_name,
+               o.vip_phone,
+               o.resv_date,
+               o.table_name,
+               o.meal_type_name,
+               b.business_address,
+               b.business_phone,
+               o.vip_sex,
+               o.resv_num,
+               o.remark,
+               o.table_area_name,
+               b.sms_style,
+               ifnull(r.${message.smsType}, 0)   isSend,
+               ifnull(b.local_url, '')   local_url,
+               ifnull(s.sms_message, '') sms_message,
+               se.vip_name_type,
+               se.area_name_type,
+               se.week_name_type,
+               se.map_type,
+               se.phone_type,
+               se.app_user_type,
+               r.confirm
+        from resv_order_android o
+                 left join business_sms_role r
+                     on o.resv_order_type = r.resv_order_type_id and r.business_id = o.business_id
+                 left join business_sms_setting se on se.business_id = o.business_id and se.type = #{message.type},
+             business b,
+             business_sms s
+        where resv_order = #{message.resvOrder}
+          and b.id = o.business_id
+          and b.id = s.business_id
+    </select>
+    <select id="getAllResvOrders" resultMap="getAllResvOrdersResultMap">
+        select o.batch_no,o.deposit,o.peicai,o.pic_url,o.resv_order_android,IFNULL(o.status,0)
+        status,m.status_name,#{order.resvDate}
+        resv_date,t.table_area_id,ta.table_area_name,mt.meal_type_name,t.id table_id,t.table_name,t.max_people_num,
+        o.vip_name,o.vip_phone,o.vip_sex,o.vip_company,o.resv_num,o.actual_num,o.confirm,o.remark,o.created_at,o.app_user_name,o.app_user_id,o.app_user_phone,o.device_user_name,o.resv_order_type,o.receipt_no,o.pay_type,o.deposit_amount
+        ,o.locked_type,o.external_source_id,o.external_source_name,o.dest_time
+        arrival_time,o.tag,o.peicai_amt,o.peicai_type,o.dest_time,o.isSendMsg
+        <if test="1 == order.isKbc">
+            ,isKbc,(
+            select IFNULL(o1.status, '0')
+            from meal_type mt0, resv_order_android o1
+            where mt0.id = #{order.mealTypeid} and o1.table_id = t.id and mt0.status = 1
+            and o1.resv_date = #{order.resvDate} and o1.meal_type_id = (
+            select id
+            from meal_type mt1
+            where
+            <![CDATA[sysdate() <= concat(date_format(o1.resv_date, '%y-%m-%d'), ' ', mt1.resv_end_time)]]>    <!-- 当前时间小于等于所选预订日期和班次时间 -->
+            and mt1.business_id = mt0.business_id and mt1.status = 1
+            <!-- and case when ''=#{meal_type_id_a} then mt1.resv_end_time > mt0.resv_end_time else mt1.resv_end_time > mt0.band_end_time end -->
+            <choose>
+                <when test="null!=order.mealTypeIdA and ''!=mealTypeIdA">
+                    and mt1.resv_end_time > mt0.band_end_time    <!-- 因为是餐别A，所以肯定有餐别B，餐别B的结束时间大于餐别分割时间 -->
+                </when>
+                <otherwise>        <!-- 午市，或者午市B，下一个餐别晚市A，或者晚市的结束时间都大于上一个餐别的结束时间 -->
+                    and mt1.resv_end_time > mt0.resv_end_time
+                </otherwise>
+            </choose>
+            <!-- order by mt1.resv_end_time asc limit 1 -->
+            limit 1        <!-- 只要有1条，就算有，不需要排序 -->
+            )
+            <if test="null!=mealTypeIdA and ''!=mealTypeIdA">
+                and o1.meal_type_id_b is not null    <!-- 午市A或者晚市A，下一个餐别午市B或者晚市B肯定不为空，因为分餐别 -->
+            </if>
+            <if test="null!=mealTypeIdB and ''!=mealTypeIdB">
+                and (o1.meal_type_id_a = (
+                select mt1.meal_type_id_a
+                from meal_type mt1
+                where mt1.business_id = mt0.business_id and mt1.resv_end_time > mt0.resv_end_time and mt1.status = 1
+                <!-- order by mt1.resv_end_time asc limit 1 -->
+                limit 1        <!-- 只要有1条，就算有，不需要排序 -->
+                )
+                or o1.meal_type_id_b is null    <!-- 午市B，下一个餐别是晚市A 或者晚市，如果是晚市， meal_type_id_b肯定为空-->
+                )
+            </if>
+            <if test="(null == meal_type_id_a or '' == meal_type_id_a)  and (null == meal_type_id_b or '' == meal_type_id_b)">
+                and (o1.meal_type_id_a = (
+                select mt1.meal_type_id_a
+                from meal_type mt1
+                where mt1.business_id = mt0.business_id and mt1.resv_end_time > mt0.resv_end_time and mt1.status = 1
+                <!-- order by mt1.resv_end_time asc limit 1 -->
+                limit 1
+                )
+                or o1.meal_type_id_b is null    <!-- 同上 午市或午市B -->
+                )
+            </if>
+            and o1.status in ('1', '2', '5')
+            LIMIT 1            <!-- 子查询 作为列值，返回多个出错,子查询排序慢 -->
+            ) next_meal_type_order_status
+        </if>
+        from meal_type mt,table_area ta,`table` t
+        join resv_order_android o on t.id=o.table_id and o.resv_date=#{order.resvDate} and o.meal_type_id=#{order.mealTypeId}
+        and
+        o.status in ('1','2','5')
+        <if test="null!=order.mealTypeIdA and ''!=order.mealTypeIdA">        <!-- 查询午市A才餐别订单 -->
+            and o.meal_type_id_a = #{order.mealTypeIdA}
+            <!-- and o.meal_type_id_a is not null -->
+        </if>
+        <if test="null!=order.mealTypeIdB and ''!=order.mealTypeIdB">        <!-- 查询午市B才餐别订单 -->
+            and o.meal_type_id_b = #{mealTypeIdB}
+            <!-- and o.meal_type_id_b is not null -->
+        </if>
+        left join resv_status_mapping m on o.status=m.status_id
+        where mt.id=#{order.mealTypeId} and mt.status = 1 and ta.id=t.table_area_id and t.status=1 and ta.status=1 and
+        t.business_id=#{order.businessId} and t.table_type=0
+        <if test="order.tableAreaId!=null">
+            and t.table_area_id in
+            <foreach collection="order.tableAreaId" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="order.resvOrderStatus!=null and order.resvOrderStatus!='' and order.resvOrderStatus!=6 and order.resvOrderStatus!=60 and order.resvOrderStatus!=61 and order.resvOrderStatus!=62 and order.resvOrderStatus!=7">
+            and IFNULL(o.status,0)=#{order.resvOrderStatus}
+        </if>
+        <if test="order.resvOrderStatus==6">
+            and confirm=0 and o.status = 1
+        </if>
+        <if test="order.resvOrderStatus==60">
+            and confirm!=0 and o.status = 1
+        </if>
+        <if test="order.resvOrderStatus==61">
+            and confirm=1 and o.status = 1
+        </if>
+        <if test="order.resvOrderStatus==62">
+            and confirm=2 and o.status = 1
+        </if>
+        <if test="order.resvOrderStatus==7">
+            and deposit=1 and o.status = 1
+        </if>
+        group by t.id
+        order by ta.sort_id,ta.id,t.sort_id,t.id
+    </select>
+    <select id="findDeskOrders" resultType="com.zhidianfan.pig.yd.moduler.resv.bo.DeskOrderBo">
+        select o.*,
+        v.vip_value_name as vipValueName,
+        v.vip_class_name as vipClassName,
+        ror.id as orderRatingId
+
+        from resv_order_android o
+        left join vip v on v.id=o.vip_id
+        left join resv_order_rating ror on ror.batch_no=o.batch_no
+        where o.business_id=#{businessId}
+
+        <if test="resvDate!=null">and o.resv_date=#{resvDate}</if>
+        <if test="mealTypeId!=null">and o.meal_type_id=#{mealTypeId}</if>
+        <if test="tableAreaId!=null">and o.table_area_id=#{tableAreaId}</if>
+        <if test="resvNum!=null and resvNum!=''.toString() ">and o.resv_num=#{resvNum}</if>
+        <if test="status!=null and status!=''.toString() ">and o.`status`=#{status}</if>
+
+
+        <!-- 是否散客  -->
+        <if test="isVip!=null and isVip==false">and (o.vip_id =0 or o.vip_id is null)</if>
+        <if test="isVip!=null and isVip==true">and o.vip_phone is not null</if>
+
+
+        <!-- 关键字搜索  -->
+        <if test="keyword!=null and keyword!=''.toString() ">
+            and ( o.vip_name like concat('%',#{keyword},'%') or o.vip_phone like concat('%',#{keyword},'%') )
+        </if>
+
+        <!-- 普通订单查询  -->
+        <if test="now==null">
+            order by o.dest_time asc
+        </if>
+
+
+        <!-- 历史订单查询 3已结账 批次内所有订单都是已结账 -->
+        <if test="now!=null">
+            and concat(o.resv_date,' ',if(o.dest_time is null,'',o.dest_time)) &lt; #{now}
+            and o.status =3
+            and not exists
+            (select 1 from resv_order_android o1 where o1.batch_no =o.batch_no and o1.status !=3  and concat(o1.resv_date,' ',if(o1.dest_time is null,'',o1.dest_time)) &lt; #{now} )
+            order by o.resv_date desc,o.dest_time desc
+        </if>
+
+
+    </select>
+
+    <delete id="deleteResvOrders" parameterType="com.zhidianfan.pig.yd.moduler.resv.dto.ResvOrderDTO">
+
+        DELETE FROM resv_order
+        <where>
+            business_id=#{businessId} and resv_date <![CDATA[<=]]> date_format(#{resvDateEndLimit},'%Y-%m-%d')
+            <if test="unorderReason != null and unorderReason != ''">
+                <if test="unorderReason != '其他原因'">
+                    and `unorder_reason` = #{unorderReason}
+                </if>
+                <if test="unorderReason == '其他原因'">
+                    and `unorder_reason` not in (select name from unorder_reason where name != '其他原因')
+                </if>
+            </if>
+            <if test="status == null and status == ''">
+                and (vip_name !='' or locked='0')
+            </if>
+            <if test="vipNameOrPhone != null and vipNameOrPhone != ''">
+                and (vip_name like CONCAT('%', #{vipNameOrPhone}, '%') or vip_phone like
+                CONCAT('%',#{vipNameOrPhone},'%'))
+            </if>
+            <if test=" status != 5 and status != null and status != '' and status != 0 and status != 1">
+                and status = #{status} and (vip_name !='')
+                <if test="status == 4">
+                    <!-- status = '4' 日志不需要判断-->
+                    <if test="unorderDateStart != null">
+                        and exists (select 1 from resv_order_logs l where resv_order = l.resv_order AND l.`status` = 4
+                        and l.created_at >= date_format(#{unorderDateStart},'%Y-%m-%d'))
+                    </if>
+                    <if test="unorderDateEnd != null">
+                        and exists (select 1 from resv_order_logs l where resv_order = l.resv_order AND l.`status` = 4
+                        and l.created_at <![CDATA[<=]]> date_format(#{unorderDateEnd},'%Y-%m-%d'))
+                    </if>
+                </if>
+            </if>
+            <if test=" status == 5">
+                and ( vip_name ='')
+            </if>
+            <if test=" status == 1 or status == 2 or status == 3">
+                and ( vip_name !='') and status=#{status}
+            </if>
+            <if test="tableAreaId!= null and tableAreaId!= ''">
+                and table_area_id =#{tableAreaId}
+            </if>
+            <if test="mealTypeId!= null and mealTypeId!= ''">
+                and meal_type_id=#{mealTypeId}
+            </if>
+            <if test="appUserId!= null and appUserId!= ''">
+                and app_user_id=#{appUserId}
+            </if>
+            <if test="resvOrderType!= null and resvOrderType!= ''">
+                and resv_order_type=#{resvOrderType}
+            </if>
+            <if test="deviceUserId!= null and deviceUserId!= ''">
+                and device_user_id=#{deviceUserId}
+            </if>
+            <if test="resvDateStart!= null">
+                <![CDATA[ and  DATE_FORMAT(#{resvDateStart},'%Y-%m-%d') <= resv_date ]]>
+            </if>
+            <if test="resvDateEnd!= null">
+                <![CDATA[ and  DATE_FORMAT(#{resvDateEnd},'%Y-%m-%d') >= resv_date ]]>
+            </if>
+            <if test="operateDateStart!= null">
+                <![CDATA[ and  DATE_FORMAT(#{operateDateStart},'%Y-%m-%d %H:%i') <= created_at ]]>
+            </if>
+            <if test="operateDateEnd!= null">
+                <![CDATA[ and  DATE_FORMAT(#{operateDateEnd},'%Y-%m-%d %H:%i') >= created_at ]]>
+            </if>
+            <if test="source== '01'">
+                and device_user_id is not null and device_user_id !='' and device_user_id !='0'
+            </if>
+            <if test="source== '02'">
+                and (device_user_id is null or device_user_id ='' or device_user_id ='0')
+            </if>
+            <if test="source != null and source != '' and source != '01' and source != '02'">
+                and external_source_id = #{source}
+            </if>
+            AND EXISTS (select 1 from resv_order_his h where h.id=id)
+        </where>
+    </delete>
+
+    <select id="selectResvTimes" resultType="integer">
+        SELECT
+        COUNT(DISTINCT batch_no)
+        FROM resv_order_android
+        WHERE
+        vip_id =  #{id}
+        <if test="status != null and status != ''">
+            AND status = #{status}
+        </if>
+    </select>
+
+    <select id="selectTableAndPeopleNum" resultType="map">
+        SELECT
+        count( resv_order_android.resv_order ) AS tableNum,
+        CAST(COALESCE(sum(resv_num),0) AS signed) AS peopleNum
+        FROM
+        resv_order_android
+        WHERE
+        vip_id =  #{id}
+        <if test="status != null and status != ''">
+            AND status = #{status}
+        </if>
+    </select>
+
+    <select id="selectLastEatTime" resultType="date">
+        SELECT
+           DATE_FORMAT(updated_at, '%Y-%m-%d' ) AS updated_at
+        FROM
+            resv_order_android
+        WHERE
+            vip_id =  #{id}
+            AND status = #{status}
+        ORDER BY
+            updated_at DESC
+            LIMIT 1
+    </select>
+
+    <update id="updateStatusByOrder">
+        update
+        resv_order_android
+        <set>
+            status= #{editStatusDTO.status},
+            android_user_id =  #{editStatusDTO.androidUserId},
+            android_user_name = #{editStatusDTO.androidUserName}
+            <!--退订时需要选择退订理由跟备注 -->
+            <if test="editStatusDTO.status == 4">
+                ,unorder_reason_id = #{editStatusDTO.unorderReasonId}
+                ,unorder_reason= #{editStatusDTO.unorderReason}
+                ,remark= #{editStatusDTO.remark}
+            </if>
+        </set>
+        where resv_order in
+        <foreach collection="resvOrders" index="index" item="item"
+                 separator="," open="(" close=")">
+            #{item}
+        </foreach>
+    </update>
+
+    <update id="updateConfirmByOrder">
+        update
+        resv_order_android
+        set confirm= #{confirm}
+        where resv_order in
+        <foreach collection="resvOrders" index="index" item="item"
+                 separator="," open="(" close=")">
+            #{item}
+        </foreach>
+    </update>
+
+    <select id="conditionQueryResvOrder" parameterType="com.zhidianfan.pig.yd.moduler.resv.dto.ResvOrderQueryDTO" resultType="com.zhidianfan.pig.yd.moduler.resv.dto.ResvTableOrder">
+        SELECT
+        batchNo,
+        concat_ws( ' ', eattime, meal_type_name ) AS eatTime,
+        vipName,
+        vipPhone,
+        tableInfo,
+        orderNo,
+        createdAt,
+        status
+        FROM
+        (
+        SELECT
+        batch_no AS batchNo,
+        DATE_FORMAT( concat_ws( ' ', resv_date, dest_time ), '%Y-%m-%d %H:%i' ) AS eattime,
+        meal_type_name,
+        (CASE WHEN vip_phone is null THEN '散客' ELSE concat_ws( ' ', vip_name, IF ( vip_sex = '男', "先生", "女士" ) )  END ) AS vipName,
+        vip_phone AS vipPhone,
+        GROUP_CONCAT( concat_ws( ' ', table_area_name, table_name ) ) AS tableInfo,
+        GROUP_CONCAT( resv_order ) AS orderNo,
+        GROUP_CONCAT( created_at ) AS createdAt,
+        GROUP_CONCAT(
+        ( CASE status WHEN 1 THEN '已预订' WHEN 2 THEN '已入座' WHEN 3 THEN '已结账' WHEN 4 THEN '已退订' WHEN 5 THEN '锁台' ELSE '无状态' END )
+        ) AS status
+        FROM
+        resv_order_android
+        WHERE
+        business_id = #{businessId}
+        /*不需要锁台和解锁的订单*/
+        AND status != 5
+        AND status != 6
+        <if test="vipName != null and vipName != ''">
+            AND vip_name like CONCAT('%',#{vipName},'%')
+        </if>
+        <if test="vipPhone != null and vipPhone != ''">
+            AND vip_phone like CONCAT('%',#{vipPhone},'%')
+        </if>
+        <if test="status != null and status != ''">
+            AND status = #{status}
+        </if>
+        <if test="tableAreaId != null and tableAreaId != ''">
+            AND table_area_id = #{tableAreaId}
+        </if>
+        <if test="createdAtStart != null ">
+            AND created_at >= #{createdAtStart}
+        </if>
+        <if test="createdAtEnd != null ">
+            AND created_at &lt;= #{createdAtEnd}
+        </if>
+        <if test="mealTypeId != null ">
+            AND meal_type_id = #{mealTypeId}
+        </if>
+        GROUP BY
+        batch_no,
+        eattime,
+        vipName,
+        vip_phone,
+        meal_type_name
+        ) A
+        WHERE
+        1=1
+        <if test="startTime != null">
+            AND A.eattime  >= #{startTime}
+        </if>
+        <if test="endTime != null">
+            AND A.eattime  &lt;= #{endTime}
+        </if>
+        order by
+        batchNo DESC
+    </select>
+
+
+    <select id="excelConditionFindResvOrders"  parameterType="com.zhidianfan.pig.yd.moduler.resv.dto.ResvOrderQueryDTO" resultType="com.zhidianfan.pig.yd.moduler.resv.dto.ResvTableOrder">
+
+        SELECT
+        batchNo,
+        concat_ws( ' ', eattime, meal_type_name ) AS eatTime,
+        vipName,
+        vipPhone,
+        tableInfo,
+        orderNo,
+        createdAt,
+        status
+        FROM
+        (
+        SELECT
+        batch_no AS batchNo,
+        DATE_FORMAT( concat_ws( ' ', resv_date, dest_time ), '%Y-%m-%d %H:%i:%S' ) AS eattime,
+        meal_type_name,
+        (CASE WHEN vip_phone is null THEN '散客' ELSE concat_ws( ' ', vip_name, IF ( vip_sex = '男', "先生", "女士" ) )  END ) AS vipName,
+        vip_phone AS vipPhone,
+        GROUP_CONCAT( concat_ws( ' ', table_area_name, table_name ) ) AS tableInfo,
+        GROUP_CONCAT( resv_order ) AS orderNo,
+        GROUP_CONCAT( created_at ) AS createdAt,
+        GROUP_CONCAT(
+        ( CASE status WHEN 1 THEN '已预订' WHEN 2 THEN '已入座' WHEN 3 THEN '已结账' WHEN 4 THEN '已退订' WHEN 5 THEN '锁台' ELSE '无状态' END )
+        ) AS status
+        FROM
+        resv_order_android
+        WHERE
+        business_id = #{businessId}
+        /*不需要锁台和解锁的订单*/
+        AND status != 5
+        AND status != 6
+        <if test="vipName != null and vipName != ''">
+            AND vip_name like CONCAT('%',#{vipName},'%')
+        </if>
+        <if test="vipPhone != null and vipPhone != ''">
+            AND vip_phone like CONCAT('%',#{vipPhone},'%')
+        </if>
+        <if test="status != null and status != ''">
+            AND status = #{status}
+        </if>
+        <if test="tableAreaId != null and tableAreaId != ''">
+            AND table_area_id = #{tableAreaId}
+        </if>
+        GROUP BY
+        batch_no,
+        eattime,
+        vipName,
+        vip_phone,
+        meal_type_name
+        ) A
+        WHERE
+        1=1
+        <if test="startTime != null">
+            AND A.eattime  >= #{startTime}
+        </if>
+        <if test="endTime != null">
+            AND A.eattime  &lt;= #{endTime}
+        </if>
+        order by
+        batchNo DESC
+    </select>
+
+
+    <select id="getorderSucNum"  parameterType="integer" resultType="string">
+		SELECT
+			COUNT(batch_no) AS orderSucNum
+		FROM (
+			 select
+			    batch_no
+             from
+                resv_order_android
+             where
+                status in (1,2,3)
+                and business_id = #{business_id}
+             GROUP BY
+                batch_no ) A
+	</select>
+
+    <select id="getpaySum"  parameterType="integer" resultType="string">
+      select
+          IFNULL(sum(payamount),0) as  paysum
+      from
+          resv_order_android
+      where
+          business_id = #{business_id}
+          and `status` = 3
+
+	</select>
+
+    <select id="getYesterdayData" parameterType="integer" resultType="map">
+    SELECT
+        IFNULL( sum( resv_num ), 0 ) resvSum,
+        IFNULL( sum( payamount ) / sum( resv_num ), 0 )  perConsum,
+        (select count(resv_order) from (select resv_order from resv_order_android
+         where `status` = 3
+             AND resv_date  =  (SELECT date_sub( curdate( ), INTERVAL 1 DAY) )
+             AND business_id = #{business_id} ) t ) as orderSum
+    FROM
+       (select payamount,resv_num from resv_order_android
+        where  `status` = 3
+             AND resv_date  =  (SELECT date_sub( curdate( ), INTERVAL 1 DAY) )
+             AND business_id = #{business_id}
+        ) A
+
+
+	</select>
+
+    <select id="conditionQueryLockRecord" parameterType="com.zhidianfan.pig.yd.moduler.resv.qo.LockTablQO" resultType="com.zhidianfan.pig.yd.moduler.resv.dto.LockTablDTO">
+        select
+        SUBSTRING(status_name,2) as statusName,
+        resv_order as resvOrder,
+        table_area_name as tableAreaName,
+        table_name as tableName,
+        meal_type_name as mealTypeName,
+        resv_date as resvDate,
+        remark,
+        logs_create_time as logsCreateTime,
+        operationName
+        from (
+        SELECT
+        l.`status`,
+        m.status_name as status_name,
+        o.resv_order as resv_order ,
+        table_area_id ,
+        table_area_name,
+        table_id,
+        table_name,
+        meal_type_id,
+        meal_type_name,
+        DATE_FORMAT( resv_date, "%Y-%m-%d" ) resv_date,
+        IFNULL( remark, "" ) remark,
+        l.created_at AS logs_create_time,
+        IFNULL( IFNULL( au.app_user_name, du.device_user_name ), aui.user_name ) AS operationName
+        FROM
+        resv_order_logs l
+        LEFT JOIN resv_order_android o ON o.resv_order = l.resv_order
+        LEFT JOIN app_user au ON au.id = l.app_user_id
+        LEFT JOIN device_user du ON du.id = l.device_user_id
+        LEFT JOIN android_user_info aui ON aui.id = l.android_user_id,
+        resv_status_mapping m
+        WHERE
+        l.`status` = m.status_id
+        AND o.business_id = #{businessId}
+        AND ( l.`status` = 5 OR l.`status` = 6 ))  A
+        WHERE
+        1 = 1
+        <if test="lockTime != null ">
+            <![CDATA[ and  A.`resv_date` = DATE_FORMAT(#{lockTime},'%Y-%m-%d') ]]>
+        </if>
+        <if test="status != null ">
+            AND A.`status` = #{status}
+        </if>
+        <if test="tableName != null and tableName != '' ">
+            AND A.table_name  like CONCAT('%',#{tableName},'%')
+        </if>
+
+    </select>
+
+    <update id="checkoutBills" >
+            update resv_order_android
+            set
+                status = '3',
+                payamount =  #{checkoutBill.everypay},
+                actual_num = #{checkoutBill.actualNum},
+                android_user_id =  #{userId},
+                android_user_name = #{userName}
+            where resv_order = #{checkoutBill.resvOrder}
+    </update>
+
+    <select id="getYesterdayBusniness" resultType="integer">
+            SELECT
+                id
+            FROM
+                business
+            WHERE
+                 status = '1'
+    </select>
+
+    <select id="getOrderDistribution" resultType="map">
+        SELECT
+            count( 1 ) as orderNum,
+            ifnull(external_source_name,"其他") as  externalSourceName
+        FROM
+            resv_order_android
+        WHERE
+            business_id =  #{businessId}
+            AND resv_date = #{calDate}
+            AND `status` = 3
+        GROUP BY
+            external_source_name
+    </select>
+    <select id="findOrders" resultType="com.zhidianfan.pig.yd.moduler.resv.bo.DeskOrderBo">
+        select
+        CONCAT(ur.name,' ',o.unorder_reason) as unorderReason,
+        ror.id as orderRatingId,
+        o.*,
+        v.vip_value_name as vipValueName,
+        v.vip_class_name as vipClassName
+
+
+        from resv_order_android o
+        left join vip v on v.id=o.vip_id
+        left join resv_order_rating ror on ror.batch_no=o.batch_no
+        left join unorder_reason ur on ur.id=o.unorder_reason_id
+
+        where o.business_id=#{businessId}
+
+        <if test="batchNo!=null"> and o.batch_no=#{batchNo} </if>
+        <if test="mealTypeId!=null"> and o.meal_type_id=#{mealTypeId} </if>
+        <if test="tableAreaId!=null"> and o.table_area_id=#{tableAreaId} </if>
+        <if test="resvNum!=null and resvNum!=''.toString() ">and o.resv_num=#{resvNum}</if>
+        <if test="status!=null and status!=''.toString() ">and o.`status`=#{status}</if>
+
+        <if test="resvDate!=null">and o.resv_date=#{resvDate}</if>
+        <!-- 大于等于的时间起始点
+        <if test="geResvDate!=null">and o.resv_date &gt;= #{geResvDate}</if>
+        -->
+
+        <!-- 是否评论  -->
+        <if test="isComment!=null">and ror.id
+            <if test="isComment==true" > is not null  </if>
+            <if test="isComment==false" >  is null  </if>
+        </if>
+
+        <!-- 是否散客  -->
+        <if test="isVip!=null and isVip==false">and (o.vip_id =0 or o.vip_id is null)</if>
+        <if test="isVip!=null and isVip==true">and o.vip_phone is not null</if>
+
+
+        <!-- 关键字搜索  -->
+        <if test="keyword!=null and keyword!=''.toString() ">
+            and ( o.vip_name like concat('%',#{keyword},'%') or o.vip_phone like concat('%',#{keyword},'%') )
+        </if>
+
+        <!-- 按日期分页  -->
+        <if test="batchNo==null"> and o.resv_date between #{geResvDate} and #{leResvDate} </if>
+
+        order by o.resv_date desc
+    </select>
+
+</mapper>

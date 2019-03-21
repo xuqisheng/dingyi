@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhidianfan.pig.user.dao.mapper.BusinessMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zhidianfan.pig.user.dao.entity.Business">
+        <id column="id" property="id" />
+        <result column="business_name" property="businessName" />
+        <result column="parent_id" property="parentId" />
+        <result column="parent_name" property="parentName" />
+        <result column="business_phone" property="businessPhone" />
+        <result column="business_address" property="businessAddress" />
+        <result column="business_star" property="businessStar" />
+        <result column="business_manager" property="businessManager" />
+        <result column="open_id" property="openId" />
+        <result column="username" property="username" />
+        <result column="password" property="password" />
+        <result column="device_items" property="deviceItems" />
+        <result column="business_config_items" property="businessConfigItems" />
+        <result column="serial_port" property="serialPort" />
+        <result column="agent_id" property="agentId" />
+        <result column="agent_name" property="agentName" />
+        <result column="city_id" property="cityId" />
+        <result column="province_id" property="provinceId" />
+        <result column="area_id" property="areaId" />
+        <result column="province_name" property="provinceName" />
+        <result column="city_name" property="cityName" />
+        <result column="area_name" property="areaName" />
+        <result column="status" property="status" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+        <result column="local_url" property="localUrl" />
+        <result column="licence_url" property="licenceUrl" />
+        <result column="soft_version" property="softVersion" />
+        <result column="open_date" property="openDate" />
+        <result column="price" property="price" />
+        <result column="year_price" property="yearPrice" />
+        <result column="year_price_one" property="yearPriceOne" />
+        <result column="year_price_two" property="yearPriceTwo" />
+        <result column="year_price_three" property="yearPriceThree" />
+        <result column="due_date" property="dueDate" />
+        <result column="delay_days" property="delayDays" />
+        <result column="review_time" property="reviewTime" />
+        <result column="review_user" property="reviewUser" />
+        <result column="longitude" property="longitude" />
+        <result column="latitude" property="latitude" />
+        <result column="logo_pic" property="logoPic" />
+        <result column="tag" property="tag" />
+        <result column="table_tag" property="tableTag" />
+    </resultMap>
+
+</mapper>

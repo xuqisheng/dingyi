@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhidianfan.pig.yd.moduler.common.dao.mapper.ResvOrderMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zhidianfan.pig.yd.moduler.common.dao.entity.ResvOrder">
+        <id column="id" property="id"/>
+        <result column="batch_no" property="batchNo"/>
+        <result column="resv_order" property="resvOrder"/>
+        <result column="business_id" property="businessId"/>
+        <result column="business_name" property="businessName"/>
+        <result column="app_user_id" property="appUserId"/>
+        <result column="app_user_phone" property="appUserPhone"/>
+        <result column="vip_id" property="vipId"/>
+        <result column="vip_phone" property="vipPhone"/>
+        <result column="vip_name" property="vipName"/>
+        <result column="vip_sex" property="vipSex"/>
+        <result column="vip_company" property="vipCompany"/>
+        <result column="table_area_id" property="tableAreaId"/>
+        <result column="table_area_name" property="tableAreaName"/>
+        <result column="table_id" property="tableId"/>
+        <result column="table_name" property="tableName"/>
+        <result column="max_people_num" property="maxPeopleNum"/>
+        <result column="resv_num" property="resvNum"/>
+        <result column="actual_num" property="actualNum"/>
+        <result column="resv_date" property="resvDate"/>
+        <result column="meal_type_id" property="mealTypeId"/>
+        <result column="meal_type_name" property="mealTypeName"/>
+        <result column="meal_type_id_a" property="mealTypeIdA"/>
+        <result column="meal_type_name_a" property="mealTypeNameA"/>
+        <result column="meal_type_id_b" property="mealTypeIdB"/>
+        <result column="meal_type_name_b" property="mealTypeNameB"/>
+        <result column="remark" property="remark"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="status" property="status"/>
+        <result column="confirm" property="confirm"/>
+        <result column="app_user_name" property="appUserName"/>
+        <result column="device_user_id" property="deviceUserId"/>
+        <result column="device_user_name" property="deviceUserName"/>
+        <result column="device_user_phone" property="deviceUserPhone"/>
+        <result column="peicai" property="peicai"/>
+        <result column="pic_url" property="picUrl"/>
+        <result column="payamount" property="payamount"/>
+        <result column="unorder_reason" property="unorderReason"/>
+        <result column="deposit" property="deposit"/>
+        <result column="locked" property="locked"/>
+        <result column="receipt_no" property="receiptNo"/>
+        <result column="deposit_amount" property="depositAmount"/>
+        <result column="pay_type" property="payType"/>
+        <result column="resv_order_type" property="resvOrderType"/>
+        <result column="locked_type" property="lockedType"/>
+        <result column="resv_meeting_order_no" property="resvMeetingOrderNo"/>
+        <result column="external_source_name" property="externalSourceName"/>
+        <result column="external_source_id" property="externalSourceId"/>
+        <result column="istirdparty" property="istirdparty"/>
+        <result column="ischangetable" property="ischangetable"/>
+        <result column="iskbc" property="iskbc"/>
+        <result column="tag" property="tag"/>
+        <result column="peicai_amt" property="peicaiAmt"/>
+        <result column="peicai_type" property="peicaiType"/>
+        <result column="dest_time" property="destTime"/>
+        <result column="property_id" property="propertyId"/>
+        <result column="property_name" property="propertyName"/>
+        <result column="isrank" property="isrank"/>
+        <result column="issendmsg" property="issendmsg"/>
+        <result column="re_vip_phone" property="reVipPhone"/>
+        <result column="re_vip_name" property="reVipName"/>
+        <result column="re_vip_sex" property="reVipSex"/>
+        <result column="open_is_sync" property="openIsSync"/>
+        <result column="order_status" property="orderStatus"/>
+        <result column="deposit_status" property="depositStatus"/>
+        <result column="deposit_desc" property="depositDesc"/>
+        <result column="is_dish" property="isDish"/>
+        <result column="third_order_no" property="thirdOrderNo"/>
+        <result column="unorder_reason_id" property="unorderReasonId"/>
+        <result column="android_user_id" property="androidUserId"/>
+        <result column="android_user_name" property="androidUserName"/>
+    </resultMap>
+    <resultMap id="getMessageOrderResultMap" type="com.zhidianfan.pig.yd.moduler.resv.bo.MessageOrderBO">
+    </resultMap>
+    <resultMap id="getAllResvOrdersResultMap" type="com.zhidianfan.pig.yd.moduler.resv.bo.OrderBO">
+    </resultMap>
+
+
+    <update id="updateThirdOrderNo">
+        update resv_order, resv_order_tem
+        set resv_order.third_order_no = resv_order_tem.third_order_no
+        where resv_order.resv_order = resv_order_tem.resv_order
+          and resv_order_tem.third_order_no != ""
+          and resv_order_tem.status=resv_order.status
+          and resv_order.business_id = #{businessId};
+    </update>
+
+
+    <select id="statisticsOrderAboutConsume"
+            resultType="com.zhidianfan.pig.yd.moduler.common.dao.entity.CustomValueStatistics">
+        select * from (
+          select AVG(consume) as consume ,vip_id from (
+            select
+            sum(o.payamount)/sum(if(o.actual_num is null,o.resv_num,o.actual_num )) as consume,o.vip_id as vip_id
+            from resv_order o
+            where  o.business_id=#{data.businessId} and  o.status in (2,3)
+            and o.resv_date &gt;= #{startDate} and o.resv_date &lt; #{endDate}
+            and o.payamount is not null
+            and o.vip_id is not null
+            group by o.batch_no
+        ) avgt group by vip_id )t
+        where 1=1
+        <if test="data.consumeStart!=null"> and t.consume &gt;= #{data.consumeStart} </if>
+        <if test="data.consumeEnd!=null">   and t.consume &lt;  #{data.consumeEnd} </if>
+
+    </select>
+    <select id="statisticsOrderAboutExpenseTime"
+            resultType="com.zhidianfan.pig.yd.moduler.common.dao.entity.CustomValueStatistics">
+      select * from (
+        select vip_id,count(1) as expenseTime  from (
+            select  o.vip_id from resv_order o
+            where  business_id=#{data.businessId} and  status in (2,3)  and o.resv_date &gt;= #{startDate} and o.resv_date &lt; #{endDate}
+             and o.vip_id is not null
+            group by batch_no
+            ) t group by  vip_id
+        )countc
+        where
+         1=1
+        <if test="data.expenseTimeStart!=null"> and countc.expenseTime &gt;= #{data.expenseTimeStart} </if>
+        <if test="data.expenseTimeEnd!=null">   and countc.expenseTime &lt;  #{data.expenseTimeEnd} </if>
+
+    </select>
+    <select id="statisticsOrderAboutExpenseMoney"
+            resultType="com.zhidianfan.pig.yd.moduler.common.dao.entity.CustomValueStatistics">
+    select * from (
+      select vip_id,sum(expenseMoney) as expenseMoney  from (
+        select  sum(o.payamount) as expenseMoney,o.vip_id  from resv_order o
+            where business_id=#{data.businessId} and  status in (2,3)  and o.resv_date &gt;= #{startDate} and o.resv_date &lt; #{endDate}
+             and o.vip_id is not null
+            group by batch_no
+      ) t group by  t.vip_id
+      ) sumc
+      where 1=1
+        <if test="data.expenseMoneyStart!=null"> and sumc.expenseMoney &gt;= #{data.expenseMoneyStart} </if>
+        <if test="data.expenseMoneyEnd!=null">   and sumc.expenseMoney &lt;  #{data.expenseMoneyEnd} </if>
+
+    </select>
+    <select id="statisticsOrderAboutMeetingDay"
+            resultType="com.zhidianfan.pig.yd.moduler.common.dao.entity.CustomValueStatistics">
+
+      select * from (
+        select o.resv_date as lastMeatDay,o.vip_id as vip_id
+        from resv_order o
+        where business_id=#{data.businessId} and  o.status in (2,3)  and o.resv_date &gt;= #{startDate} and o.resv_date &lt; #{endDate}
+         and o.vip_id is not null
+        order by o.resv_date desc
+      ) t group by vip_id
+    </select>
+    <select id="statisticsHotel"
+            resultType="com.zhidianfan.pig.yd.moduler.common.dao.entity.HotelMarketingStatistics">
+
+        select
+        o.business_id as business_id,
+        if(sum(o.payamount) is null ,0,sum(o.payamount)) as taking,
+        sum(if(o.status=4,1,0)) as recedeTime,
+        sum(if(o.status=1,1,0)) as reserveTableNum,
+        sum(if(o.status in (2,3) ,1,0)) as expenseTime ,
+        sum(if(o.vip_id != 0 &amp;&amp; o.vip_id is not null &amp;&amp; o.status not in (5,6) ,1,0)) as allReserveTime,
+        sum(if(o.app_user_id != 0 &amp;&amp; o.app_user_id is not null &amp;&amp; o.status not in (5,6) ,1,0)) as appReserveTime
+        from resv_order o
+        where  o.resv_date &gt;= #{startDate} and o.resv_date &lt; #{endDate}
+        <if test="businessId!=null"> and o.business_id=#{businessId} </if>
+        group by o.business_id
+
+    </select>
+
+</mapper>

@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhidianfan.pig.yd.moduler.common.dao.mapper.ResvLineMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zhidianfan.pig.yd.moduler.common.dao.entity.ResvLine">
+        <id column="id" property="id" />
+        <result column="business_id" property="businessId" />
+        <result column="business_name" property="businessName" />
+        <result column="batch_no" property="batchNo" />
+        <result column="line_no" property="lineNo" />
+        <result column="line_sort" property="lineSort" />
+        <result column="vip_id" property="vipId" />
+        <result column="vip_name" property="vipName" />
+        <result column="vip_phone" property="vipPhone" />
+        <result column="vip_sex" property="vipSex" />
+        <result column="resv_date" property="resvDate" />
+        <result column="resv_num" property="resvNum" />
+        <result column="meal_type_id" property="mealTypeId" />
+        <result column="meal_type_name" property="mealTypeName" />
+        <result column="resv_time" property="resvTime" />
+        <result column="resv_source_id" property="resvSourceId" />
+        <result column="resv_source_name" property="resvSourceName" />
+        <result column="remark" property="remark" />
+        <result column="status" property="status" />
+        <result column="operation" property="operation" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+        <result column="table_id" property="tableId" />
+        <result column="table_name" property="tableName" />
+        <result column="app_user_id" property="appUserId" />
+        <result column="app_user_name" property="appUserName" />
+        <result column="device_user_id" property="deviceUserId" />
+        <result column="device_user_name" property="deviceUserName" />
+        <result column="android_user_id" property="androidUserId" />
+        <result column="android_user_name" property="androidUserName" />
+
+    </resultMap>
+
+    <resultMap id="LineTable" type="com.zhidianfan.pig.yd.moduler.resv.dto.LineTableDTO">
+        <result column="id" property="id" />
+        <result column="line_no" property="lineNo" />
+        <result column="resv_time" property="resvTime" />
+        <result column="eattime" property="eatTime" />
+        <result column="line_sort" property="lineSort" />
+        <result column="vip_name" property="vipName" />
+        <result column="vip_phone" property="vipPhone" />
+        <result column="resv_num" property="resvNum" />
+        <result column="remark" property="remark" />
+        <result column="status" property="status" />
+    </resultMap>
+
+
+    <select id="conditionFindVips" parameterType="com.zhidianfan.pig.yd.moduler.resv.dto.LineQueryDTO" resultMap="LineTable">
+        select id,line_no,eattime,line_sort,resv_time,vip_name,vip_phone,resv_num,remark,status,resv_date from
+            (SELECT
+                id,
+                line_no,
+                concat_ws('  ',resv_date,meal_type_name) as eattime,
+                line_sort,
+                resv_time,
+                concat_ws('  ',vip_name,if(vip_sex='男',"先生","女士")) as vip_name,
+                vip_phone,
+                concat_ws('',resv_num,"人") resv_num,
+                remark,
+                resv_date,
+                (
+                CASE
+                WHEN status =  0  and resv_date+1 > CURRENT_DATE() THEN
+                '待转订单'
+                WHEN status = 1 THEN
+                '已转订单'
+                ELSE
+                '已失效'
+                END
+                )    status
+                FROM
+                resv_line
+            WHERE
+                business_id = #{businessId}
+                <if test="vipName != null and vipName != ''">
+                    AND vip_name like CONCAT('%',#{vipName},'%')
+                </if>
+                <if test="vipPhone != null and vipPhone != ''">
+                    AND vip_phone like CONCAT('%',#{vipPhone},'%')
+                </if>
+                <if test="mealTypeId != null and mealTypeId != ''">
+                    AND meal_type_id = #{mealTypeId}
+                </if>
+                <if test="startTime != null">
+                    AND resv_date >= #{startTime}
+                </if>
+                <if test="endTime != null ">
+                    AND resv_date &lt;= #{endTime}
+                </if>) A
+        where
+            1 = 1
+            <if test="lineStatus != null and lineStatus != ''">
+                AND status = #{lineStatus}
+            </if>
+        ORDER BY
+            resv_date,
+            line_sort
+
+    </select>
+
+
+    <select id="excelConditionFindLineOrders" parameterType="com.zhidianfan.pig.yd.moduler.resv.dto.LineQueryDTO" resultMap="LineTable">
+        select id,line_no,eattime,line_sort,resv_time,vip_name,vip_phone,resv_num,remark,status,resv_date from
+            (SELECT
+                id,
+                line_no,
+                concat_ws('  ',resv_date,meal_type_name) as eattime,
+                line_sort,
+                resv_time,
+                concat_ws('  ',vip_name,if(vip_sex='男',"先生","女士")) as vip_name,
+                vip_phone,
+                concat_ws('',resv_num,"人") resv_num,
+                remark,
+                resv_date,
+                (
+                CASE
+                WHEN status =  0  and resv_date+1 > CURRENT_DATE() THEN
+                '待转订单'
+                WHEN status = 1 THEN
+                '已转订单'
+                ELSE
+                '已失效'
+                END
+                )    status
+            FROM
+                resv_line
+            WHERE
+                business_id = #{businessId}
+                <if test="vipName != null and vipName != ''">
+                    AND vip_name like CONCAT('%',#{vipName},'%')
+                </if>
+                <if test="vipPhone != null and vipPhone != ''">
+                    AND vip_phone like CONCAT('%',#{vipPhone},'%')
+                </if>
+                <if test="mealTypeId != null and mealTypeId != ''">
+                    AND meal_type_id = #{mealTypeId}
+                </if>
+                <if test="startTime != null">
+                    AND resv_date >= #{startTime}
+                </if>
+                <if test="endTime != null ">
+                    AND resv_date &lt;= #{endTime}
+                </if>) A
+        where
+            1 = 1
+            <if test="lineStatus != null and lineStatus != ''">
+                AND status = #{lineStatus}
+            </if>
+        ORDER BY
+            resv_date,
+            line_sort
+
+    </select>
+
+</mapper>

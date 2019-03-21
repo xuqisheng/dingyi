@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhidianfan.pig.yd.moduler.common.dao.mapper.ResvOrderLogsMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zhidianfan.pig.yd.moduler.common.dao.entity.ResvOrderLogs">
+        <id column="id" property="id" />
+        <result column="resv_order" property="resvOrder" />
+        <result column="status" property="status" />
+        <result column="status_name" property="statusName" />
+        <result column="logs" property="logs" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+        <result column="app_user_id" property="appUserId" />
+        <result column="device_user_id" property="deviceUserId" />
+        <result column="android_user_id" property="androidUserId" />
+    </resultMap>
+
+    <resultMap id="ResvOrderLogsDTOResultMap" type="com.zhidianfan.pig.yd.moduler.resv.dto.ResvOrderLogsDTO">
+        <result column="table_name" property="tableName" />
+    </resultMap>
+
+    <select id="selectOrderLogsByBatchNo" resultMap="ResvOrderLogsDTOResultMap">
+        SELECT
+            A.table_name,
+            B.id,
+            B.resv_order,
+            B.status,
+            B.status_name,
+            B.logs,
+            B.created_at
+        FROM
+            ( SELECT resv_order,table_name FROM resv_order_android WHERE batch_no = #{batchNo}) A
+            LEFT JOIN resv_order_logs B
+            ON A.resv_order = B.resv_order
+        order by
+        created_at	desc
+
+    </select>
+
+</mapper>

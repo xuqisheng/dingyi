@@ -1,0 +1,218 @@
+# 启动微服务所需的最少依赖
+
+version: '3'
+services:
+  #  数据库
+  mysql:
+    container_name: pig-compose-mysql
+    image: registry.cn-hangzhou.aliyuncs.com/sherry/mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+    command: [
+      'mysqld',
+      '--innodb-buffer-pool-size=20M',
+      '--character-set-server=utf8',
+      '--collation-server=utf8_general_ci',
+      '--default-time-zone=+8:00',
+      '--lower-case-table-names=1'
+    ]
+    volumes:
+    - /Users/zhangliuning/Volumes/mysql/data:/var/lib/mysql
+    restart: always
+    ports:
+    - 3306:3306
+  #   Redis
+  redis:
+    container_name: pig-compose-redis
+    image: registry.cn-hangzhou.aliyuncs.com/sherry/redis:3.2.9
+    ports:
+    - 6379:6379
+  #      RabbitMQ
+  rabbitmq:
+    container_name: pig-compose-rabbitmq
+    image: registry.cn-hangzhou.aliyuncs.com/sherry/rabbitmq:3.7-management
+    hostname: rabbitmqhost
+    environment:
+      RABBITMQ_DEFAULT_USER: pig
+      RABBITMQ_DEFAULT_PASS: pig
+    volumes:
+    - /Users/zhangliuning/Volumes/rabbitmq:/var/rabbitmq/lib
+    ports:
+    - 15672:15672
+    - 5672:5672
+
+  pig-eureka:
+    build:
+      context: ./
+      dockerfile: Dockerfile-eureka
+    container_name: pig-eureka
+    image: sherry/pig-eureka:latest
+    restart: always
+    ports:
+    - 1025:1025
+
+  pig-auth:
+    build:
+      context: ./
+      dockerfile: Dockerfile-auth
+    container_name: pig-auth
+    image: sherry/pig-auth:latest
+    links:
+    - pig-eureka:eureka
+    - redis:redishost
+    - rabbitmq:mqhost
+    - mysql:mysqlhost
+    restart: always
+    ports:
+    - 3000:3000
+
+  pig-upms-service:
+    build:
+      context: ./
+      dockerfile: Dockerfile-upms
+    container_name: pig-upms-service
+    image: sherry/pig-upms-service:latest
+    links:
+    - redis:redishost
+    - rabbitmq:mqhost
+    - pig-eureka:eureka
+    - mysql:mysqlhost
+    restart: always
+
+  pig-gateway:
+    build:
+      context: ./
+      dockerfile: Dockerfile-gateway
+    container_name: pig-gateway
+    image: sherry/pig-gateway:latest
+    links:
+    - redis:redishost
+    - rabbitmq:mqhost
+    - pig-eureka:eureka
+    - pig-auth:authhost
+    restart: always
+    ports:
+    - 9999:9999
+#
+#  # 业务模块
+#
+#  pig-base:
+#    build:
+#      context: ./
+#      dockerfile: Dockerfile-base
+#    container_name: pig-yd-base
+#    image: sherry/pig-yd-base:latest
+#    links:
+#    - rabbitmq:mqhost
+#    - mysql:mysqlhost
+#    - redis:redishost
+#    - pig-eureka:eureka
+#    restart: always
+#    ports:
+#    - 9003:9003
+#
+#  pig-log:
+#    build:
+#      context: ./
+#      dockerfile: Dockerfile-log
+#    container_name: pig-yd-log
+#    image: sherry/pig-yd-log:latest
+#    links:
+#    - rabbitmq:mqhost
+#    - mysql:mysqlhost
+#    - redis:redishost
+#    - pig-eureka:eureka
+#    restart: always
+#    ports:
+#    - 9004:9004
+#
+#  pig-push:
+#    build:
+#      context: ./
+#      dockerfile: Dockerfile-push.sh
+#    container_name: pig-yd-push.sh
+#    image: sherry/pig-yd-push.sh:latest
+#    links:
+#    - rabbitmq:mqhost
+#    - mysql:mysqlhost
+#    - redis:redishost
+#    - pig-eureka:eureka
+#    restart: always
+#
+#  pig-service:
+#    build:
+#      context: ./
+#      dockerfile: Dockerfile-service
+#    container_name: pig-yd-service
+#    image: sherry/pig-yd-service:latest
+#    links:
+#    - rabbitmq:mqhost
+#    - mysql:mysqlhost
+#    - redis:redishost
+#    - pig-eureka:eureka
+#    restart: always
+#
+#  pig-sms:
+#    build:
+#      context: ./
+#      dockerfile: Dockerfile-sms
+#    container_name: pig-yd-sms
+#    image: sherry/pig-yd-sms:latest
+#    links:
+#    - rabbitmq:mqhost
+#    - mysql:mysqlhost
+#    - redis:redishost
+#    - pig-eureka:eureka
+#    restart: always
+#
+#  pig-user:
+#    build:
+#      context: ./
+#      dockerfile: Dockerfile-user
+#    container_name: pig-yd-user
+#    image: sherry/pig-yd-user:latest
+#    links:
+#    - rabbitmq:mqhost
+#    - mysql:mysqlhost
+#    - redis:redishost
+#    - pig-eureka:eureka
+#    restart: always
+#
+#  pig-ydmonitor:
+#    build:
+#      context: ./
+#      dockerfile: Dockerfile-ydmonitor
+#    container_name: pig-yd-ydmonitor
+#    image: sherry/pig-yd-ydmonitor:latest
+#    links:
+#    - rabbitmq:mqhost
+#    - mysql:mysqlhost
+#    - redis:redishost
+#    - pig-eureka:eureka
+#    restart: always
+#
+#  pig-monitor:
+#    build:
+#      context: ./
+#      dockerfile: Dockerfile-monitor
+#    container_name: pig-monitor
+#    image: sherry/pig-monitor:latest
+#    links:
+#    - rabbitmq:mqhost
+#    - mysql:mysqlhost
+#    - redis:redishost
+#    - pig-eureka:eureka
+#    restart: always
+#
+#  pig-zipkin-db:
+#    build:
+#      context: ./
+#      dockerfile: Dockerfile-zipkin
+#    container_name: pig-zipkin-db
+#    image: sherry/pig-zipkin-db:latest
+#    links:
+#    - rabbitmq:mqhost
+#    - mysql:mysqlhost
+#    - redis:redishost
+#    - pig-eureka:eureka
+#    restart: always

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhidianfan.pig.yd.moduler.common.dao.mapper.BasePushLogMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zhidianfan.pig.yd.moduler.common.dao.entity.BasePushLog">
+        <id column="id" property="id"/>
+        <result column="app_key" property="appKey"/>
+        <result column="master_secret" property="masterSecret"/>
+        <result column="reg_id" property="regId"/>
+        <result column="type" property="type"/>
+        <result column="username" property="username"/>
+        <result column="push_msg" property="pushMsg"/>
+        <result column="push_time" property="pushTime"/>
+        <result column="insert_time" property="insertTime"/>
+        <result column="msg_seq" property="msgSeq"/>
+        <result column="push_status" property="pushStatus"/>
+        <result column="note" property="note"/>
+        <result column="business_id" property="businessId"/>
+        <result column="pushed_count" property="pushedCount"/>
+    </resultMap>
+    <insert id="toHis">
+        INSERT
+        INTO base_push_log_his
+            SELECT *
+            FROM base_push_log t2
+            WHERE t2.insert_time <![CDATA[<]]> #{_parameter} AND NOT exists(
+                    SELECT 1
+                    FROM base_push_log_his t1
+                    WHERE t1.id = t2.id
+            )
+    </insert>
+    <delete id="deleteHisData">
+        DELETE FROM base_push_log
+        WHERE exists(
+                SELECT 1
+                FROM base_push_log_his
+                WHERE base_push_log.id = base_push_log_his.id
+        )
+    </delete>
+
+</mapper>

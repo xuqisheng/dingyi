@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhidianfan.pig.yd.moduler.common.dao.mapper.BusinessSmsMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zhidianfan.pig.yd.moduler.common.dao.entity.BusinessSms">
+        <id column="id" property="id" />
+        <result column="business_id" property="businessId" />
+        <result column="admin_name" property="adminName" />
+        <result column="admin_phone" property="adminPhone" />
+        <result column="current_sms_num" property="currentSmsNum" />
+        <result column="min_sms_num" property="minSmsNum" />
+        <result column="sms_message" property="smsMessage" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+        <result column="is_send" property="isSend" />
+    </resultMap>
+
+</mapper>

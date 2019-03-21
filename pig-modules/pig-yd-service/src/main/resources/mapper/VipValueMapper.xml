@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhidianfan.pig.yd.moduler.common.dao.mapper.VipValueMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zhidianfan.pig.yd.moduler.common.dao.entity.VipValue">
+        <id column="id" property="id" />
+        <result column="vip_value_name" property="vipValueName" />
+        <result column="business_id" property="businessId" />
+        <result column="unorder_count" property="unorderCount" />
+        <result column="active_days" property="activeDays" />
+        <result column="flow_days" property="flowDays" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+        <result column="type" property="type" />
+        <result column="high_value_days" property="highValueDays" />
+        <result column="high_value_counts" property="highValueCounts" />
+        <result column="high_value_amount" property="highValueAmount" />
+    </resultMap>
+
+    <resultMap id="BusinessVipValue" type="com.zhidianfan.pig.yd.moduler.resv.dto.VipValueDTO">
+        <result column="business_id" property="businessId" />
+        <result column="active_days" property="activeDays" />
+        <result column="sleep_days_begin" property="sleepDaysBegin" />
+        <result column="sleep_days_end" property="sleepDaysEnd" />
+        <result column="flow_days" property="flowDays" />
+        <result column="unorder_count" property="unorderCount" />
+        <result column="high_value_days" property="highValueDays" />
+        <result column="high_value_counts" property="highValueCounts" />
+        <result column="high_value_amount" property="highValueAmount" />
+    </resultMap>
+    
+    <select id="getBusinessVipValue" resultMap="BusinessVipValue">
+        SELECT
+            #{businessId} as business_id,
+            (SELECT active_days FROM vip_value WHERE business_id = #{businessId} and type=1) active_days,
+            (SELECT flow_days from vip_value where business_id=#{businessId} and type=2) sleep_days_begin,
+            (SELECT active_days  FROM  vip_value  WHERE  business_id = #{businessId} and type=2) sleep_days_end,
+            (SELECT flow_days from vip_value where business_id=#{businessId} and type=3) flow_days,
+            (SELECT unorder_count  FROM vip_value  WHERE  business_id = #{businessId} and type=5) unorder_count,
+            (SELECT high_value_days  FROM  vip_value  WHERE  business_id = #{businessId} and type=6) high_value_days,
+            (SELECT high_value_counts from vip_value where business_id=#{businessId} and type=6) high_value_counts,
+            (SELECT high_value_amount from vip_value where business_id=#{businessId} and type=6) high_value_amount
+        FROM
+        DUAL
+    </select>
+
+    <insert id="insertVIPValueInfo" parameterType="com.zhidianfan.pig.yd.moduler.resv.dto.VipValueDTO">
+       insert into vip_value (vip_value_name,business_id,unorder_count,active_days,flow_days,created_at,updated_at,type,high_value_days,high_value_counts,high_value_amount)
+	   values('活跃用户',#{businessId},null,#{activeDays},0,now(),now(),1,null,null,null),
+	  		 ('沉睡用户',#{businessId},null,#{sleepDaysEnd},#{sleepDaysBegin},now(),now(),2,null,null,null),
+	  		 ('流失用户',#{businessId},null,null,#{flowDays},now(),now(),3,null,null,null),
+	 		 ('意向用户',#{businessId},null,null,null,now(),now(),4,null,null,null),
+	 		 ('恶意用户',#{businessId},#{unorderCount},null,null,now(),now(),5,null,null,null),
+	 		 ('高价值用户',#{businessId},null,null,null,now(),now(),6,#{highValueDays},#{highValueCounts},#{highValueAmount})
+    </insert>
+
+    <update id="editVIPValueInfo1" parameterType="com.zhidianfan.pig.yd.moduler.resv.dto.VipValueDTO">
+	   update vip_value set active_days =#{activeDays} ,updated_at=now() where business_id=#{businessId} and type=1
+	</update>
+    <update id="editVIPValueInfo2" parameterType="com.zhidianfan.pig.yd.moduler.resv.dto.VipValueDTO">
+	   update vip_value set flow_days =#{sleepDaysBegin},active_days=#{sleepDaysEnd},updated_at=now() where business_id=#{businessId} and type=2
+	</update>
+    <update id="editVIPValueInfo3" parameterType="com.zhidianfan.pig.yd.moduler.resv.dto.VipValueDTO">
+	   update vip_value set flow_days =#{flowDays},updated_at=now()  where business_id=#{businessId} and type=3
+	</update>
+    <update id="editVIPValueInfo5" parameterType="com.zhidianfan.pig.yd.moduler.resv.dto.VipValueDTO">
+	   update vip_value set unorder_count =#{unorderCount},updated_at=now()  where business_id=#{businessId} and type=5
+	</update>
+    <update id="editVIPValueInfo6" parameterType="com.zhidianfan.pig.yd.moduler.resv.dto.VipValueDTO">
+	   update vip_value set high_value_days =#{highValueDays},high_value_counts =#{highValueCounts},high_value_amount =#{highValueAmount},updated_at=now()  where business_id=#{businessId} and type=6
+	</update>
+
+</mapper>

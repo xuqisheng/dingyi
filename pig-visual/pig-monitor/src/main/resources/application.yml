@@ -1,0 +1,162 @@
+server:
+  port: 5001
+spring:
+  application:
+    name: pig-monitor
+  profiles:
+    active: dev
+  boot:
+    admin:
+      turbine:
+        location: pig-monitor
+      routes:
+        endpoints: env,metrics,trace,dump,jolokia,info,configprops,trace,logfile,refresh,flyway,liquibase,heapdump,loggers,auditevents,hystrix.stream,turbine.stream
+  http:
+    multipart:
+      max-file-size: 1000MB
+      max-request-size: 1000MB
+
+#监控短点配置
+management:
+  security:
+    enabled: false
+endpoints:
+  actuator:
+    enabled: true
+  shutdown:
+    enabled: false
+
+turbine:
+  app-config: pig-gateway #,pig-auth,pig-helloworld-service,pig-upms-service #收集监控信息的服务名
+  combine-host-port: true
+  cluster-name-expression: new String('default') #集群名称
+
+
+
+notifier:
+  mobile:
+    enabled: true
+    mobiles:
+      - 15658219258
+  dingTalk:
+    enabled: true
+
+eureka:
+  auth:
+    username: pig
+    password: gip6666
+    port: 1025
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 5
+    lease-expiration-duration-in-seconds: 20
+    instance-id: ${spring.cloud.client.ipAddress}:${server.port}
+  client:
+    registry-fetch-interval-seconds: 10
+
+redis:
+  cache:
+    expiration: 3601
+
+ribbon:
+  eager-load:
+    enabled: true
+    clients: pig-auth,pig-upms-service
+  Httpclient:
+    enabled: false
+  OkHttp:
+    enabled: true
+  ReadTimeout: 10000
+  ConnectTimeout: 10000
+
+feign:
+  hystrix:
+    enabled: true
+  okhttp:
+    enabled: true
+  httpclient:
+    enabled: false
+  client:
+    config:
+      feignName:
+        connectTimeout: 30000
+        readTimeout: 30000
+  compression:
+    request:
+      enabled: true
+    response:
+      enabled: true
+
+hystrix:
+  threadpool:
+    default:
+      coreSize: 500
+      maxQueueSize: 1000
+      queueSizeRejectionThreshold: 800
+  command:
+    default:
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 60000
+
+---
+
+spring:
+  profiles: dev
+  redis:
+    remote: false        #cachecloud 获取
+    host: localhost
+    port: 6379
+    password:
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: pig
+    password: pig
+eureka:
+  environment: ${spring.profiles}
+  client:
+    serviceUrl:
+      defaultZone: http://${eureka.auth.username}:${eureka.auth.password}@localhost:${eureka.auth.port}/eureka
+
+---
+
+spring:
+  profiles: test
+  redis:
+    remote: false        #cachecloud 获取
+    host: redishost
+    port: 6379
+    password:
+  rabbitmq:
+    host: rabbithost
+    port: 5672
+    username: guest
+    password: guest
+eureka:
+  environment: ${spring.profiles}
+  client:
+    serviceUrl:
+      defaultZone: http://${eureka.auth.username}:${eureka.auth.password}@server1:${eureka.auth.port}/eureka/,http://${eureka.auth.username}:${eureka.auth.password}@server2:${eureka.auth.port}/eureka/,http://${eureka.auth.username}:${eureka.auth.password}@server3:${eureka.auth.port}/eureka/
+
+---
+
+spring:
+  profiles: prod
+  redis:
+    remote: false        #cachecloud 获取
+    host: yd-cloud.redis.rds.aliyuncs.com
+    port: 6379
+    password: FCfpyZBb6421
+  rabbitmq:
+    host: 47.97.41.1
+    port: 5672
+    username: pig
+    password: 7tm5Uo7Pi0mk
+eureka:
+  environment: ${spring.profiles}
+  client:
+    serviceUrl:
+      defaultZone: http://${eureka.auth.username}:${eureka.auth.password}@server1:${eureka.auth.port}/eureka/,http://${eureka.auth.username}:${eureka.auth.password}@server2:${eureka.auth.port}/eureka/,http://${eureka.auth.username}:${eureka.auth.password}@server3:${eureka.auth.port}/eureka/
+

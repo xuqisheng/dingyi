@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhidianfan.pig.yd.moduler.common.dao.mapper.HotelMarketingStatisticsMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zhidianfan.pig.yd.moduler.common.dao.entity.HotelMarketingStatistics">
+        <id column="id" property="id" />
+        <result column="business_id" property="businessId" />
+        <result column="business_name" property="businessName" />
+        <result column="taking" property="taking" />
+        <result column="app_reserve_time" property="appReserveTime" />
+        <result column="all_reserve_time" property="allReserveTime" />
+        <result column="expense_time" property="expenseTime" />
+        <result column="recede_time" property="recedeTime" />
+        <result column="reserve_table_num" property="reserveTableNum" />
+        <result column="create_at" property="createAt" />
+        <result column="update_at" property="updateAt" />
+        <result column="update_time" property="updateTime" />
+        <result column="statistics_year" property="statisticsYear" />
+        <result column="statistics_month" property="statisticsMonth" />
+    </resultMap>
+    <select id="selectHotelByBusinessName"
+            resultType="com.zhidianfan.pig.yd.moduler.common.dao.entity.HotelMarketingStatistics">
+
+        select t1.*,b1.business_name as business_name from (
+            select
+            sum(h.taking) as taking,sum(h.app_reserve_time) as app_reserve_time,sum(h.all_reserve_time) as all_reserve_time,
+            sum(h.expense_time) as expense_time,sum(h.recede_time) as recede_time,sum(h.reserve_table_num) as
+            reserve_table_num,
+            h.business_id
+            from hotel_marketing_statistics h
+
+            <if test="businessName!=null">
+                inner join business b on b.id=h.business_id
+                where b.business_name like concat('%',#{businessName},'%')
+            </if>
+            group by h.business_id
+        ) t1
+        left join business b1 on b1.id=t1.business_id
+
+    </select>
+
+</mapper>

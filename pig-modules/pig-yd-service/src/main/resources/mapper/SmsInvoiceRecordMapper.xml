@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhidianfan.pig.yd.moduler.common.dao.mapper.SmsInvoiceRecordMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zhidianfan.pig.yd.moduler.common.dao.entity.SmsInvoiceRecord">
+        <id column="id" property="id" />
+        <result column="invoice_amount" property="invoiceAmount" />
+        <result column="invoice_company" property="invoiceCompany" />
+        <result column="invoice_type" property="invoiceType" />
+        <result column="mailing_person" property="mailingPerson" />
+        <result column="mailing_phone" property="mailingPhone" />
+        <result column="mailing_address" property="mailingAddress" />
+        <result column="zip_code" property="zipCode" />
+        <result column="taxpayer_number" property="taxpayerNumber" />
+        <result column="invoice_address" property="invoiceAddress" />
+        <result column="invoice_bank" property="invoiceBank" />
+        <result column="invoice_phone" property="invoicePhone" />
+        <result column="account" property="account" />
+        <result column="desc" property="desc" />
+        <result column="status" property="status" />
+        <result column="created_time" property="createdTime" />
+        <result column="created_person" property="createdPerson" />
+        <result column="updated_time" property="updatedTime" />
+        <result column="updated_person" property="updatedPerson" />
+        <result column="business_id" property="businessId" />
+        <result column="brand_id" property="brandId" />
+        <result column="recharge_log_id" property="rechargeLogId" />
+    </resultMap>
+
+</mapper>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhidianfan.pig.log.dao.mapper.LogApiMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zhidianfan.pig.log.dao.entity.LogApi">
+        <id column="id" property="id" />
+        <result column="micro_name" property="microName" />
+        <result column="url" property="url" />
+        <result column="req_time" property="reqTime" />
+        <result column="res_time" property="resTime" />
+        <result column="req_data" property="reqData" />
+        <result column="res_data" property="resData" />
+        <result column="client_id" property="clientId" />
+        <result column="user_id" property="userId" />
+        <result column="note" property="note" />
+    </resultMap>
+
+</mapper>

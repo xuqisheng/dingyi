@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration debug="false" scan="false">
+    <springProperty scop="context" name="spring.application.name" source="spring.application.name" defaultValue="pig"/>
+    <springProperty scop="context" name="spring.logs.path" source="spring.logs.path" defaultValue="logs"/>
+    <property name="log.path" value="${spring.logs.path}/${spring.application.name}"/>
+    <!-- 定时任务log配置 -->
+    <!-- Console log output -->
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{MM-dd HH:mm:ss.SSS} %-5level [%logger{50}] - %msg%n</pattern>
+        </encoder>
+    </appender>
+    <!-- Log file debug output -->
+    <appender name="debug" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${log.path}/debug-task.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${log.path}/%d{yyyy-MM}/debug-task.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>500MB</maxFileSize>
+            <maxHistory>2</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%date [%thread] %-5level [%logger{50}] %file:%line - %msg%n</pattern>
+        </encoder>
+    </appender>
+    <!-- Log file error output -->
+    <appender name="error" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${log.path}/error-task.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${log.path}/%d{yyyy-MM}/error-task.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>500MB</maxFileSize>
+            <maxHistory>2</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%date [%thread] %-5level [%logger{50}] %file:%line - %msg%n</pattern>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
+    </appender>
+
+    <!-- 其余log配置 -->
+    <appender name="otherconsole" class="ch.qos.logback.core.ConsoleAppender">
+        <filter class="com.zhidianfan.pig.yd.config.LogFilter"/>
+        <encoder>
+            <pattern>%d{MM-dd HH:mm:ss.SSS} %-5level [%logger{50}] - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Log file debug output -->
+    <appender name="otherdebug" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${log.path}/debug.log</file>
+        <filter class="com.zhidianfan.pig.yd.config.LogFilter"/>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${log.path}/%d{yyyy-MM}/debug.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>500MB</maxFileSize>
+            <maxHistory>2</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%date [%thread] %-5level [%logger{50}] %file:%line - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Log file error output -->
+    <appender name="othererror" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${log.path}/error.log</file>
+        <filter class="com.zhidianfan.pig.yd.config.LogErrorFilter"/>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${log.path}/%d{yyyy-MM}/error.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>500MB</maxFileSize>
+            <maxHistory>2</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%date [%thread] %-5level [%logger{50}] %file:%line - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!--开发环境-->
+    <springProfile name="dev">
+        <root level="INFO">
+            <appender-ref ref="otherconsole"/>
+        </root>
+    </springProfile>
+
+    <!--测试环境-->
+    <springProfile name="test">
+        <root level="INFO">
+            <appender-ref ref="otherconsole"/>
+            <appender-ref ref="otherdebug"/>
+            <appender-ref ref="othererror"/>
+        </root>
+        <logger name="com.zhidianfan.pig.yd.moduler.order.task" level="INFO">
+            <appender-ref ref="debug"/>
+            <appender-ref ref="error"/>
+        </logger>
+    </springProfile>
+
+    <!--生产环境-->
+    <springProfile name="prod">
+        <root level="INFO">
+            <appender-ref ref="otherconsole"/>
+             <appender-ref ref="otherdebug"/>
+             <appender-ref ref="othererror"/>
+        </root>
+        <logger name="com.zhidianfan.pig.yd.moduler.order.task" level="INFO">
+            <appender-ref ref="debug"/>
+            <appender-ref ref="error"/>
+        </logger>
+    </springProfile>
+</configuration>
