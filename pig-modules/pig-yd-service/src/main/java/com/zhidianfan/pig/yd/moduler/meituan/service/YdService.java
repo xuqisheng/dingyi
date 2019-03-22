@@ -317,6 +317,9 @@ public class YdService {
                     Integer endTime1 = Integer.valueOf(String.valueOf(date2.getTime() / 1000));
                     ResvOrderAndroid resvOrderAndroid = new ResvOrderAndroid();
                     BeanUtils.copyProperties(resvOrderThird, resvOrderAndroid);
+
+                    //吃饭时间 14:00 之类
+                    resvOrderAndroid.setDestTime(unixTimeToDate2(meituanOrderDTO.getBookingTime()).toString().substring(11, 16));
                     resvOrderAndroid.setStatus(OrderStatus.RESERVE.code);
                     resvOrderAndroid.setBusinessName(business.getBusinessName());
                     resvOrderAndroid.setResvNum(String.valueOf(resvOrderThird.getResvNum()));
