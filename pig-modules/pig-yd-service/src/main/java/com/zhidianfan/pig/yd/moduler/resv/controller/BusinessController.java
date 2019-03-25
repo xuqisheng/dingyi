@@ -1,18 +1,21 @@
 package com.zhidianfan.pig.yd.moduler.resv.controller;
 
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
-import com.zhidianfan.pig.yd.moduler.common.dao.entity.*;
 import com.zhidianfan.pig.common.constant.ErrorTip;
 import com.zhidianfan.pig.common.constant.SuccessTip;
 import com.zhidianfan.pig.common.constant.Tip;
-import com.zhidianfan.pig.yd.moduler.common.service.IAppTypeService;
+import com.zhidianfan.pig.common.util.PasswordUtils;
+import com.zhidianfan.pig.yd.moduler.common.dao.entity.*;
 import com.zhidianfan.pig.yd.moduler.common.service.IBusinessService;
 import com.zhidianfan.pig.yd.moduler.common.service.IBusinessUnorderReasonService;
 import com.zhidianfan.pig.yd.moduler.common.service.ISellerGroupService;
 import com.zhidianfan.pig.yd.moduler.resv.bo.BusinessBrandBo;
 import com.zhidianfan.pig.yd.moduler.resv.bo.EmpChangeBo;
 import com.zhidianfan.pig.yd.moduler.resv.bo.EmployeeBo;
-import com.zhidianfan.pig.yd.moduler.resv.dto.*;
+import com.zhidianfan.pig.yd.moduler.resv.dto.BusinessDTO;
+import com.zhidianfan.pig.yd.moduler.resv.dto.BusinessThirdPartyDTO;
+import com.zhidianfan.pig.yd.moduler.resv.dto.BusinessUnorderReasonDTO;
+import com.zhidianfan.pig.yd.moduler.resv.dto.EmployeeDTO;
 import com.zhidianfan.pig.yd.moduler.resv.service.BusinessService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -272,6 +275,9 @@ BusinessController {
     @ApiOperation("员工编辑")
     @PostMapping(value = "/employee/edit")
     public ResponseEntity employeeEdit(@RequestBody EmployeeDTO employeeDTO) {
+        if(StringUtils.isNotEmpty(employeeDTO.getPassword()) && !PasswordUtils.checkSimplePassword(employeeDTO.getPassword())){
+            return ResponseEntity.badRequest().body(ErrorTip.ERROR_TIP);
+        }
         businessService.employeeEdit(employeeDTO);
         return ResponseEntity.ok(SuccessTip.SUCCESS_TIP);
     }

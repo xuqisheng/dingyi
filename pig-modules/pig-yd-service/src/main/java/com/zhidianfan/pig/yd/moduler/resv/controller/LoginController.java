@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.zhidianfan.pig.common.constant.ErrorTip;
 import com.zhidianfan.pig.common.constant.SuccessTip;
 import com.zhidianfan.pig.common.constant.Tip;
+import com.zhidianfan.pig.common.util.PasswordUtils;
 import com.zhidianfan.pig.common.util.UserUtils;
 
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.*;
@@ -85,7 +86,7 @@ public class LoginController {
 
     @ApiOperation("网页后台用户")
     @GetMapping("webStoreUser")
-    public ResponseEntity<SellerUserBo>  store(HttpServletRequest request){
+    public ResponseEntity  store(HttpServletRequest request){
 
         SellerUserBo sellerUserBo = new SellerUserBo();
 
@@ -106,6 +107,12 @@ public class LoginController {
            throw new RuntimeException("账号或密码错误");
         }
 
+        if(!PasswordUtils.checkSimplePassword(password)){
+            tipCommon.setCode(500);
+            tipCommon.setMsg("密码过于简单");
+            return ResponseEntity.badRequest().body(tipCommon);
+        }
+
         //String userName = UserUtils.getUserName();
 
         SellerUser condition = new SellerUser();
@@ -121,6 +128,8 @@ public class LoginController {
 
         return ResponseEntity.ok(sellerUserBo);
     }
+
+
 
 
 

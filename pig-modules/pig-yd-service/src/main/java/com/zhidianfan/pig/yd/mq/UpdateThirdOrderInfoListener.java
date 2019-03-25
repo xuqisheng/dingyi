@@ -66,7 +66,6 @@ public class UpdateThirdOrderInfoListener {
     private void PushMes(ResvOrderAndroid resvOrderAndroid) {
         JgPush jgPush = new JgPush();
         jgPush.setUsername("13777575146");
-        JSONObject jsonObject = new JSONObject();
         //自动接单推送内容
         String orderMsg1 = JsonUtils.obj2Json(resvOrderAndroid).replaceAll("\r|\n", "").replaceAll("\\s*", "");
         JSONObject jsonObject1 = new JSONObject();
