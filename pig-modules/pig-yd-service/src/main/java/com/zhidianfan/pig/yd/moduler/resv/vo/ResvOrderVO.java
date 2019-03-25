@@ -19,7 +19,7 @@ public class ResvOrderVO {
      */
     private String vipName;
     /**
-     * 客户性别,先生  女士
+     * 客户性别,男  女
      */
     private String vipSex;
     /**
