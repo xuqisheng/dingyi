@@ -93,6 +93,12 @@ public class YdService {
     private VipService vipService;
 
     /**
+     * 订单日志记录
+     */
+    @Autowired
+    private IResvOrderLogsService iResvOrderLogsService;
+
+    /**
      * 易订桌位查询接口
      *
      * @param tableDTO
@@ -334,6 +340,10 @@ public class YdService {
 
                     resvOrderAndroid.setVipId(0);
                     boolean insert = iResvOrderAndroidService.insert(resvOrderAndroid);
+                    //插入订单自动接单日志
+                    insertAutoAcceptLogs(resvOrderAndroid.getResvOrder());
+
+
                     if (insert) {
                         //更新批次号
                         resvOrderThird.setBatchNo("pc" + orderNo);
@@ -740,6 +750,25 @@ public class YdService {
         return SignUtil.verifySignature(params, MeituanMethod.SIGNKEY);
     }
 
+
+    /**
+     * 插入日志
+     */
+    public void insertAutoAcceptLogs(String  orderNo){
+        //订单日志记录
+        ResvOrderLogs resvOrderLogs = new ResvOrderLogs();
+
+        String log = "订单预订成功-安卓电话机(系统自动接单)" ;
+        //将订单操作日志插入订单日志表
+        resvOrderLogs.setResvOrder(orderNo);
+        resvOrderLogs.setCreatedAt(new Date());
+        resvOrderLogs.setStatus("1");
+        resvOrderLogs.setStatusName("已预定");
+        resvOrderLogs.setLogs(log);
+        iResvOrderLogsService.insert(resvOrderLogs);
+    }
+
+
     /**
      * 生成美团签名
      *
@@ -749,6 +778,12 @@ public class YdService {
     private static String createMeituanSgin(Map<String, Object> params) {
         return SignUtil.calcSign(params, MeituanMethod.SIGNKEY);
     }
+
+
+    /**
+     * 自动接单插入订单日志
+     */
+
 
     /**
      * 实体对象转成Map

@@ -142,28 +142,27 @@ public class AddOrderService {
         ResvStatusMapping resvStatus = iResvStatusMappingService.selectOne(new EntityWrapper<ResvStatusMapping>()
                 .eq("status_id", resvOrder.getStatus()));
 
-        Integer androidUserId = resvOrder.getAndroidUserId();
-        String androidUserName = resvOrder.getAndroidUserName();
+        //根据deviceType 判断是小程序还是电话机的制定日志
+        String deviceType = (addOrderDTO.getDeviceType().equals("1") ? "安卓电话机" : "小程序");
 
-        String desc = (androidUserId == null ? "" : "(" + androidUserName + ")");
+        String androidUserName = resvOrder.getAndroidUserName();
+        String desc = (androidUserName == null ? "" : "(" + androidUserName + ")");
 
         String log;
-
         switch (resvStatus.getStatusId()) {
             case 1:
-                log = "订单预订成功-安卓电话机" + desc;
+                log = "订单预订成功-" + deviceType + desc;
                 break;
             case 2:
-                log = "订单入座成功-安卓电话机" + desc;
+                log = "订单入座成功-" + deviceType + desc;
                 break;
             case 5:
-                log = "锁台成功-安卓电话机" + desc;
+                log = "锁台成功-" + deviceType + desc;
                 break;
             default:
-                log = "订单预订成功-安卓电话机" + desc;
+                log = "订单预订成功-" + deviceType + desc;
                 break;
         }
-
 
         //循环插入订单
         for (TableDTO dto : tableDTO) {
@@ -174,7 +173,6 @@ public class AddOrderService {
             String orderNo = IdUtils.makeOrderNo();
             resvOrder.setResvOrder(orderNo);
             resvOrder.setCreatedAt(date);
-
             //以桌位生成订单
             iResvOrderService.insert(resvOrder);
 
@@ -187,8 +185,6 @@ public class AddOrderService {
             resvOrderLogs.setStatusName(resvStatus.getStatusName());
             resvOrderLogs.setLogs(log);
             iResvOrderLogsService.insert(resvOrderLogs);
-
-
         }
 
         return SuccessTip.SUCCESS_TIP;
@@ -197,6 +193,7 @@ public class AddOrderService {
 
     /**
      * 天泰pc端生成订单
+     *
      * @param addOrderDTO
      * @return
      */
@@ -472,6 +469,7 @@ public class AddOrderService {
 
     /**
      * 普通预定手动发送短信
+     *
      * @param smsType 预定类型
      * @param batchNo 订单批次号
      */
@@ -522,6 +520,7 @@ public class AddOrderService {
 
     /**
      * 天泰普通预定手动发送短信
+     *
      * @param smsType 预定类型
      * @param batchNo 订单批次号
      */
@@ -565,8 +564,6 @@ public class AddOrderService {
         return messageResultBO;          //普通预定或者加桌
 
     }
-
-
 
 
     /**
@@ -700,7 +697,6 @@ public class AddOrderService {
     public MessageResultBO sendCancelMsgAll(List<String> addOrderDTOS) {
 
 
-
         MessageOrderQO messageOrderQO = new MessageOrderQO();
         messageOrderQO.setSmsType("cancel");
         // 获取短信配置
@@ -752,4 +748,6 @@ public class AddOrderService {
 
         return businessSmsTemplate.getStatus();
     }
+
+
 }
