@@ -16,6 +16,7 @@ import com.zhidianfan.pig.yd.moduler.manage.dto.UserDTO;
 import com.zhidianfan.pig.yd.moduler.manage.feign.AuthFeign;
 import com.zhidianfan.pig.yd.moduler.manage.feign.SysDictFeign;
 import com.zhidianfan.pig.yd.moduler.manage.feign.WxPushFeign;
+import com.zhidianfan.pig.yd.moduler.sms.service.rmi.SmsFeign;
 import org.apache.commons.lang.time.DateFormatUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -47,6 +48,9 @@ public class AgentManageService {
 
     @Autowired
     private ISnCodeService snCodeService;
+
+    @Autowired
+    private SmsFeign smsFeign;
 
     /**
      * 经销商列表
@@ -156,6 +160,12 @@ public class AgentManageService {
             if(putStatus){
                 String openid = sysDictFeign.getDict("agent_openid","agent_openid");
                 putApplyNotice(openid,agent.getCreatedAt(),agent.getAgentName(),"经销商");
+
+                //todo 经销商注册发送短信审核 发送给胡鹏程
+                String phone = "13028939980";
+                String msg= "叮叮,有渠道提交申请请求，请及时处理。登录查看详情:   manager.zhidianfan.com";
+                smsFeign.sendNormalMsg(phone,msg);
+
                 return new SuccessTip(200,"添加成功");
             }else {
                 return new SuccessTip(4001,"添加失败");

@@ -416,6 +416,12 @@ public class SmsController {
 
 
         Tip tip = result ? new SuccessTip(200, "success") : new ErrorTip(400, "failed");
+
+        //审核发送给刘健
+        String phone = "13065883920";
+        String msg = String.format("叮叮，%s酒店有营销短信待审核，请及时处理。登录查看详情   manager.zhidianfan.com" , business.getBusinessName()) ;
+        smsFeign.sendNormalMsg(phone,msg);
+
         return ResponseEntity.ok(tip);
     }
 

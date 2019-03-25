@@ -16,6 +16,7 @@ import com.zhidianfan.pig.yd.moduler.resv.dto.EmployeeDTO;
 import com.zhidianfan.pig.yd.moduler.resv.dto.VipValueDTO;
 import com.zhidianfan.pig.yd.moduler.resv.service.BusinessEmployeeService;
 import com.zhidianfan.pig.yd.moduler.resv.service.BusinessService;
+import com.zhidianfan.pig.yd.moduler.sms.service.rmi.SmsFeign;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -110,6 +111,9 @@ public class BusinessManageService {
 
     @Autowired
     private ISellerMenuService iSellerMenuService;
+
+    @Autowired
+    private SmsFeign smsFeign;
 
 
     /**
@@ -291,6 +295,13 @@ public class BusinessManageService {
                 String openid = sysDictFeign.getDict("business_openid","business_openid");
                 agentManageService.putApplyNotice(openid,business.getCreatedAt(),business.getBusinessName(),"酒店");
                 successTip = new SuccessTip(200,"添加成功");
+
+                //todo 发送短信提醒公司 审核发送给胡鹏程
+                String phone = "13028939980" ;
+                String msg = String.format("叮叮，%s渠道提交%s 酒店开户申请，请及时处理。登录查看详情:   manager.zhidianfan.com"
+                                            ,businessDTO.getAgentName(),businessDTO.getBusinessName());
+                smsFeign.sendNormalMsg(phone,msg);
+
             }else {
                 successTip = new SuccessTip(4001,"添加失败");
             }
