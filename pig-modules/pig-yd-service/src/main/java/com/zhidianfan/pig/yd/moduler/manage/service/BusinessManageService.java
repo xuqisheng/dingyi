@@ -296,7 +296,7 @@ public class BusinessManageService {
                 agentManageService.putApplyNotice(openid,business.getCreatedAt(),business.getBusinessName(),"酒店");
                 successTip = new SuccessTip(200,"添加成功");
 
-                //todo 发送短信提醒公司 审核发送给胡鹏程
+                // 发送短信提醒公司 审核发送给胡鹏程
                 String phone = "13028939980" ;
                 String msg = String.format("叮叮，%s渠道提交%s 酒店开户申请，请及时处理。登录查看详情:   manager.zhidianfan.com"
                                             ,businessDTO.getAgentName(),businessDTO.getBusinessName());
