@@ -7,7 +7,7 @@ import com.zhidianfan.pig.yd.moduler.common.service.IAndroidUserInfoService;
 import com.zhidianfan.pig.yd.moduler.common.service.ISmsValidateService;
 import com.zhidianfan.pig.yd.moduler.manage.dto.SuccessTip;
 import com.zhidianfan.pig.yd.moduler.manage.dto.TipCommon;
-import com.zhidianfan.pig.yd.moduler.resv.service.SmsService;
+import com.zhidianfan.pig.yd.moduler.resv.service.SmsValidateService;
 import com.zhidianfan.pig.yd.moduler.resv.vo.LoginMessageVo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -30,21 +30,21 @@ import java.util.Random;
  */
 @Slf4j
 @RestController
-@RequestMapping("/sms")
-public class SmsController {
+@RequestMapping("/sms/validate")
+public class SmsValidateController {
     @Autowired
     private IAndroidUserInfoService androidUserInfoService;
 
     @Autowired
-    private SmsService smsService;
+    private SmsValidateService smsValidateService;
 
     @Autowired
-    private ISmsValidateService smsValidateService;
+    private ISmsValidateService validateService;
 
     @Autowired
     private RestTemplate restTemplate;
 
-    @PostMapping("/send/validate")
+    @PostMapping("/send")
     public ResponseEntity sendValidate(String username){
         AndroidUserInfo userInfo = androidUserInfoService.selectOne(new EntityWrapper<AndroidUserInfo>().eq("login_name", username));
         TipCommon tipCommon = new TipCommon();
@@ -76,7 +76,7 @@ public class SmsController {
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
 
         HttpEntity<LoginMessageVo> httpEntity = new HttpEntity<>(loginMessageVo, httpHeaders);
-        if(!smsService.checkMobileSendTime(userInfo.getAppUserPhone())){
+        if(!smsValidateService.checkMobileSendTime(userInfo.getAppUserPhone())){
             tipCommon.setCode(500);
             tipCommon.setMsg("短信发送过于频繁，每分钟只能发送一次");
             return ResponseEntity.badRequest().body(tipCommon);
@@ -99,7 +99,7 @@ public class SmsController {
             smsValidate.setIsUse(0);
             smsValidate.setBusinessId(30);
             smsValidate.setPhone(userInfo.getAppUserPhone());
-            smsValidateService.insert(smsValidate);
+            validateService.insert(smsValidate);
         }
 
         return ResponseEntity.ok(SuccessTip.SUCCESS_TIP);

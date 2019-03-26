@@ -10,6 +10,7 @@ import com.zhidianfan.pig.yd.moduler.common.dto.Tip;
 import com.zhidianfan.pig.yd.moduler.common.service.IAndroidUserInfoService;
 import com.zhidianfan.pig.yd.moduler.common.service.ISmsValidateService;
 import com.zhidianfan.pig.yd.moduler.manage.dto.TipCommon;
+import com.zhidianfan.pig.yd.moduler.manage.feign.AuthFeign;
 import com.zhidianfan.pig.yd.moduler.resv.dto.ChangePasswordDTO;
 import com.zhidianfan.pig.yd.moduler.resv.service.UserAuthService;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +41,9 @@ public class UserController {
 
     @Autowired
     private ISmsValidateService smsValidateService;
+
+    @Autowired
+    private AuthFeign authFeign;
 
     /**
      * 认证信息同步(不开放外部调用)
@@ -147,7 +151,7 @@ public class UserController {
             return ResponseEntity.badRequest().body(tipCommon);
         }
 
-        SmsValidate smsValidate = smsValidateService.selectOne(new EntityWrapper<SmsValidate>().eq("mobile", userInfo.getAppUserPhone()).eq("code", changePasswordDTO.getValidate()));
+        SmsValidate smsValidate = smsValidateService.selectOne(new EntityWrapper<SmsValidate>().eq("phone", userInfo.getAppUserPhone()).eq("code", changePasswordDTO.getValidate()));
 
         if(null == smsValidate || smsValidate.getIsUse() == 1){
             log.debug("验证码错误");
@@ -164,6 +168,8 @@ public class UserController {
             boolean userInfoUpdate = androidUserInfoService.updateById(userInfo);
             if(!smsValidateUpdate || !userInfoUpdate){
                 flag = false;
+            }else{
+                authFeign.updateUserPassword(userInfo.getAppUserPhone(),changePasswordDTO.getPassword());
             }
         } catch (Exception e) {
             log.error(e.getMessage());
