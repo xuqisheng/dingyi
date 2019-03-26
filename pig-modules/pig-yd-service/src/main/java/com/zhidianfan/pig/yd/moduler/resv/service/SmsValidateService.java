@@ -17,12 +17,12 @@ import java.time.ZoneId;
  * @Modified By:
  */
 @Service
-public class SmsService {
+public class SmsValidateService {
     @Autowired
     private ISmsValidateService smsValidateService;
 
     public boolean checkMobileSendTime(String mobile) {
-        SmsValidate smsValidate = smsValidateService.selectOne(new EntityWrapper<SmsValidate>().eq("mobile", mobile).orderBy("create_time", false));
+        SmsValidate smsValidate = smsValidateService.selectOne(new EntityWrapper<SmsValidate>().eq("phone", mobile).orderBy("create_time", false));
         if(null == smsValidate){
             return true;
         }
