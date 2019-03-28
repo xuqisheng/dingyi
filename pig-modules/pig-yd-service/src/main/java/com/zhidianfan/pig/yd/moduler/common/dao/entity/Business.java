@@ -324,6 +324,17 @@ public class Business extends Model<Business> {
      */
     @TableField("table_tag")
     private String tableTag;
+    /**
+     * 是否推送pad端
+     */
+    @TableField("is_pad_push")
+    private Integer isPadPush;
+    /**
+     * 是否推送pc端
+     */
+    @TableField("is_pc_push")
+    private Integer isPcPush;
+
 
 
     public Integer getId() {
@@ -972,6 +983,22 @@ public class Business extends Model<Business> {
 
     public void setTableTag(String tableTag) {
         this.tableTag = tableTag;
+    }
+
+    public Integer getIsPadPush() {
+        return isPadPush;
+    }
+
+    public void setIsPadPush(Integer isPadPush) {
+        this.isPadPush = isPadPush;
+    }
+
+    public Integer getIsPcPush() {
+        return isPcPush;
+    }
+
+    public void setIsPcPush(Integer isPcPush) {
+        this.isPcPush = isPcPush;
     }
 
     @Override

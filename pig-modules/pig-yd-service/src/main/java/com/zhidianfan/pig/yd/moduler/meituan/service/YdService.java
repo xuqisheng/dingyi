@@ -12,6 +12,7 @@ import com.zhidianfan.pig.yd.moduler.common.dto.SuccessTip;
 import com.zhidianfan.pig.yd.moduler.common.dto.Tip;
 import com.zhidianfan.pig.yd.moduler.common.service.*;
 import com.zhidianfan.pig.yd.moduler.meituan.bo.BasicBO;
+import com.zhidianfan.pig.yd.moduler.meituan.bo.BusinessBo;
 import com.zhidianfan.pig.yd.moduler.meituan.bo.OrderBO;
 import com.zhidianfan.pig.yd.moduler.meituan.bo.OrderQueryBO;
 import com.zhidianfan.pig.yd.moduler.meituan.constant.MeituanMethod;
@@ -353,13 +354,23 @@ public class YdService {
             basicBO.setData(data);
             basicBO.setError(null);
             try {
-                pushFeign.pushMsg(jgPush.getType(), jgPush.getUsername(), jgPush.getMsgSeq(), jgPush.getBusinessId(), jgPush.getMsg());
+                if(business.getIsPadPush() == 1){
+                    pushFeign.pushMsg(jgPush.getType(), jgPush.getUsername(), jgPush.getMsgSeq(), jgPush.getBusinessId(), jgPush.getMsg());
+                }
                 //如果自动接单则不推送这个消息
                 if (!receiptSign) {
                     jgPush.setType("ANDROID_PHONE");
                     pushFeign.pushMsg(jgPush.getType(), jgPush.getUsername(), jgPush.getMsgSeq(), jgPush.getBusinessId(), jgPush.getMsg());
                 }
-
+                List<Business> businessList = businessService.selectList(new EntityWrapper<Business>().eq("brand_id",business.getBrandId()).eq("status",'1'));
+                for(Business business1 : businessList){
+                    if(business1.getIsPcPush() == 1){
+                        jgPush.setType("WEB");
+                        jgPush.setBusinessId(String.valueOf(business1.getId()));
+                        log.info("pc版推送:{}",business1.getId());
+                        pushFeign.pushMsg(jgPush.getType(), jgPush.getUsername(), jgPush.getMsgSeq(), jgPush.getBusinessId(), jgPush.getMsg());
+                    }
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -824,5 +835,21 @@ public class YdService {
         long l2 = redisTemplate.opsForValue().increment("PUSH:" + type + ":" + todayStr, 1);
         String s1 = StringUtils.leftPad("" + l2, 7, "0");
         return Long.parseLong(todayStr + s1);
+    }
+
+    /**
+     * 根据口碑门店id获取酒店信息
+     * @param shopId
+     * @param merchantPid
+     * @return
+     */
+    public BusinessBo getBusinessInfo(String shopId, String merchantPid){
+        Business business = businessService.selectOne(new EntityWrapper<Business>().eq("shop_id",shopId).eq("merchant_pid",merchantPid).eq("status",'1'));
+        BusinessBo businessBo = null;
+        if(business != null){
+            businessBo.setBusinessId(business.getId());
+            businessBo.setBusinessName(business.getBusinessName());
+        }
+        return businessBo;
     }
 }

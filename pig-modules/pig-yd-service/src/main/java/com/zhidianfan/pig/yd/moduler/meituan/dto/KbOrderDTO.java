@@ -1,6 +1,6 @@
 package com.zhidianfan.pig.yd.moduler.meituan.dto;
 
-import io.swagger.models.auth.In;
+import lombok.Data;
 
 import java.util.Date;
 
@@ -10,6 +10,7 @@ import java.util.Date;
  * @Date Create in 2018/11/16
  * @Modified By:
  */
+@Data
 public class KbOrderDTO {
 
     /**
@@ -36,85 +37,5 @@ public class KbOrderDTO {
     private String remark;
     private Integer tableType;
     private String tableTypeName;
-
-    public Date getResvDate() {
-        return resvDate;
-    }
-
-    public void setResvDate(Date resvDate) {
-        this.resvDate = resvDate;
-    }
-
-    public String getVipName() {
-        return vipName;
-    }
-
-    public void setVipName(String vipName) {
-        this.vipName = vipName;
-    }
-
-    public Integer getResvNum() {
-        return resvNum;
-    }
-
-    public void setResvNum(Integer resvNum) {
-        this.resvNum = resvNum;
-    }
-
-    public String getVipPhone() {
-        return vipPhone;
-    }
-
-    public void setVipPhone(String vipPhone) {
-        this.vipPhone = vipPhone;
-    }
-
-    public String getVipSex() {
-        return vipSex;
-    }
-
-    public void setVipSex(String vipSex) {
-        this.vipSex = vipSex;
-    }
-
-    public String getBusinessName() {
-        return businessName;
-    }
-
-    public void setBusinessName(String businessName) {
-        this.businessName = businessName;
-    }
-
-    public Integer getBusinessId() {
-        return businessId;
-    }
-
-    public void setBusinessId(Integer businessId) {
-        this.businessId = businessId;
-    }
-
-    public String getRemark() {
-        return remark;
-    }
-
-    public void setRemark(String remark) {
-        this.remark = remark;
-    }
-
-    public Integer getTableType() {
-        return tableType;
-    }
-
-    public void setTableType(Integer tableType) {
-        this.tableType = tableType;
-    }
-
-    public String getTableTypeName() {
-        return tableTypeName;
-    }
-
-    public void setTableTypeName(String tableTypeName) {
-        this.tableTypeName = tableTypeName;
-    }
 
 }
