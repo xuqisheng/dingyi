@@ -171,5 +171,13 @@ public class VipInfoDTO {
 
     private String  vipPostion;
 
+    private Integer birthFlag;
+
+    private Integer hideBirthdayYear;
+
+    private Date nextVipBirthday;
+
+    private Integer isLeap;
+
 
 }
