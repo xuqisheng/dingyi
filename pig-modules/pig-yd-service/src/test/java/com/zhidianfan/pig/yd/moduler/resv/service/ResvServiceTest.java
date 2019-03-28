@@ -101,7 +101,7 @@ public class ResvServiceTest {
 
 
 		ResvOrderAndroid resvOrderAndroid = new ResvOrderAndroid();
-		resvOrderAndroid.setId(1103921355747299329L);
+		resvOrderAndroid.setId(1);
 		resvOrderAndroid.setBusinessId(1);
 
 		iResvOrderAndroidService.updateById(resvOrderAndroid);
