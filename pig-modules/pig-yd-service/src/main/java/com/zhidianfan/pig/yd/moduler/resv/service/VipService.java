@@ -67,6 +67,9 @@ public class VipService {
     @Resource
     private IResvOrderRatingService iResvOrderRatingService;
 
+    @Autowired
+    private AnniversaryService anniversaryService;
+
     /**
      * 根据酒店id与手机号更新或者新增Vip
      *
@@ -134,9 +137,9 @@ public class VipService {
         Date lastEatTime = iResvOrderAndroidService.selectLastEatTime(vipInfo.getId(), OrderStatus.SETTLE_ACCOUNTS.code);
 
         //查询上一次就餐评分
-
         VipInfoDTO vipInfoDTO = new VipInfoDTO();
         BeanUtils.copyProperties(vipInfo, vipInfoDTO);
+
 
         vipInfoDTO.setResvTimes(resvTimes);
         vipInfoDTO.setActResvTimes(actResvTimes);

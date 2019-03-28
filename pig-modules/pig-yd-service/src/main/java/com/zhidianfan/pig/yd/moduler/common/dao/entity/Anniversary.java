@@ -51,6 +51,12 @@ public class Anniversary extends Model<Anniversary> {
     @TableField("anniversary_year_flag")
     private Integer anniversaryYearFlag;
 
+    @TableField("remark")
+    private String remark;
+
+    @TableField("anniversary_pic")
+    private String anniversaryPic;
+
 
     public Integer getId() {
         return id;
@@ -140,6 +146,23 @@ public class Anniversary extends Model<Anniversary> {
         this.anniversaryYearFlag = anniversaryYearFlag;
     }
 
+
+    public String getRemark() {
+        return remark;
+    }
+
+    public void setRemark(String remark) {
+        this.remark = remark;
+    }
+
+    public String getAnniversaryPic() {
+        return anniversaryPic;
+    }
+
+    public void setAnniversaryPic(String anniversaryPic) {
+        this.anniversaryPic = anniversaryPic;
+    }
+
     @Override
     protected Serializable pkVal() {
         return this.id;
@@ -160,6 +183,8 @@ public class Anniversary extends Model<Anniversary> {
                 ", businessId=" + businessId +
                 ", nextAnniversaryTime=" + nextAnniversaryTime +
                 ", anniversaryYearFlag=" + anniversaryYearFlag +
+                ", remark='" + remark + '\'' +
+                ", anniversaryPic='" + anniversaryPic + '\'' +
                 '}';
     }
 }
