@@ -51,4 +51,10 @@ public class AnniversaryDTO {
      * 纪念日图片url 多张图片url 可以用逗号隔开
      */
     private String anniversaryPic;
+
+    /**
+     * 纪念日标题
+     */
+    private String anniversaryTitle;
+
 }
