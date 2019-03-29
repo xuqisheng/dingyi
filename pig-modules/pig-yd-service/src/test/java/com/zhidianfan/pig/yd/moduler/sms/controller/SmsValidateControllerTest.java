@@ -23,7 +23,7 @@ import static org.junit.Assert.*;
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @AutoConfigureMockMvc
-public class SmsControllerTest {
+public class SmsValidateControllerTest {
 	private Logger log = LoggerFactory.getLogger(getClass());
 
 	private MockMvc mvc;
