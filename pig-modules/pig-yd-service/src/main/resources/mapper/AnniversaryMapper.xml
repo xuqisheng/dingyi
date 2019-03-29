@@ -17,6 +17,7 @@
         <result column="anniversary_year_flag" property="anniversaryYearFlag" />
         <result column="remark" property="remark" />
         <result column="anniversary_pic" property="anniversaryPic" />
+        <result column="anniversary_title" property="anniversaryTitle" />
     </resultMap>
 
     <select id="getPastAnniversaryVip" resultMap="BaseResultMap">
@@ -31,6 +32,75 @@
         next_anniversary_time is null
         OR CURDATE() &gt; next_anniversary_time)
         and  calendar_type is not null
+    </select>
+
+    <select id="selectCustomerCareInfoByPage" parameterType="com.zhidianfan.pig.yd.moduler.resv.dto.CustomerCareDTO" resultType="com.zhidianfan.pig.yd.moduler.resv.bo.CustomerCareBO">
+        /*基本信息*/
+        SELECT
+            id, vip_name vipName,vip_sex vipSex,vip_phone vipPhone,vip_value_name vipValueName,
+            vip_birthday vipBirthday,vip_birthday_nl vipBirthdayNl,birth_flag birthFlag,
+            anniversary_date  anniversaryDate,anniversary_title  title,calendar_type calendarType,nexttime,surplusTime,type
+        FROM
+            (
+            SELECT
+                b.id AS id,
+                b.vip_name,
+                b.vip_sex,
+                b.vip_phone,
+                b.vip_value_name,
+                '' AS vip_birthday,
+                '' AS vip_birthday_nl,
+                '' AS birth_flag,
+                a.anniversary_date,
+                a.anniversary_title,
+                a.calendar_type,
+                a.next_anniversary_time AS nexttime,
+                datediff(next_anniversary_time,SYSDATE()) as surplusTime,
+                /*剩余天数*/
+                '0' AS type
+            FROM
+               (select * from vip where business_id = #{businessId}
+                            and vip_phone is not null
+                            <if test="customerValueId != null and customerValueId != ''">
+                                AND vip_value_id = #{customerValueId}
+                            </if>) b
+                LEFT JOIN
+                ( SELECT * FROM anniversary WHERE business_id = #{businessId}
+                /*客户价值条件*/) a
+                ON a.vip_id = b.id
+            UNION
+            SELECT
+                id,
+                vip_name,
+                vip_sex,
+                vip_phone,
+                vip_value_name,
+                vip_birthday,
+                vip_birthday_nl,
+                birth_flag,
+                '' AS anniversary_date,
+                CONCAT( vip_name, IF ( vip_sex = '女', ' 小姐', ' 先生' ), '的生日' ) AS anniversary_title,
+                '' as calendar_type,
+                next_vip_birthday AS nexttime,
+                /*剩余天数*/
+                datediff(next_vip_birthday,SYSDATE())  as  surplusTime,
+                '1' AS type
+            FROM
+                vip
+            WHERE
+            business_id = #{businessId}
+            and vip_phone is not null
+            <if test="customerValueId != null and customerValueId != ''">
+                AND vip_value_id = #{customerValueId}
+            </if>
+            /*客户价值条件*/
+            ) c
+            where
+            1 = 1
+            <if test="surplusTime != null and surplusTime != ''">
+                AND surplusTime &lt;= #{surplusTime}
+            </if>
+
     </select>
 
 </mapper>

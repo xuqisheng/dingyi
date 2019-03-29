@@ -57,6 +57,9 @@ public class Anniversary extends Model<Anniversary> {
     @TableField("anniversary_pic")
     private String anniversaryPic;
 
+    @TableField("anniversary_title")
+    private String anniversaryTitle;
+
 
     public Integer getId() {
         return id;
@@ -163,11 +166,18 @@ public class Anniversary extends Model<Anniversary> {
         this.anniversaryPic = anniversaryPic;
     }
 
+    public String getAnniversaryTitle() {
+        return anniversaryTitle;
+    }
+
+    public void setAnniversaryTitle(String anniversaryTitle) {
+        this.anniversaryTitle = anniversaryTitle;
+    }
+
     @Override
     protected Serializable pkVal() {
         return this.id;
     }
-
 
     @Override
     public String toString() {
@@ -185,6 +195,7 @@ public class Anniversary extends Model<Anniversary> {
                 ", anniversaryYearFlag=" + anniversaryYearFlag +
                 ", remark='" + remark + '\'' +
                 ", anniversaryPic='" + anniversaryPic + '\'' +
+                ", anniversaryTitle='" + anniversaryTitle + '\'' +
                 '}';
     }
 }

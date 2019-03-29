@@ -1,5 +1,6 @@
 package com.zhidianfan.pig.yd.moduler.resv.controller;
 
+import com.baomidou.mybatisplus.plugins.Page;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.Anniversary;
 import com.zhidianfan.pig.yd.moduler.common.dto.ErrorTip;
 import com.zhidianfan.pig.yd.moduler.common.dto.SuccessTip;
@@ -78,18 +79,13 @@ public class AnniversaryController {
      * 客户关怀页面
      * @return
      */
-    @GetMapping("/customercare")
-    public ResponseEntity getCustomerCare() {
+    @PostMapping("/customercare")
+    public ResponseEntity getCustomerCare(@RequestBody CustomerCareDTO customerCareDTO) {
 
         //客户关怀
-        CustomerCareDTO customerCareDTO = new CustomerCareDTO();
-        customerCareDTO.setCustomerValue("高价值客户");
-        customerCareDTO.setTitle("张三线上的结婚纪念日");
-        customerCareDTO.setPhone("13676520623");
-        customerCareDTO.setDate("2018-07-27");
-        customerCareDTO.setSurplusTime("今天(一周年)");
-        customerCareDTO.setVipId("7105125");
+        Page<CustomerCareDTO> customerCarePage  = anniversaryService.getCustomerCarePage(customerCareDTO);
 
-        return ResponseEntity.ok(customerCareDTO);
+
+        return ResponseEntity.ok(customerCarePage);
     }
 }

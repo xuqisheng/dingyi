@@ -16,8 +16,10 @@ public class CustomerCareDTO {
     private String name;
     private String phone;
     private String customerValue;
+    private Integer customerValueId;
     private String date;
     private String surplusTime;
     private String vipId;
+    private String businessId;
 
 }
