@@ -1,5 +1,6 @@
 package com.zhidianfan.pig.yd.moduler.resv.service;
 
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.baomidou.mybatisplus.plugins.Page;
 import com.zhidianfan.pig.common.util.PageFactory;
@@ -325,7 +326,8 @@ public class VipService {
         Business businessInfo = businessService.selectOne(new EntityWrapper<Business>()
                 .eq("id", id).eq("status", 1));
 
-        List<Vip> vips = new ArrayList<>();
+        List<Vip> sucVips = new ArrayList<>();
+        List<Vip> failVips = new ArrayList<>();
         Date date = new Date();
 
         for (Map<String, Object> map : list) {
@@ -337,18 +339,30 @@ public class VipService {
                 vip.setBusinessId(businessInfo.getId());
                 vip.setBusinessName(businessInfo.getBusinessName());
                 vip.setCreatedAt(date);
-                vips.add(vip);
+                sucVips.add(vip);
+            }else {
+                //加入失败的客户信息
+                Vip vip = new Vip();
+                org.apache.commons.beanutils.BeanUtils.populate(vip, map);
+                failVips.add(vip);
             }
 
         }
 
         SuccessTip successTip = new SuccessTip();
 
-        if (vips.size() == 0) {
+        if (sucVips.size() == 0) {
             successTip.setMsg("表内数据为空或者请检查字段");
         } else {
-            iVipService.excelInsertVIPInfo(vips);
-            successTip.setMsg("成功导入数据" + vips.size() + "条");
+            iVipService.excelInsertVIPInfo(sucVips);
+
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("total",list);
+            jsonObject.put("successNum",sucVips.size());
+            jsonObject.put("failNum",failVips.size());
+            jsonObject.put("failData",failVips);
+
+            successTip.setMsg(jsonObject.toString());
         }
 
 
