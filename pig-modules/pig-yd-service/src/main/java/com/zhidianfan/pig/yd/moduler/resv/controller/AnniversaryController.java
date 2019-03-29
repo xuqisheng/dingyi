@@ -1,18 +1,17 @@
 package com.zhidianfan.pig.yd.moduler.resv.controller;
 
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.Anniversary;
-import com.zhidianfan.pig.yd.moduler.common.dao.entity.Blacklist;
 import com.zhidianfan.pig.yd.moduler.common.dto.ErrorTip;
 import com.zhidianfan.pig.yd.moduler.common.dto.SuccessTip;
 import com.zhidianfan.pig.yd.moduler.common.dto.Tip;
 import com.zhidianfan.pig.yd.moduler.resv.dto.AnniversaryDTO;
 import com.zhidianfan.pig.yd.moduler.resv.service.AnniversaryService;
-import com.zhidianfan.pig.yd.moduler.resv.service.BlackListService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.List;
 
 /**
@@ -28,7 +27,6 @@ public class AnniversaryController {
 
     @Autowired
     AnniversaryService anniversaryService;
-
 
     /**
      * 查询用户的纪念日
@@ -56,7 +54,7 @@ public class AnniversaryController {
 
 
     @PostMapping("/deleteinfo")
-    public ResponseEntity deleteExactAnniversary(@RequestBody Integer anniversaryId) {
+    public ResponseEntity deleteExactAnniversary(@Valid Integer anniversaryId) {
 
         Boolean b = anniversaryService.deleteExactAnniversary(anniversaryId);
         Tip tip = (b ? SuccessTip.SUCCESS_TIP : ErrorTip.ERROR_TIP);

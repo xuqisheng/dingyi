@@ -64,7 +64,7 @@ public class AnniversaryService {
 
         Anniversary anniversary= new Anniversary();
 
-        BeanUtils.copyProperties(anniversary , anniversaryDTO);
+        BeanUtils.copyProperties(anniversaryDTO ,anniversary);
 
         //更新或者插入
         Boolean b = iAnniversaryService.insertOrUpdate(anniversary);
