@@ -1,6 +1,7 @@
 package com.zhidianfan.pig.yd.moduler.resv.controller;
 
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
+import com.xiaoleilu.hutool.system.UserInfo;
 import com.zhidianfan.pig.common.util.PasswordUtils;
 import com.zhidianfan.pig.yd.moduler.common.constant.ClientId;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.AndroidUserInfo;
@@ -143,15 +144,15 @@ public class UserController {
             return ResponseEntity.badRequest().body(tipCommon);
         }
 
-        AndroidUserInfo userInfo = androidUserInfoService.selectOne(new EntityWrapper<AndroidUserInfo>().eq("login_name", changePasswordDTO.getUsername()));
-        if(null == userInfo){
+        tipCommon = authFeign.findUserPhone(changePasswordDTO.getUsername(), "WEB_MANAGER");
+        if(tipCommon.getCode() != 200){
             log.debug("用户名:{} 不存在",changePasswordDTO.getUsername());
             tipCommon.setCode(500);
             tipCommon.setMsg("用户不存在");
             return ResponseEntity.badRequest().body(tipCommon);
         }
 
-        SmsValidate smsValidate = smsValidateService.selectOne(new EntityWrapper<SmsValidate>().eq("phone", userInfo.getAppUserPhone()).eq("code", changePasswordDTO.getValidate()));
+        SmsValidate smsValidate = smsValidateService.selectOne(new EntityWrapper<SmsValidate>().eq("phone", tipCommon.getMsg()).eq("code", changePasswordDTO.getValidate()));
 
         if(null == smsValidate || smsValidate.getIsUse() == 1){
             log.debug("验证码错误");
@@ -162,6 +163,7 @@ public class UserController {
 
         boolean flag = true;
         try {
+            AndroidUserInfo userInfo = androidUserInfoService.selectOne(new EntityWrapper<AndroidUserInfo>().eq("login_name", changePasswordDTO.getUsername()));
             smsValidate.setIsUse(1);
             boolean smsValidateUpdate = smsValidateService.updateById(smsValidate);
             userInfo.setAppUserPassword(changePasswordDTO.getPassword());
@@ -169,7 +171,7 @@ public class UserController {
             if(!smsValidateUpdate || !userInfoUpdate){
                 flag = false;
             }else{
-                authFeign.updateUserPassword(userInfo.getAppUserPhone(),changePasswordDTO.getPassword());
+                authFeign.updateUserPassword(tipCommon.getMsg(),changePasswordDTO.getPassword());
             }
         } catch (Exception e) {
             log.error(e.getMessage());

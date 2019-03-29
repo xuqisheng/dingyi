@@ -54,4 +54,13 @@ public class ErrorTip implements Tip {
     public String getMsg() {
         return msg;
     }
+
+    @Override
+    public String toString() {
+        return "ErrorTip{" +
+                "code=" + code +
+                ", msg='" + msg + '\'' +
+                ", content=" + content +
+                '}';
+    }
 }

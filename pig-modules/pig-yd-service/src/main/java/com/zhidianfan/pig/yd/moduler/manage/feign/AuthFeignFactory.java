@@ -92,6 +92,10 @@ public class AuthFeignFactory implements FallbackFactory<AuthFeign> {
                 return new TipCommon(500, throwable.getMessage());
             }
 
+            @Override
+            public TipCommon findUserPhone(String username, String clientType) {
+                return new TipCommon(500, throwable.getMessage());
+            }
         };
     }
 }

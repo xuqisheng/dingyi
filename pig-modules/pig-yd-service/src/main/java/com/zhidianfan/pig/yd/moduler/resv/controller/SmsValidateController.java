@@ -1,12 +1,16 @@
 package com.zhidianfan.pig.yd.moduler.resv.controller;
 
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
+import com.zhidianfan.pig.common.constant.Tip;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.AndroidUserInfo;
+import com.zhidianfan.pig.yd.moduler.common.dao.entity.SellerUser;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.SmsValidate;
 import com.zhidianfan.pig.yd.moduler.common.service.IAndroidUserInfoService;
+import com.zhidianfan.pig.yd.moduler.common.service.ISellerUserService;
 import com.zhidianfan.pig.yd.moduler.common.service.ISmsValidateService;
 import com.zhidianfan.pig.yd.moduler.manage.dto.SuccessTip;
 import com.zhidianfan.pig.yd.moduler.manage.dto.TipCommon;
+import com.zhidianfan.pig.yd.moduler.manage.feign.AuthFeign;
 import com.zhidianfan.pig.yd.moduler.resv.service.SmsValidateService;
 import com.zhidianfan.pig.yd.moduler.resv.vo.LoginMessageVo;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +37,7 @@ import java.util.Random;
 @RequestMapping("/sms/validate")
 public class SmsValidateController {
     @Autowired
-    private IAndroidUserInfoService androidUserInfoService;
+    private ISellerUserService sellerUserService;
 
     @Autowired
     private SmsValidateService smsValidateService;
@@ -42,25 +46,36 @@ public class SmsValidateController {
     private ISmsValidateService validateService;
 
     @Autowired
+    private AuthFeign authFeign;
+
+    @Autowired
     private RestTemplate restTemplate;
 
     @PostMapping("/send")
     public ResponseEntity sendValidate(String username){
-        AndroidUserInfo userInfo = androidUserInfoService.selectOne(new EntityWrapper<AndroidUserInfo>().eq("login_name", username));
-        TipCommon tipCommon = new TipCommon();
-        if(null == userInfo){
-            log.debug("用户名:{} 不存在", username);
+//        SellerUser userInfo = sellerUserService.selectOne(new EntityWrapper<SellerUser>().eq("login_name", username));
+        TipCommon tipCommon = authFeign.findUserPhone(username, "WEB_MANAGER");
+
+        log.info("tipCommon:{}",tipCommon);
+        if(tipCommon.getCode() != 200){
             tipCommon.setCode(500);
-            tipCommon.setMsg("用户名不存在");
+            tipCommon.setMsg("用户该客户端无法登录");
             return ResponseEntity.badRequest().body(tipCommon);
         }
 
-        if(!StringUtils.equals(userInfo.getStatus(),"1")){
-            log.debug("用户名:{} 状态:{} 不可用",userInfo.getLoginName(),userInfo.getStatus());
-            tipCommon.setCode(500);
-            tipCommon.setMsg("用户状态不可用");
-            return ResponseEntity.badRequest().body(tipCommon);
-        }
+//        if(null == userInfo){
+//            log.debug("用户名:{} 不存在", username);
+//            tipCommon.setCode(500);
+//            tipCommon.setMsg("用户名不存在");
+//            return ResponseEntity.badRequest().body(tipCommon);
+//        }
+//
+//        if(!StringUtils.equals(userInfo.getStatus(),"1")){
+//            log.debug("用户名:{} 状态:{} 不可用",userInfo.getLoginName(),userInfo.getStatus());
+//            tipCommon.setCode(500);
+//            tipCommon.setMsg("用户状态不可用");
+//            return ResponseEntity.badRequest().body(tipCommon);
+//        }
         Random random = new Random();
 
         String code = "";
@@ -71,12 +86,12 @@ public class SmsValidateController {
         LoginMessageVo loginMessageVo = new LoginMessageVo();
         loginMessageVo.setBusinessId(30L);
         loginMessageVo.setCode(code);
-        loginMessageVo.setPhone(Long.valueOf(userInfo.getAppUserPhone()));
+        loginMessageVo.setPhone(Long.valueOf(tipCommon.getMsg()));
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
 
         HttpEntity<LoginMessageVo> httpEntity = new HttpEntity<>(loginMessageVo, httpHeaders);
-        if(!smsValidateService.checkMobileSendTime(userInfo.getAppUserPhone())){
+        if(!smsValidateService.checkMobileSendTime(tipCommon.getMsg())){
             tipCommon.setCode(500);
             tipCommon.setMsg("短信发送过于频繁，每分钟只能发送一次");
             return ResponseEntity.badRequest().body(tipCommon);
@@ -98,7 +113,7 @@ public class SmsValidateController {
             smsValidate.setCode(code);
             smsValidate.setIsUse(0);
             smsValidate.setBusinessId(30);
-            smsValidate.setPhone(userInfo.getAppUserPhone());
+            smsValidate.setPhone(tipCommon.getMsg());
             validateService.insert(smsValidate);
         }
 
