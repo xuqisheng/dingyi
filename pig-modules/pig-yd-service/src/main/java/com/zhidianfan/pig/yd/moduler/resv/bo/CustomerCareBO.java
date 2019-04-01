@@ -21,11 +21,17 @@ public class CustomerCareBO {
     private String vipValueName;
     private String vipBirthday;
     private String vipBirthdayNl;
-    private String birthFlag;
+    /**
+     * 0为公历
+     * 1为农历
+     */
+    private Integer calendarType;
     private String anniversaryDate;
     private String anniversaryTitle;
     private LocalDateTime nexttime;
     private Integer surplusTime;
+    private Integer hideFlag;
+    private Integer isLeap;
     /**
      * 0 代表纪念日  1 代表生日
      */

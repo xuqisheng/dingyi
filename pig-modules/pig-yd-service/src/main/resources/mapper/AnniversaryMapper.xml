@@ -38,8 +38,8 @@
         /*基本信息*/
         SELECT
             id, vip_name vipName,vip_sex vipSex,vip_phone vipPhone,vip_value_name vipValueName,
-            vip_birthday vipBirthday,vip_birthday_nl vipBirthdayNl,birth_flag birthFlag,
-            anniversary_date  anniversaryDate,anniversary_title  title,calendar_type calendarType,nexttime,surplusTime,type
+            vip_birthday vipBirthday,vip_birthday_nl vipBirthdayNl,hideFlag,is_leap isLeap,
+            anniversary_date  anniversaryDate,anniversary_title  title,calendar_type calendarType,nexttime,   surplusTime,type
         FROM
             (
             SELECT
@@ -50,23 +50,23 @@
                 b.vip_value_name,
                 '' AS vip_birthday,
                 '' AS vip_birthday_nl,
-                '' AS birth_flag,
+                a.calendar_type  AS calendar_type,
+                anniversary_year_flag as hideFlag,
+                a.is_leap,
                 a.anniversary_date,
                 a.anniversary_title,
-                a.calendar_type,
                 a.next_anniversary_time AS nexttime,
                 datediff(next_anniversary_time,SYSDATE()) as surplusTime,
                 /*剩余天数*/
                 '0' AS type
             FROM
-               (select * from vip where business_id = #{businessId}
-                            and vip_phone is not null
-                            <if test="customerValueId != null and customerValueId != ''">
-                                AND vip_value_id = #{customerValueId}
-                            </if>) b
+                    (select * from anniversary	c	where business_id = #{businessId} and EXISTS( SELECT id FROM vip o WHERE o.id=c.vip_id and business_id = #{businessId})) a
                 LEFT JOIN
-                ( SELECT * FROM anniversary WHERE business_id = #{businessId}
-                /*客户价值条件*/) a
+                    (select * from vip where business_id = #{businessId}
+                    and vip_phone is not null
+                    <if test="customerValueId != null and customerValueId != ''">
+                        AND vip_value_id = #{customerValueId}
+                    </if>) b
                 ON a.vip_id = b.id
             UNION
             SELECT
@@ -77,10 +77,11 @@
                 vip_value_name,
                 vip_birthday,
                 vip_birthday_nl,
-                birth_flag,
+                birth_flag as calendar_type,
                 '' AS anniversary_date,
                 CONCAT( vip_name, IF ( vip_sex = '女', ' 小姐', ' 先生' ), '的生日' ) AS anniversary_title,
-                '' as calendar_type,
+                hide_birthday_year as hideFlag,
+                is_leap,
                 next_vip_birthday AS nexttime,
                 /*剩余天数*/
                 datediff(next_vip_birthday,SYSDATE())  as  surplusTime,
@@ -89,7 +90,9 @@
                 vip
             WHERE
             business_id = #{businessId}
-            and vip_phone is not null
+            and vip_phone is not null /*客户存在的条件*/
+            and vip_birthday is not null
+            and vip_birthday != ''
             <if test="customerValueId != null and customerValueId != ''">
                 AND vip_value_id = #{customerValueId}
             </if>
@@ -97,7 +100,8 @@
             ) c
             where
             1 = 1
-            <if test="surplusTime != null and surplusTime != ''">
+
+        <if test="surplusTime != null and surplusTime != ''">
                 AND surplusTime &lt;= #{surplusTime}
             </if>
 

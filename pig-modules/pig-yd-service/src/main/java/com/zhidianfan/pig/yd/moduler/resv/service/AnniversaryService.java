@@ -25,6 +25,8 @@ import java.util.Date;
 import java.util.List;
 
 import static com.zhidianfan.pig.yd.moduler.resv.service.VipNextBirthDayAnniversaryService.nextLunarTime;
+import static com.zhidianfan.pig.yd.utils.LunarSolarConverter.SolarToLunar;
+import static com.zhidianfan.pig.yd.utils.LunarStringConverterUtil.*;
 
 /**
  * @Author: hzp
@@ -147,7 +149,7 @@ public class AnniversaryService {
         for (CustomerCareBO customerCareBO : customerCareBOS) {
             CustomerCareDTO customerCareData = new CustomerCareDTO();
             customerCareData.setVipId(customerCareBO.getId());
-            String name = customerCareBO.getVipName() + (customerCareBO.getVipSex().equals("女") ? "小姐" : "先生");
+            String name  = customerCareBO.getVipName() + (customerCareBO.getVipSex().equals("女") ? "小姐" : "先生");
             customerCareData.setName(name);
             customerCareData.setPhone(customerCareBO.getVipPhone());
             customerCareData.setTitle(customerCareBO.getAnniversaryTitle());
@@ -163,11 +165,12 @@ public class AnniversaryService {
             } else if (customerCareBO.getSurplusTime() > 0) {
                 surplusDay = customerCareBO.getSurplusTime() + "天后";
             }
+
             //对几周年或者几岁的处理
             LocalDateTime nexttime = customerCareBO.getNexttime();
             LocalDateTime now = LocalDateTime.now();
             String yearDesc;
-            if (null == nexttime) {
+            if (null == nexttime || customerCareBO.getHideFlag() == 1) {
                 yearDesc = "";
             } else {
                 Integer yearDif = now.getYear() - nexttime.getYear() + 2;
@@ -181,8 +184,64 @@ public class AnniversaryService {
             customerCareData.setSurplusTime(surplusTime);
 
 
-            //设置日期
-            if (customerCareBO.getType() == 0)
+            //todo 展示农历还是公历 农历(年份去除)中文展示, 公历根据忽略年份展示 设置日期
+            //1. 对生日的展示
+            if (customerCareBO.getType() == 1){
+
+                //如果是农历 ,转为字符串
+                if (customerCareBO.getCalendarType() !=null  && customerCareBO.getCalendarType()  == 1){
+                   //转成农历字符串 月日形式
+                    String vipBirthdayNl = customerCareBO.getVipBirthdayNl();
+                    String nlDate="";
+                    if (customerCareBO.getIsLeap() == 1){
+                        nlDate= "闰";
+                    }
+                    String[] split = vipBirthdayNl.split("-");
+                    nlDate = nlDate +  getLunarMonthString(Integer.valueOf(split[1])) + getLunarDayString(Integer.valueOf(split[2]));
+                    customerCareData.setDate(nlDate);
+                }else {
+                    //如果是公历
+                    String cusVipBirthday = customerCareBO.getVipBirthday();
+                    String vipBirthday;
+                    //如果忽略年份
+                    if (customerCareBO.getHideFlag() != null && customerCareBO.getHideFlag() == 1){
+                        vipBirthday = cusVipBirthday.substring(5);
+                    }else {
+                        vipBirthday = cusVipBirthday;
+                    }
+                    customerCareData.setDate(vipBirthday);
+                }
+
+            }else {
+
+                String anniversaryDate = customerCareBO.getAnniversaryDate();
+                //2.对纪念日的展示
+                if (customerCareBO.getCalendarType() !=null &&  customerCareBO.getCalendarType()  == 1){
+                    String[] split = anniversaryDate.split("-");
+                    //如果是农历
+                    //1.公历转为农历
+                    Solar solar = new Solar(Integer.valueOf(split[0]),Integer.valueOf(split[1]),Integer.valueOf(split[2]));
+                    Lunar lunar = SolarToLunar(solar);
+                    String nlDate="";
+                    if (customerCareBO.getIsLeap() == 1){
+                        nlDate= "闰";
+                    }
+                    nlDate = nlDate +  getLunarMonthString(Integer.valueOf(lunar.lunarMonth)) + getLunarDayString(Integer.valueOf(lunar.lunarDay));
+
+                    customerCareData.setDate(nlDate);
+                }else {
+                    //如果是公历
+                    String anniversaryDate1;
+                    //如果忽略年份
+                    if (customerCareBO.getHideFlag() != null && customerCareBO.getHideFlag() == 1){
+                        anniversaryDate1 = anniversaryDate.substring(5);
+                    }else {
+                        anniversaryDate1 = anniversaryDate;
+                    }
+                    customerCareData.setDate(anniversaryDate1);
+                }
+
+            }
 
             customerCareDTOS.add(customerCareData);
 

@@ -182,7 +182,9 @@ public class LunarStringConverterUtil {
         return GanZhiTolunarYear(GanZhi)+"-"+getLunarMonth(luanrmonth)+"-"+getLunarDay(luanrday);
     }
 
-
+    public static String getLunarWithoutGZ(String luanrmonth,String luanrday){
+        return getLunarMonth(luanrmonth)+"-"+getLunarDay(luanrday);
+    }
 
 
 }
