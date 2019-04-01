@@ -37,17 +37,19 @@
     <select id="selectCustomerCareInfoByPage" parameterType="com.zhidianfan.pig.yd.moduler.resv.dto.CustomerCareDTO" resultType="com.zhidianfan.pig.yd.moduler.resv.bo.CustomerCareBO">
         /*基本信息*/
         SELECT
-            id, vip_name vipName,vip_sex vipSex,vip_phone vipPhone,vip_value_name vipValueName,
+            id, vip_name vipName,vip_sex vipSex,vip_phone vipPhone,vip_value_name vipValueName,vip_value_id vipValueId,business_id   businessId,
             vip_birthday vipBirthday,vip_birthday_nl vipBirthdayNl,hideFlag,is_leap isLeap,
             anniversary_date  anniversaryDate,anniversary_title  title,calendar_type calendarType,nexttime,   surplusTime,type
         FROM
             (
             SELECT
+                a.business_id,
                 b.id AS id,
                 b.vip_name,
                 b.vip_sex,
                 b.vip_phone,
                 b.vip_value_name,
+                b.vip_value_id,
                 '' AS vip_birthday,
                 '' AS vip_birthday_nl,
                 a.calendar_type  AS calendar_type,
@@ -71,10 +73,12 @@
             UNION
             SELECT
                 id,
+                business_id,
                 vip_name,
                 vip_sex,
                 vip_phone,
                 vip_value_name,
+                vip_value_id,
                 vip_birthday,
                 vip_birthday_nl,
                 birth_flag as calendar_type,
@@ -100,7 +104,6 @@
             ) c
             where
             1 = 1
-
         <if test="surplusTime != null and surplusTime != ''">
                 AND surplusTime &lt;= #{surplusTime}
             </if>

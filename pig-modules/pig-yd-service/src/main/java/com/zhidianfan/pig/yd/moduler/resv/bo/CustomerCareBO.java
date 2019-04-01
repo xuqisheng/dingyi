@@ -37,4 +37,7 @@ public class CustomerCareBO {
      */
     private Integer type;
 
+    private Integer  businessId;
+    private Integer vipValueId;
+
 }

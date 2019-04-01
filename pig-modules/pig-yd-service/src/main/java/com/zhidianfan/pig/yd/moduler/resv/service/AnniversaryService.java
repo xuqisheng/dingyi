@@ -154,6 +154,8 @@ public class AnniversaryService {
             customerCareData.setPhone(customerCareBO.getVipPhone());
             customerCareData.setTitle(customerCareBO.getAnniversaryTitle());
             customerCareData.setCustomerValue(customerCareBO.getVipValueName());
+            customerCareData.setCustomerValueId(customerCareBO.getVipValueId());
+            customerCareData.setBusinessId(customerCareBO.getBusinessId().toString());
 
 
             //对日期的处理 --几天后的处理

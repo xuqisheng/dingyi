@@ -21,7 +21,6 @@ public class CustomerCareDTO {
     private String surplusTime;
     private String vipId;
     private String businessId;
-    private Integer dateType;
 
 
 }
