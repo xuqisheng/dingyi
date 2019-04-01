@@ -68,6 +68,9 @@
                     and vip_phone is not null
                     <if test="customerValueId != null and customerValueId != ''">
                         AND vip_value_id = #{customerValueId}
+                    </if>
+                    <if test="name != null and name != ''">
+                        AND vip_name like concat('%',#{name},'%');
                     </if>) b
                 ON a.vip_id = b.id
             UNION
@@ -97,10 +100,13 @@
             and vip_phone is not null /*客户存在的条件*/
             and vip_birthday is not null
             and vip_birthday != ''
+            /*客户价值条件*/
             <if test="customerValueId != null and customerValueId != ''">
                 AND vip_value_id = #{customerValueId}
             </if>
-            /*客户价值条件*/
+            <if test="name != null and name != ''">
+                AND vip_name like concat('%',#{name},'%');
+            </if>
             ) c
             where
             1 = 1

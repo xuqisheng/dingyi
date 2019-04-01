@@ -225,7 +225,7 @@ public class AnniversaryService {
                     Solar solar = new Solar(Integer.valueOf(split[0]),Integer.valueOf(split[1]),Integer.valueOf(split[2]));
                     Lunar lunar = SolarToLunar(solar);
                     String nlDate="";
-                    if (customerCareBO.getIsLeap() == 1){
+                    if (customerCareBO.getIsLeap() != null &&  customerCareBO.getIsLeap() == 1){
                         nlDate= "闰";
                     }
                     nlDate = nlDate +  getLunarMonthString(Integer.valueOf(lunar.lunarMonth)) + getLunarDayString(Integer.valueOf(lunar.lunarDay));
