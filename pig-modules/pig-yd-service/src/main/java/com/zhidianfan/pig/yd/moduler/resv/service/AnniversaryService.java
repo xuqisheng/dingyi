@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -40,7 +41,8 @@ public class AnniversaryService {
 
     /**
      * 根据主键查询确切的纪念日
-     * @param anniversaryId  纪念日id
+     *
+     * @param anniversaryId 纪念日id
      * @return 纪念日
      */
     public Anniversary getExactAnniversary(Integer anniversaryId) {
@@ -59,6 +61,7 @@ public class AnniversaryService {
 
     /**
      * 根据客户id 查询该客户的所有纪念日
+     *
      * @param vipId 客户id
      * @return 纪念日list
      */
@@ -73,50 +76,51 @@ public class AnniversaryService {
 
     /**
      * 编辑客户纪念日
+     *
      * @param anniversaryDTO 纪念日
      * @return 返回编辑结果
      */
     public Boolean editExactAnniversary(AnniversaryDTO anniversaryDTO) {
 
-        Anniversary anniversary= new Anniversary();
-        BeanUtils.copyProperties(anniversaryDTO ,anniversary);
+        Anniversary anniversary = new Anniversary();
+        BeanUtils.copyProperties(anniversaryDTO, anniversary);
 
         Date anniversaryDate = anniversaryDTO.getAnniversaryDate();
 
         //客户下次纪念日时间计算
         //需要过农历的下一年的日期
-        if (anniversaryDTO.getCalendarType() == 1){
+        if (anniversaryDTO.getCalendarType() == 1) {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-            Calendar calendar =Calendar.getInstance();
+            Calendar calendar = Calendar.getInstance();
             calendar.setTime(anniversaryDate);
             Solar solar = new Solar(calendar.get(Calendar.YEAR),
-                                    calendar.get(Calendar.MONTH)+1,
-                                    calendar.get(Calendar.DAY_OF_MONTH));
+                    calendar.get(Calendar.MONTH) + 1,
+                    calendar.get(Calendar.DAY_OF_MONTH));
 
             Lunar lastLunarBirth = nextLunarTime(solar.toString());
             String solarString = LunarSolarConverter.LunarToSolar(lastLunarBirth).toString();
             try {
                 anniversary.setNextAnniversaryTime(sdf.parse(solarString));
             } catch (ParseException e) {
-                log.error("更新下次日期格式出错:"+ e.getMessage());
+                log.error("更新下次日期格式出错:" + e.getMessage());
             }
-        }else {
+        } else {
             //需要过公历的下一年的日期
-            Date nextAnniversaryTime =  anniversaryDate;
-            Calendar calendar =Calendar.getInstance();
+            Date nextAnniversaryTime = anniversaryDate;
+            Calendar calendar = Calendar.getInstance();
             calendar.setTime(nextAnniversaryTime);
             calendar.add(calendar.YEAR, 1);//把日期往后增加一年.整数往后推,负数往前移动
             nextAnniversaryTime = calendar.getTime();
             anniversary.setNextAnniversaryTime(nextAnniversaryTime);
         }
 
-        Boolean b ;
+        Boolean b;
         //更新或者插入
-        if(anniversaryDTO.getId() != null){
+        if (anniversaryDTO.getId() != null) {
             //更新
             anniversary.setUpdatedAt(new Date());
             b = iAnniversaryService.updateById(anniversary);
-        }else {
+        } else {
             anniversary.setCreatedAt(new Date());
             b = iAnniversaryService.insert(anniversary);
         }
@@ -127,6 +131,7 @@ public class AnniversaryService {
 
     /**
      * 分页查询客户生日与纪念日信息
+     *
      * @return 客户关怀数据
      */
     public Page<CustomerCareDTO> getCustomerCarePage(CustomerCareDTO customerCareDTO) {
@@ -135,12 +140,12 @@ public class AnniversaryService {
         Page<CustomerCareDTO> page = new PageFactory().defaultPage();
 
         //查询出客户关怀等信息
-        List<CustomerCareBO> customerCareBOS=  iAnniversaryService.selectCustomerCareInfoByPage(page,customerCareDTO);
+        List<CustomerCareBO> customerCareBOS = iAnniversaryService.selectCustomerCareInfoByPage(page, customerCareDTO);
 
         List<CustomerCareDTO> customerCareDTOS = new ArrayList<>();
         //对数据的处理
-        for (CustomerCareBO customerCareBO: customerCareBOS) {
-            CustomerCareDTO customerCareData =  new CustomerCareDTO();
+        for (CustomerCareBO customerCareBO : customerCareBOS) {
+            CustomerCareDTO customerCareData = new CustomerCareDTO();
             customerCareData.setVipId(customerCareBO.getId());
             String name = customerCareBO.getVipName() + (customerCareBO.getVipSex().equals("女") ? "小姐" : "先生");
             customerCareData.setName(name);
@@ -150,25 +155,34 @@ public class AnniversaryService {
 
 
             //对日期的处理 --几天后的处理
-            String surplusDay  = "暂无";
-            if (customerCareBO.getSurplusTime() == null || customerCareBO.getSurplusTime() < 0){
+            String surplusDay = "暂无";
+            if (customerCareBO.getSurplusTime() == null || customerCareBO.getSurplusTime() < 0) {
                 surplusDay = "暂无";
-            } else if (customerCareBO.getSurplusTime() == 0){
-                surplusDay= "今天";
-            } else  if(customerCareBO.getSurplusTime() >  0) {
+            } else if (customerCareBO.getSurplusTime() == 0) {
+                surplusDay = "今天";
+            } else if (customerCareBO.getSurplusTime() > 0) {
                 surplusDay = customerCareBO.getSurplusTime() + "天后";
             }
-
-            //todo 几周年或者几岁的处理
-//            if(customerCareBO.getType() == 0){
-//                String nexttime = customerCareBO.getNexttime();
-//                customerCareBO.get
-//
-//            }
-
-            String surplusTime = surplusDay + "";
+            //对几周年或者几岁的处理
+            LocalDateTime nexttime = customerCareBO.getNexttime();
+            LocalDateTime now = LocalDateTime.now();
+            String yearDesc;
+            if (null == nexttime) {
+                yearDesc = "";
+            } else {
+                Integer yearDif = now.getYear() - nexttime.getYear() + 2;
+                if (customerCareBO.getType() == 0) {
+                    yearDesc = "(" + yearDif + "周年)";
+                } else {
+                    yearDesc = "(" + yearDif + "岁)";
+                }
+            }
+            String surplusTime = surplusDay + yearDesc;
             customerCareData.setSurplusTime(surplusTime);
 
+
+            //设置日期
+            if (customerCareBO.getType() == 0)
 
             customerCareDTOS.add(customerCareData);
 

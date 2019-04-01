@@ -3,6 +3,8 @@ package com.zhidianfan.pig.yd.moduler.resv.bo;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 /**
  * @Author: hzp
  * @Date: 2019-03-29 11:01
@@ -22,7 +24,7 @@ public class CustomerCareBO {
     private String birthFlag;
     private String anniversaryDate;
     private String anniversaryTitle;
-    private String nexttime;
+    private LocalDateTime nexttime;
     private Integer surplusTime;
     /**
      * 0 代表纪念日  1 代表生日
