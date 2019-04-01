@@ -8,18 +8,29 @@ import com.zhidianfan.pig.yd.moduler.common.service.IAnniversaryService;
 import com.zhidianfan.pig.yd.moduler.resv.bo.CustomerCareBO;
 import com.zhidianfan.pig.yd.moduler.resv.dto.AnniversaryDTO;
 import com.zhidianfan.pig.yd.moduler.resv.dto.CustomerCareDTO;
+import com.zhidianfan.pig.yd.utils.Lunar;
+import com.zhidianfan.pig.yd.utils.LunarSolarConverter;
+import com.zhidianfan.pig.yd.utils.Solar;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+
+import static com.zhidianfan.pig.yd.moduler.resv.service.VipNextBirthDayAnniversaryService.nextLunarTime;
 
 /**
  * @Author: hzp
  * @Date: 2019-03-28 16:05
  * @Description:
  */
+@Slf4j
 @Service
 public class AnniversaryService {
 
@@ -68,13 +79,47 @@ public class AnniversaryService {
     public Boolean editExactAnniversary(AnniversaryDTO anniversaryDTO) {
 
         Anniversary anniversary= new Anniversary();
-
-        //todo 如果日期需要为农历,将公历转化为转换为农历,计算下一次农历存入下一次生日时间
-
         BeanUtils.copyProperties(anniversaryDTO ,anniversary);
 
+        Date anniversaryDate = anniversaryDTO.getAnniversaryDate();
+
+        //客户下次纪念日时间计算
+        //需要过农历的下一年的日期
+        if (anniversaryDTO.getCalendarType() == 1){
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            Calendar calendar =Calendar.getInstance();
+            calendar.setTime(anniversaryDate);
+            Solar solar = new Solar(calendar.get(Calendar.YEAR),
+                                    calendar.get(Calendar.MONTH)+1,
+                                    calendar.get(Calendar.DAY_OF_MONTH));
+
+            Lunar lastLunarBirth = nextLunarTime(solar.toString());
+            String solarString = LunarSolarConverter.LunarToSolar(lastLunarBirth).toString();
+            try {
+                anniversary.setNextAnniversaryTime(sdf.parse(solarString));
+            } catch (ParseException e) {
+                log.error("更新下次日期格式出错:"+ e.getMessage());
+            }
+        }else {
+            //需要过公历的下一年的日期
+            Date nextAnniversaryTime =  anniversaryDate;
+            Calendar calendar =Calendar.getInstance();
+            calendar.setTime(nextAnniversaryTime);
+            calendar.add(calendar.YEAR, 1);//把日期往后增加一年.整数往后推,负数往前移动
+            nextAnniversaryTime = calendar.getTime();
+            anniversary.setNextAnniversaryTime(nextAnniversaryTime);
+        }
+
+        Boolean b ;
         //更新或者插入
-        Boolean b = iAnniversaryService.insertOrUpdate(anniversary);
+        if(anniversaryDTO.getId() != null){
+            //更新
+            anniversary.setUpdatedAt(new Date());
+            b = iAnniversaryService.updateById(anniversary);
+        }else {
+            anniversary.setCreatedAt(new Date());
+            b = iAnniversaryService.insert(anniversary);
+        }
 
         return b;
     }
@@ -133,6 +178,8 @@ public class AnniversaryService {
 
         return page;
     }
+
+
 }
 
 

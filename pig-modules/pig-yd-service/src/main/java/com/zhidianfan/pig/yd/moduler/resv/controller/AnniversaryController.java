@@ -46,6 +46,11 @@ public class AnniversaryController {
         return ResponseEntity.ok(anniversaryListByVipID);
     }
 
+    /**
+     * 查询具体某个纪念日
+     * @param anniversaryId 纪念日id
+     * @return 纪念日信息
+     */
     @GetMapping("/exactanniversary")
     public ResponseEntity getExactAnniversary(@RequestParam Integer anniversaryId) {
 
@@ -55,6 +60,11 @@ public class AnniversaryController {
     }
 
 
+    /**
+     * 删除纪念日
+     * @param anniversaryId 纪念日id
+     * @return 删除结果
+     */
     @PostMapping("/deleteinfo")
     public ResponseEntity deleteExactAnniversary(@Valid Integer anniversaryId) {
 
@@ -65,6 +75,11 @@ public class AnniversaryController {
     }
 
 
+    /**
+     * 编辑纪念日信息
+     * @param anniversaryDTO 纪念日信息dto
+     * @return 操作结果
+     */
     @PostMapping("/info")
     public ResponseEntity editExactAnniversary(@RequestBody AnniversaryDTO anniversaryDTO) {
 
@@ -76,8 +91,9 @@ public class AnniversaryController {
 
 
     /**
-     * 客户关怀页面
-     * @return
+     * 客户关怀
+     * @param customerCareDTO 客户关怀筛选信息
+     * @return 返回客户关怀信息
      */
     @PostMapping("/customercare")
     public ResponseEntity getCustomerCare(@RequestBody CustomerCareDTO customerCareDTO) {
