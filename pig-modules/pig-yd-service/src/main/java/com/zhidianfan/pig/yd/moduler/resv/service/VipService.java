@@ -68,8 +68,6 @@ public class VipService {
     @Resource
     private IResvOrderRatingService iResvOrderRatingService;
 
-    @Autowired
-    private AnniversaryService anniversaryService;
 
     /**
      * 根据酒店id与手机号更新或者新增Vip
@@ -103,6 +101,8 @@ public class VipService {
             vip.setUpdatedAt(new Date());
             b = iVipService.updateById(vip);
         }
+
+
         return b;
     }
 
