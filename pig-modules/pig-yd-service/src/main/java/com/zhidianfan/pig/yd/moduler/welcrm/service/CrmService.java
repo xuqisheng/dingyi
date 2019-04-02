@@ -73,6 +73,9 @@ public class CrmService {
                 data.put("userPhone",basicBO.getRes().getJSONObject(0).get("phone"));
                 data.put("userGrade",basicBO.getRes().getJSONObject(0).get("grade_name"));
                 data.put("userCredit",basicBO.getRes().getJSONObject(0).get("credit"));
+                data.put("userBalance",basicBO.getRes().getJSONObject(0).get("balance"));
+                data.put("userBirthday",basicBO.getRes().getJSONObject(0).get("birthday"));
+                data.put("userSex",basicBO.getRes().getJSONObject(0).get("gender"));
                 basicBO.setData(data);
             }else {
                 basicBO.setData(null);
@@ -90,6 +93,9 @@ public class CrmService {
                 data.put("userPhone",cno);
                 data.put("userGrade",fiveiUserDTO.getConsuVo().getConsuDetailList().get(0).getMemberLevelName());
                 data.put("userCredit",fiveiUserDTO.getConsuVo().getConsuDetailList().get(0).getMemberScore());
+                data.put("userBalance",0);
+                data.put("userBirthday","");
+                data.put("userSex","");
                 basicBO.setData(data);
                 basicBO.setErrcode(fiveiUserDTO.getResult().getCode());
                 basicBO.setErrmsg(fiveiUserDTO.getResult().getMsg());

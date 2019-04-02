@@ -287,6 +287,11 @@ public class Business extends Model<Business> {
     @TableField("is_meituan")
     private Integer isMeituan;
     /**
+     * 是否开启口碑 0 不启用 1 启用
+     */
+    @TableField("is_koubei")
+    private Integer isKoubei;
+    /**
      * 是否可取消入座订单 1 可取消 0 不可取消
      */
     @TableField("cancel_seatedorder_able")
@@ -919,6 +924,14 @@ public class Business extends Model<Business> {
 
     public void setIsMeituan(Integer isMeituan) {
         this.isMeituan = isMeituan;
+    }
+
+    public Integer getIsKoubei() {
+        return isKoubei;
+    }
+
+    public void setIsKoubei(Integer isKoubei) {
+        this.isKoubei = isKoubei;
     }
 
     public Integer getCancelSeatedorderAble() {
