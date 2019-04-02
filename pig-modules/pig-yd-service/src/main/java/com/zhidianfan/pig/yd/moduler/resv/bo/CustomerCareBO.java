@@ -27,7 +27,7 @@ public class CustomerCareBO {
      */
     private Integer calendarType;
     private String anniversaryDate;
-    private String anniversaryTitle;
+    private String title;
     private LocalDateTime nexttime;
     private Integer surplusTime;
     private Integer hideFlag;

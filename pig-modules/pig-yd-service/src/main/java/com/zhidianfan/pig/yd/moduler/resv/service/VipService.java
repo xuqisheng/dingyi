@@ -36,10 +36,7 @@ import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.zhidianfan.pig.yd.moduler.resv.service.VipNextBirthDayAnniversaryService.*;
@@ -320,7 +317,7 @@ public class VipService {
         }
 
         //读取
-        List<Map<String, Object>> list = ExcelUtil.ReadExcel(file, "vip");
+        List<Map<String, Object>> list = ExcelUtil.ReadExcel(file, "vip",2);
 
         //查询出酒店信息
         Business businessInfo = businessService.selectOne(new EntityWrapper<Business>()
@@ -331,7 +328,7 @@ public class VipService {
         Date date = new Date();
 
         for (Map<String, Object> map : list) {
-            //剔除名字和手机号码字段为空的
+            //剔除名字和手机号码字段为空的, 生日格式不正确的
             if ((map.get("vipPhone") != null && !"".equals(map.get("vipPhone")))
                     && (map.get("vipName") != null && !"".equals(map.get("vipName")))) {
                 Vip vip = new Vip();
@@ -356,8 +353,9 @@ public class VipService {
         } else {
             iVipService.excelInsertVIPInfo(sucVips);
 
+
             JSONObject jsonObject = new JSONObject();
-            jsonObject.put("total",list);
+            jsonObject.put("total",list.size());
             jsonObject.put("successNum",sucVips.size());
             jsonObject.put("failNum",failVips.size());
             jsonObject.put("failData",failVips);

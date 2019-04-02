@@ -152,7 +152,7 @@ public class AnniversaryService {
             String name  = customerCareBO.getVipName() + (customerCareBO.getVipSex().equals("女") ? "小姐" : "先生");
             customerCareData.setName(name);
             customerCareData.setPhone(customerCareBO.getVipPhone());
-            customerCareData.setTitle(customerCareBO.getAnniversaryTitle());
+            customerCareData.setTitle(customerCareBO.getTitle());
             customerCareData.setCustomerValue(customerCareBO.getVipValueName());
             customerCareData.setCustomerValueId(customerCareBO.getVipValueId());
             customerCareData.setBusinessId(customerCareBO.getBusinessId().toString());
