@@ -8,6 +8,7 @@ import com.zhidianfan.pig.yd.moduler.common.dto.Tip;
 import com.zhidianfan.pig.yd.moduler.resv.dto.AnniversaryDTO;
 import com.zhidianfan.pig.yd.moduler.resv.dto.CustomerCareDTO;
 import com.zhidianfan.pig.yd.moduler.resv.service.AnniversaryService;
+import jdk.nashorn.internal.objects.annotations.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -64,8 +65,8 @@ public class AnniversaryController {
      * @param anniversaryId 纪念日id
      * @return 删除结果
      */
-    @PostMapping("/deleteinfo")
-    public ResponseEntity deleteExactAnniversary(@Valid Integer anniversaryId) {
+    @GetMapping("/deleteinfo")
+    public ResponseEntity deleteExactAnniversary(@RequestParam Integer anniversaryId) {
 
         Boolean b = anniversaryService.deleteExactAnniversary(anniversaryId);
         Tip tip = (b ? SuccessTip.SUCCESS_TIP : ErrorTip.ERROR_TIP);
