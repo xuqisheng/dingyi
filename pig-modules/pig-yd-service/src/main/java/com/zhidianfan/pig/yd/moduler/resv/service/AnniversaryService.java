@@ -186,7 +186,6 @@ public class AnniversaryService {
             customerCareData.setSurplusTime(surplusTime);
 
 
-            //todo 展示农历还是公历 农历(年份去除)中文展示, 公历根据忽略年份展示 设置日期
             //1. 对生日的展示
             if (customerCareBO.getType() == 1){
 
@@ -195,7 +194,7 @@ public class AnniversaryService {
                    //转成农历字符串 月日形式
                     String vipBirthdayNl = customerCareBO.getVipBirthdayNl();
                     String nlDate="";
-                    if (customerCareBO.getIsLeap() == 1){
+                    if (customerCareBO.getIsLeap() !=null && customerCareBO.getIsLeap() == 1){
                         nlDate= "闰";
                     }
                     String[] split = vipBirthdayNl.split("-");

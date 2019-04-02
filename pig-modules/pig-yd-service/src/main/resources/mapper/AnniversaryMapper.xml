@@ -43,38 +43,6 @@
         FROM
             (
             SELECT
-                a.business_id,
-                b.id AS id,
-                b.vip_name,
-                b.vip_sex,
-                b.vip_phone,
-                b.vip_value_name,
-                b.vip_value_id,
-                '' AS vip_birthday,
-                '' AS vip_birthday_nl,
-                a.calendar_type  AS calendar_type,
-                anniversary_year_flag as hideFlag,
-                a.is_leap,
-                a.anniversary_date,
-                a.anniversary_title,
-                a.next_anniversary_time AS nexttime,
-                datediff(next_anniversary_time,SYSDATE()) as surplusTime,
-                /*剩余天数*/
-                '0' AS type
-            FROM
-                    (select * from anniversary	c	where business_id = #{businessId} and EXISTS( SELECT id FROM vip o WHERE o.id=c.vip_id and business_id = #{businessId})) a
-                LEFT JOIN
-                    (select * from vip where business_id = #{businessId}
-                    and vip_phone is not null
-                    <if test="customerValueId != null and customerValueId != ''">
-                        AND vip_value_id = #{customerValueId}
-                    </if>
-                    <if test="name != null and name != ''">
-                        AND vip_name like concat('%',#{name},'%');
-                    </if>) b
-                ON a.vip_id = b.id
-            UNION
-            SELECT
                 id,
                 business_id,
                 vip_name,
@@ -93,24 +61,56 @@
                 /*剩余天数*/
                 datediff(next_vip_birthday,SYSDATE())  as  surplusTime,
                 '1' AS type
-            FROM
+                FROM
                 vip
-            WHERE
-            business_id = #{businessId}
-            and vip_phone is not null /*客户存在的条件*/
-            and vip_birthday is not null
-            and vip_birthday != ''
-            /*客户价值条件*/
-            <if test="customerValueId != null and customerValueId != ''">
-                AND vip_value_id = #{customerValueId}
-            </if>
-            <if test="name != null and name != ''">
-                AND vip_name like concat('%',#{name},'%');
-            </if>
+                WHERE
+                business_id = #{businessId}
+                and vip_phone is not null /*客户存在的条件*/
+                and vip_birthday is not null
+                and vip_birthday != ''
+                /*客户价值条件*/
+                <if test="customerValueId != null and customerValueId != ''">
+                    AND vip_value_id = #{customerValueId}
+                </if>
+                <if test="name != null and name != ''">
+                    AND vip_name like concat('%',#{name},'%');
+                </if>
+            UNION
+                SELECT
+                    a.business_id,
+                    b.id AS id,
+                    b.vip_name,
+                    b.vip_sex,
+                    b.vip_phone,
+                    b.vip_value_name,
+                    b.vip_value_id,
+                    '' AS vip_birthday,
+                    '' AS vip_birthday_nl,
+                    a.calendar_type  AS calendar_type,
+                    anniversary_year_flag as hideFlag,
+                    a.is_leap,
+                    a.anniversary_date,
+                    a.anniversary_title,
+                    a.next_anniversary_time AS nexttime,
+                    datediff(next_anniversary_time,SYSDATE()) as surplusTime,
+                    /*剩余天数*/
+                    '0' AS type
+                    FROM
+                    (select * from anniversary	c	where business_id = #{businessId} and EXISTS( SELECT id FROM vip o WHERE o.id=c.vip_id and business_id = #{businessId})) a
+                    LEFT JOIN
+                    (select * from vip where business_id = #{businessId}
+                    and vip_phone is not null
+                    <if test="customerValueId != null and customerValueId != ''">
+                        AND vip_value_id = #{customerValueId}
+                    </if>
+                    <if test="name != null and name != ''">
+                        AND vip_name like concat('%',#{name},'%');
+                    </if>) b
+                    ON a.vip_id = b.id
             ) c
             where
             1 = 1
-        <if test="surplusTime != null and surplusTime != ''">
+            <if test="surplusTime != null and surplusTime != ''">
                 AND surplusTime &lt;= #{surplusTime}
             </if>
 
