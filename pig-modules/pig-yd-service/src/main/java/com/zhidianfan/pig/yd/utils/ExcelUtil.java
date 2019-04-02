@@ -24,7 +24,7 @@ import java.util.*;
 /**
  * @Author: huzp
  * @Date: 2018/11/13 13:47
- * @DESCRIPTION excel 下载
+ * @DESCRIPTION excel 下载 与导入
  */
 public class ExcelUtil {
 
@@ -245,12 +245,12 @@ public class ExcelUtil {
      * @param file 文件
      * @return 返回
      */
-    public static List<Map<String, Object>> ReadExcel(Part file, String sgin) {
+    public static List<Map<String, Object>> ReadExcel(Part file, String sign) {
 
 
         //cellName 为数据库字段 , cellNameC为excel中文字段名
-        String[] cellName = namesMap.get(sgin),
-                cellNameC = headsMap.get(sgin);
+        String[] cellName = namesMap.get(sign),
+                cellNameC = headsMap.get(sign);
 
         List<Map<String, Object>> list = new ArrayList<>();
 
@@ -294,10 +294,7 @@ public class ExcelUtil {
                     map.put(cellName[columnIndex], currentCellValue);
 
                 }
-                //客户电话号码不为空
                 list.add(map);
-
-
             }
             is.close();
 
