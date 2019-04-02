@@ -37,6 +37,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static com.zhidianfan.pig.yd.moduler.resv.service.VipNextBirthDayAnniversaryService.*;
@@ -329,10 +331,15 @@ public class VipService {
 
         for (Map<String, Object> map : list) {
             //剔除名字和手机号码字段为空的, 生日格式不正确的
-            if ((map.get("vipPhone") != null && !"".equals(map.get("vipPhone")))
-                    && (map.get("vipName") != null && !"".equals(map.get("vipName")))) {
+            if ((map.get("vipName") != null && !"".equals(map.get("vipName")))
+                    && StringUtils.isNotEmpty(map.get("vipPhone").toString()) && isMobileNO(map.get("vipPhone").toString())) {
                 Vip vip = new Vip();
                 org.apache.commons.beanutils.BeanUtils.populate(vip, map);
+                if (StringUtils.isNotEmpty(map.get("vipBirthday").toString()) && !valiDateTimeWithLongFormat(map.get("vipBirthday").toString())) {
+                    //生日格式不正确
+                    failVips.add(vip);
+                    continue;
+                }
                 vip.setBusinessId(businessInfo.getId());
                 vip.setBusinessName(businessInfo.getBusinessName());
                 vip.setCreatedAt(date);
@@ -343,13 +350,17 @@ public class VipService {
                 org.apache.commons.beanutils.BeanUtils.populate(vip, map);
                 failVips.add(vip);
             }
-
         }
+
+        //
+        //vip_birthday != null && !"".equals(vip_birthday) && !valiDateTimeWithLongFormat(vip_birthday)
 
         SuccessTip successTip = new SuccessTip();
 
 
-        iVipService.excelInsertVIPInfo(sucVips);
+        if (sucVips.size() != 0){
+            iVipService.excelInsertVIPInfo(sucVips);
+        }
 
 
         JSONObject jsonObject = new JSONObject();
@@ -464,6 +475,44 @@ public class VipService {
             }
         }
 
+    }
+
+
+    public static boolean isMobileNO(String mobiles) {
+
+        Pattern p = Pattern.compile("^.\\d{10}$");
+        Matcher m = p.matcher(mobiles);
+        System.out.println(m.matches() + "---");
+        return m.matches();
+    }
+
+    /**
+     * 判断是否为时间字符串
+     *
+     * @param timeStr 时间字符串
+     * @return 是否为YYYY-MM-DD格式的字符串
+     */
+    public static boolean valiDateTimeWithLongFormat(String timeStr) {
+        String format = "((19|20)[0-9]{2})-(0?[1-9]|1[012])-(0?[1-9]|[12][0-9]|3[01])";
+        Pattern pattern = Pattern.compile(format);
+        Matcher matcher = pattern.matcher(timeStr);
+        if (matcher.matches()) {
+            pattern = Pattern.compile("(\\d{4})-(\\d+)-(\\d+).*");
+            matcher = pattern.matcher(timeStr);
+            if (matcher.matches()) {
+                int y = Integer.valueOf(matcher.group(1));
+                int m = Integer.valueOf(matcher.group(2));
+                int d = Integer.valueOf(matcher.group(3));
+                if (d > 28) {
+                    Calendar c = Calendar.getInstance();
+                    c.set(y, m - 1, 1);
+                    int lastDay = c.getActualMaximum(Calendar.DAY_OF_MONTH);
+                    return (lastDay >= d);
+                }
+            }
+            return true;
+        }
+        return false;
     }
 
 }
