@@ -86,7 +86,7 @@ public class VipService {
             //更新客户的生日
             conversionVipBirth(vip);
         } catch (ParseException e) {
-            log.error("updateOrInsertVip : 客户信息出错"+ e.getMessage());
+            log.error("updateOrInsertVip : 客户信息出错" + e.getMessage());
         }
 
         //如果为null 则进行新增操作
@@ -230,7 +230,7 @@ public class VipService {
         try {
             conversionVipBirth(vip);
         } catch (ParseException e) {
-            log.error("updateVipInfo转换生日日期error"+ e.getMessage());
+            log.error("updateVipInfo转换生日日期error" + e.getMessage());
         }
 
         return iVipService.update(vip, new EntityWrapper<Vip>().eq("id", vip.getId()));
@@ -317,7 +317,7 @@ public class VipService {
         }
 
         //读取
-        List<Map<String, Object>> list = ExcelUtil.ReadExcel(file, "vip",2);
+        List<Map<String, Object>> list = ExcelUtil.ReadExcel(file, "vip", 2);
 
         //查询出酒店信息
         Business businessInfo = businessService.selectOne(new EntityWrapper<Business>()
@@ -337,7 +337,7 @@ public class VipService {
                 vip.setBusinessName(businessInfo.getBusinessName());
                 vip.setCreatedAt(date);
                 sucVips.add(vip);
-            }else {
+            } else {
                 //加入失败的客户信息
                 Vip vip = new Vip();
                 org.apache.commons.beanutils.BeanUtils.populate(vip, map);
@@ -348,20 +348,17 @@ public class VipService {
 
         SuccessTip successTip = new SuccessTip();
 
-        if (sucVips.size() == 0) {
-            successTip.setMsg("表内数据为空或者请检查字段");
-        } else {
-            iVipService.excelInsertVIPInfo(sucVips);
+
+        iVipService.excelInsertVIPInfo(sucVips);
 
 
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put("total",list.size());
-            jsonObject.put("successNum",sucVips.size());
-            jsonObject.put("failNum",failVips.size());
-            jsonObject.put("failData",failVips);
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("total", list.size());
+        jsonObject.put("successNum", sucVips.size());
+        jsonObject.put("failNum", failVips.size());
+        jsonObject.put("failData", failVips);
 
-            successTip.setMsg(jsonObject.toString());
-        }
+        successTip.setMsg(jsonObject.toString());
 
 
         return successTip;

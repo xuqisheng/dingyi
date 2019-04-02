@@ -41,7 +41,7 @@ public class AnniversaryController {
     public ResponseEntity getAnniversaryList(@RequestParam Integer vipId) {
 
         log.info("请求查询用户的纪念日 ");
-        List<Anniversary> anniversaryListByVipID = anniversaryService.getAnniversaryListByVipID(vipId);
+        List<AnniversaryDTO> anniversaryListByVipID = anniversaryService.getAnniversaryListByVipID(vipId);
 
         return ResponseEntity.ok(anniversaryListByVipID);
     }

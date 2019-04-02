@@ -57,4 +57,20 @@ public class AnniversaryDTO {
      */
     private String anniversaryTitle;
 
+    /**
+     * 距离下一次纪念日天数
+     */
+    private Integer surplusDay;
+
+    /**
+     * 周年数
+     */
+    private Integer yearsNumber;
+
+    /**
+     * 展示的日期
+     */
+    private String dateOfDisplay;
+
+
 }
