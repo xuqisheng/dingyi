@@ -53,10 +53,14 @@ public class AnniversaryService {
     }
 
 
+    /**
+     * 删除某个纪念日
+     * @param anniversaryId 纪念日id
+     * @return 返回操作结果
+     */
     public Boolean deleteExactAnniversary(Integer anniversaryId) {
 
-        Boolean b = iAnniversaryService.deleteById(anniversaryId);
-        return b;
+        return  iAnniversaryService.deleteById(anniversaryId);
     }
 
     /**
