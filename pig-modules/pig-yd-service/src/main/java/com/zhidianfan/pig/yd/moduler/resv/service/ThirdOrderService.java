@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
+import java.util.List;
 
 
 /**
@@ -66,6 +67,20 @@ public class ThirdOrderService {
 
 
         Page<ResvOrderThirdBO> resvOrderThirds = iResvOrderThirdService.getThirdOrder(page, thirdQueryDTO);
+
+        return resvOrderThirds;
+    }
+
+    /**
+     * 获取第三方平台未处理订单信息
+     *
+     * @param thirdQueryDTO 查询条件，酒店id必须
+     * @return 返回第三方平台未处理订单信息
+     */
+    public List<ResvOrderThirdBO> getAllConditionThirdOrder(ThirdQueryDTO thirdQueryDTO) {
+
+
+        List<ResvOrderThirdBO> resvOrderThirds = iResvOrderThirdService.getAllThirdOrder(thirdQueryDTO);
 
         return resvOrderThirds;
     }

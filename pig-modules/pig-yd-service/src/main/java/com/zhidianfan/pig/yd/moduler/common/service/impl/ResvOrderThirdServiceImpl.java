@@ -36,5 +36,12 @@ public class ResvOrderThirdServiceImpl extends ServiceImpl<ResvOrderThirdMapper,
         return page.setRecords(thirdOrderList);
     }
 
+    @Override
+    public List<ResvOrderThirdBO> getAllThirdOrder(ThirdQueryDTO thirdQueryDTO) {
+
+        List<ResvOrderThirdBO> thirdOrderList  = baseMapper.getAllThirdOrder(thirdQueryDTO);
+        return thirdOrderList;
+    }
+
 
 }

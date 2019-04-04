@@ -22,4 +22,6 @@ public interface ResvOrderThirdMapper extends BaseMapper<ResvOrderThird> {
     ResvOrderThirdBO getNewestOrder(@Param("businessId")Integer businessId);
 
     List<ResvOrderThirdBO> getThirdOrder(Page<ResvOrderThirdBO> page, ThirdQueryDTO tq);
+
+    List<ResvOrderThirdBO> getAllThirdOrder(ThirdQueryDTO tq);
 }

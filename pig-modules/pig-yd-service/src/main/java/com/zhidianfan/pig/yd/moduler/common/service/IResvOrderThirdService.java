@@ -6,6 +6,8 @@ import com.zhidianfan.pig.yd.moduler.common.dao.entity.ResvOrderThird;
 import com.zhidianfan.pig.yd.moduler.resv.bo.ResvOrderThirdBO;
 import com.zhidianfan.pig.yd.moduler.resv.dto.ThirdQueryDTO;
 
+import java.util.List;
+
 /**
  * <p>
  *  服务类
@@ -20,5 +22,7 @@ public interface IResvOrderThirdService extends IService<ResvOrderThird> {
 
 
     Page<ResvOrderThirdBO> getThirdOrder(Page<ResvOrderThirdBO> page, ThirdQueryDTO thirdQueryDTO);
+
+    List<ResvOrderThirdBO> getAllThirdOrder(ThirdQueryDTO thirdQueryDTO);
 
 }
