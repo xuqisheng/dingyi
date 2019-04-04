@@ -5,6 +5,7 @@ import com.zhidianfan.pig.common.constant.Tip;
 import com.zhidianfan.pig.yd.moduler.manage.dto.TipCommon;
 import com.zhidianfan.pig.yd.moduler.manage.dto.UserDTO;
 import org.springframework.cloud.netflix.feign.FeignClient;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -79,5 +80,8 @@ public interface AuthFeign {
     TipCommon checkAuth(@RequestParam(name = "username") String username
             , @RequestParam(name = "password") String password
             , @RequestParam(name = "clientType") String clientType);
+
+    @GetMapping("/user/find/phone")
+    TipCommon findUserPhone(@RequestParam("username") String username, @RequestParam("clientType") String clientType);
 
 }

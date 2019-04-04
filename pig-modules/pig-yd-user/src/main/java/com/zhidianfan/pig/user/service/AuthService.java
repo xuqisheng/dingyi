@@ -18,7 +18,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.AntPathMatcher;
-import org.springframework.web.bind.annotation.RequestParam;
+import sun.rmi.runtime.Log;
 
 import java.util.Date;
 import java.util.List;
@@ -259,5 +259,10 @@ public class AuthService {
             return ErrorTip.ERROR_TIP;
         }
 
+    }
+
+    public YdUser findUser(String username, String clientType) {
+        YdUser ydUser = ydUserService.selectOne(new EntityWrapper<YdUser>().eq("username", username).eq("client_id", clientType));
+        return ydUser;
     }
 }

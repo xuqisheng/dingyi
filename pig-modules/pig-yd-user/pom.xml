@@ -11,7 +11,7 @@
 
     <artifactId>pig-yd-user</artifactId>
     <description>易订用户模块</description>
-    <version>0.0.2</version>
+    <version>0.0.3</version>
 
 
     <dependencies>

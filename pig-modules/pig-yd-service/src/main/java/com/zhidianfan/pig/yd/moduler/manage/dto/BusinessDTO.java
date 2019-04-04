@@ -205,6 +205,10 @@ public class BusinessDTO {
      */
     private Integer isMeituan;
     /**
+     * 是否开启口碑 0 不启用 1 启用
+     */
+    private Integer isKoubei;
+    /**
      * 是否可取消入座订单 1 可取消 0 不可取消
      */
     private Integer cancelSeatedorderAble;

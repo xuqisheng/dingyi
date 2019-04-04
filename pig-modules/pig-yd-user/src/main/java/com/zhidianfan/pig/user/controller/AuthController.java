@@ -72,6 +72,17 @@ public class AuthController {
         return ResponseEntity.ok(tip);
     }
 
+    @GetMapping("/user/find/phone")
+    public ResponseEntity findUserPhone(@RequestParam("username")String username,@RequestParam("clientType") String clientType){
+        YdUser user = authService.findUser(username, clientType);
+        if(user == null){
+            return ResponseEntity.badRequest().body(ErrorTip.ERROR_TIP);
+        }
+        SuccessTip successTip = new SuccessTip();
+        successTip.setMsg(user.getPhone());
+        return ResponseEntity.ok(successTip);
+    }
+
     /**
      * 检查用户名与url匹配性
      *

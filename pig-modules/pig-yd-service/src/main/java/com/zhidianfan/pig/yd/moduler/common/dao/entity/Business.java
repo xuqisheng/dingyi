@@ -287,6 +287,11 @@ public class Business extends Model<Business> {
     @TableField("is_meituan")
     private Integer isMeituan;
     /**
+     * 是否开启口碑 0 不启用 1 启用
+     */
+    @TableField("is_koubei")
+    private Integer isKoubei;
+    /**
      * 是否可取消入座订单 1 可取消 0 不可取消
      */
     @TableField("cancel_seatedorder_able")
@@ -324,6 +329,17 @@ public class Business extends Model<Business> {
      */
     @TableField("table_tag")
     private String tableTag;
+    /**
+     * 是否推送pad端
+     */
+    @TableField("is_pad_push")
+    private Integer isPadPush;
+    /**
+     * 是否推送pc端
+     */
+    @TableField("is_pc_push")
+    private Integer isPcPush;
+
 
 
     public Integer getId() {
@@ -910,6 +926,14 @@ public class Business extends Model<Business> {
         this.isMeituan = isMeituan;
     }
 
+    public Integer getIsKoubei() {
+        return isKoubei;
+    }
+
+    public void setIsKoubei(Integer isKoubei) {
+        this.isKoubei = isKoubei;
+    }
+
     public Integer getCancelSeatedorderAble() {
         return cancelSeatedorderAble;
     }
@@ -972,6 +996,22 @@ public class Business extends Model<Business> {
 
     public void setTableTag(String tableTag) {
         this.tableTag = tableTag;
+    }
+
+    public Integer getIsPadPush() {
+        return isPadPush;
+    }
+
+    public void setIsPadPush(Integer isPadPush) {
+        this.isPadPush = isPadPush;
+    }
+
+    public Integer getIsPcPush() {
+        return isPcPush;
+    }
+
+    public void setIsPcPush(Integer isPcPush) {
+        this.isPcPush = isPcPush;
     }
 
     @Override

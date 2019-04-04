@@ -14,6 +14,8 @@ import com.zhidianfan.pig.yd.moduler.meituan.constant.MeituanMethod;
 import com.zhidianfan.pig.yd.moduler.meituan.dto.BasicDTO;
 import com.zhidianfan.pig.yd.moduler.meituan.service.rmi.PushFeign;
 import com.zhidianfan.pig.yd.moduler.meituan.service.rmi.dto.JgPush;
+import com.zhidianfan.pig.yd.moduler.sms.service.rmi.SmsFeign;
+import com.zhidianfan.pig.yd.moduler.sms.service.rmi.dto.SmsSendResDTO;
 import com.zhidianfan.pig.yd.utils.SignUtil;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateFormatUtils;
@@ -69,6 +71,9 @@ public class MeituanService {
 
     @Autowired
     private RedisTemplate redisTemplate;
+
+    @Autowired
+    private SmsFeign smsFeign;
 
 
     private Logger log = LoggerFactory.getLogger(getClass());
@@ -366,6 +371,19 @@ public class MeituanService {
                 resvOrderThird.setResult(2);
                 resvOrderThird.setFlag(1);
                 data.put("operationType", 2);
+                if ("KB".equals(orderSerializedId.substring(0, 2))) {
+                    log.info("口碑预订拒单发送短信");
+                    ResvOrderThird resvOrderThird1 = resvOrderThirdService.selectOne(new EntityWrapper<ResvOrderThird>().eq("third_order_no",orderSerializedId));
+                    if(resvOrderThird1 != null){
+                        Business business1 = businessService.selectById(resvOrderThird1.getBusinessId());
+                        if(business1 != null){
+                            String msg = "非常抱歉，您预订的" + business1.getBusinessName() + resvOrderThird1.getResvDate() + "已订满。期待您的下次预订。";
+                            log.info("短信发送内容:{},{}",resvOrderThird1.getVipPhone(),msg);
+                            SmsSendResDTO smsSendResDTO = smsFeign.sendNormalMsg(resvOrderThird1.getVipPhone(), msg);
+                            log.info("短信发送结果:{}",smsSendResDTO.toString());
+                        }
+                    }
+                }
             } else if ("3".equals(String.valueOf(resvType))) {
                 resvOrderThird.setStatus(50);
                 resvOrderThird.setResult(3);

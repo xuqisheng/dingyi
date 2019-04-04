@@ -12,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 
 /**
  * 第三方平台订单接口
@@ -38,6 +40,20 @@ public class ThirdOrderController {
     public ResponseEntity getOrderByBussinessId(ThirdQueryDTO thirdQueryDTO) {
 
         Page<ResvOrderThirdBO> resvOrderThird = thirdOrderService.getConditionThirdOrder(thirdQueryDTO);
+
+        return ResponseEntity.ok(resvOrderThird);
+    }
+
+    /**
+     * 查询第三方平台集团下所有订单
+     *
+     * @param thirdQueryDTO 查询条件，酒店id必须
+     * @return 返回第三方平台订单
+     */
+    @GetMapping(value = "/conditionorder/all")
+    public ResponseEntity getAllOrderByBussinessId(ThirdQueryDTO thirdQueryDTO) {
+
+        List<ResvOrderThirdBO> resvOrderThird = thirdOrderService.getAllConditionThirdOrder(thirdQueryDTO);
 
         return ResponseEntity.ok(resvOrderThird);
     }

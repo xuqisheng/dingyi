@@ -26,4 +26,6 @@ public class ResvOrderThirdBO extends ResvOrderThird {
      * 就餐时间
      */
     private String destDate;
+
+    private String businessName;
 }

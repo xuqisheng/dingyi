@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.zhidianfan.pig.yd.moduler.common.dto.Tip;
 import com.zhidianfan.pig.yd.moduler.meituan.bo.BasicBO;
+import com.zhidianfan.pig.yd.moduler.meituan.bo.BusinessBo;
 import com.zhidianfan.pig.yd.moduler.meituan.bo.OrderBO;
 import com.zhidianfan.pig.yd.moduler.meituan.constant.MeituanMethod;
 import com.zhidianfan.pig.yd.moduler.meituan.dto.*;
@@ -12,10 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.text.ParseException;
@@ -204,6 +202,19 @@ public class YdController {
     @PostMapping(value = "/alive")
     public ResponseEntity alive(){
         return ResponseEntity.ok("");
+    }
+
+    /**
+     * 根据口碑门店id获取酒店信息
+     * @param shopId
+     * @param merchantPid
+     * @return
+     */
+    @GetMapping("/business/info")
+    public ResponseEntity getBusinessInfo(@RequestParam String shopId,
+                                          @RequestParam String merchantPid){
+        BusinessBo businessBo = ydService.getBusinessInfo(shopId,merchantPid);
+        return ResponseEntity.ok(businessBo);
     }
 
 }
