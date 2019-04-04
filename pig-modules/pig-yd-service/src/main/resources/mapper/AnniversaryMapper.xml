@@ -110,6 +110,7 @@
             ) c
             where
                 surplusTime >= 0
+                and id is not null
             <if test="surplusTime != null and surplusTime != ''">
                 AND surplusTime &lt;= #{surplusTime}
             </if>

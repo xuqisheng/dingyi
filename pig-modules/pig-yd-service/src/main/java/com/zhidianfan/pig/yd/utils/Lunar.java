@@ -22,6 +22,14 @@ public class Lunar {
         this.lunarYear = lunarYear;
     }
 
+    public Lunar(int lunarYear , int lunarMonth, int lunarDay,boolean isleap) {
+        this.lunarDay = lunarDay;
+        this.lunarMonth = lunarMonth;
+        this.lunarYear = lunarYear;
+        this.isleap = isleap;
+    }
+
+
     @Override
     public String toString() {
         String month;

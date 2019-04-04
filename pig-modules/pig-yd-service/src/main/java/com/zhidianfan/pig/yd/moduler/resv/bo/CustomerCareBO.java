@@ -3,6 +3,7 @@ package com.zhidianfan.pig.yd.moduler.resv.bo;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
@@ -28,7 +29,7 @@ public class CustomerCareBO {
     private Integer calendarType;
     private String anniversaryDate;
     private String title;
-    private LocalDateTime nexttime;
+    private LocalDate nexttime;
     private Integer surplusTime;
     private Integer hideFlag;
     private Integer isLeap;

@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.*;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -55,12 +56,13 @@ public class AnniversaryService {
 
     /**
      * 删除某个纪念日
+     *
      * @param anniversaryId 纪念日id
      * @return 返回操作结果
      */
     public Boolean deleteExactAnniversary(Integer anniversaryId) {
 
-        return  iAnniversaryService.deleteById(anniversaryId);
+        return iAnniversaryService.deleteById(anniversaryId);
     }
 
     /**
@@ -214,11 +216,29 @@ public class AnniversaryService {
 
         Date nextAnniversaryTime = null;
 
+        LocalDate now = LocalDate.now();
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(anniversaryDate);
+
+        //获取年份
+        int year;
+        if (calendar.get(Calendar.MONTH) + 1 > now.getMonthValue()) {
+            year = now.getYear();
+        } else if (calendar.get(Calendar.MONTH) + 1 == now.getMonthValue()) {
+            if (calendar.get(Calendar.DAY_OF_MONTH) > now.getDayOfMonth()) {
+                year = now.getYear();
+            } else {
+                year = now.getYear() + 1;
+            }
+        } else {
+            year = now.getYear() + 1;
+        }
+
         if (calendarType == 1) {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-            Calendar calendar = Calendar.getInstance();
-            calendar.setTime(anniversaryDate);
-            Solar solar = new Solar(calendar.get(Calendar.YEAR),
+
+
+            Solar solar = new Solar(year,
                     calendar.get(Calendar.MONTH) + 1,
                     calendar.get(Calendar.DAY_OF_MONTH));
 
@@ -231,10 +251,7 @@ public class AnniversaryService {
             }
         } else {
             //需要过公历的下一年的日期
-            nextAnniversaryTime = anniversaryDate;
-            Calendar calendar = Calendar.getInstance();
-            calendar.setTime(nextAnniversaryTime);
-            calendar.add(calendar.YEAR, 1); //把日期往后增加一年.整数往后推,负数往前移动
+            calendar.add(calendar.YEAR, year - calendar.get(Calendar.YEAR)); //把日期往后增加一年.整数往后推,负数往前移动
             nextAnniversaryTime = calendar.getTime();
         }
 
@@ -308,14 +325,17 @@ public class AnniversaryService {
             surplusDay = customerCareBO.getSurplusTime() + "天后";
         }
 
-        //对几周年或者几岁的处理
-        LocalDateTime nexttime = customerCareBO.getNexttime();
-        LocalDateTime now = LocalDateTime.now();
+        //对几周年或者几岁的处理 需要拿到他原先对比的数据 比如纪念日就拿纪念日 生日就拿公历生日或者农历生日
+        LocalDate beginDateTime = getBeginDateTime(customerCareBO);
+
+        //拿nextdate  减去 beginDateTime
+        LocalDate nexttime = customerCareBO.getNexttime();
+
         String yearDesc;
-        if (null == nexttime || customerCareBO.getHideFlag() == 1) {
+        if (null == beginDateTime || customerCareBO.getHideFlag() == 1) {
             yearDesc = "";
         } else {
-            int yearDif = now.getYear() - nexttime.getYear() + 2;
+            int yearDif = getyearDif(beginDateTime, nexttime);
             if (customerCareBO.getType() == 0) {
                 yearDesc = "(" + yearDif + "周年)";
             } else {
@@ -326,9 +346,36 @@ public class AnniversaryService {
         return surplusDay + yearDesc;
     }
 
+    /**
+     * 获取两个localdate的年份差,余数进1
+     * @param beginDateTime 开始日期
+     * @param nexttime 结束日期
+     * @return 年份差值
+     */
+    private int getyearDif(LocalDate beginDateTime, LocalDate nexttime) {
+
+        int yearDif= 0;
+
+        if(nexttime.getMonthValue() > beginDateTime.getMonthValue()){
+            yearDif =nexttime.getYear() - beginDateTime.getYear() +1;
+        } else if (nexttime.getMonthValue() ==  beginDateTime.getMonthValue()){
+            if (nexttime.getDayOfMonth() > beginDateTime.getDayOfMonth()){
+                yearDif =nexttime.getYear() - beginDateTime.getYear() +1;
+            }else {
+                yearDif =nexttime.getYear() - beginDateTime.getYear() ;
+            }
+        }else {
+            yearDif =nexttime.getYear() - beginDateTime.getYear();
+
+        }
+
+        return yearDif;
+    }
+
 
     /**
      * customerCareBO 选择适当的日期,并赋予适当的形态展示
+     *
      * @param customerCareBO 客户关怀日信息
      * @return 适当的形式的字符串
      */
@@ -382,6 +429,7 @@ public class AnniversaryService {
 
     /**
      * 公历形式返回
+     *
      * @param customerCareBO 店里字符串
      * @return 公历形式返回
      */
@@ -399,6 +447,51 @@ public class AnniversaryService {
         return anniversaryDate1;
     }
 
+    /**
+     * 获取周年时间
+     * @param customerCareBO
+     * @return
+     */
+    private LocalDate getBeginDateTime(CustomerCareBO customerCareBO) {
+
+        String date = "";
+
+        //1. 对生日的展示
+        //如果是农历 ,转为字符串
+        if (customerCareBO.getType() == 1) {
+            //如果是农历
+            if (customerCareBO.getCalendarType() != null && customerCareBO.getCalendarType() == 1) {
+                //转成农历字符串 月日形式
+                String vipBirthdayNl = customerCareBO.getVipBirthdayNl();
+                boolean flag = false;
+                if (customerCareBO.getIsLeap() != null && customerCareBO.getIsLeap() == 1) {
+                    flag = true;
+                }
+                String[] split = vipBirthdayNl.split("-");
+                Lunar lunar = new Lunar(Integer.valueOf(split[0]),Integer.valueOf(split[1]),Integer.valueOf(split[2]),flag);
+                //转为现在的公历
+                Solar solar = LunarSolarConverter.LunarToSolar(lunar);
+                date =solar.toString();
+
+
+            } else {
+                //如果是公历
+                date = customerCareBO.getVipBirthday();
+
+            }
+        }  else if (customerCareBO.getType() == 0) {
+
+            //2.对纪念日的展示
+            date = customerCareBO.getAnniversaryDate();
+            //现在的年份减去纪念日的年份
+
+        }
+
+        //字符串转为localdate
+        LocalDate beginDateTime = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+
+        return beginDateTime;
+    }
 
 }
 
