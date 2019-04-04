@@ -9,6 +9,7 @@ import com.zhidianfan.pig.yd.moduler.common.service.IVipService;
 import com.zhidianfan.pig.yd.utils.Lunar;
 import com.zhidianfan.pig.yd.utils.LunarSolarConverter;
 import com.zhidianfan.pig.yd.utils.Solar;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,7 @@ import java.util.List;
  * @description
  */
 @Service
+@Slf4j
 public class VipNextBirthDayAnniversaryService {
 
     @Autowired
@@ -46,20 +48,26 @@ public class VipNextBirthDayAnniversaryService {
 
         //根据他过得是农历生日还是公历生日计算他的下一次生日的公历日期
         for (Vip vip : vips) {
-            Integer birthFlag = vip.getBirthFlag();
-            //如果过农历
-            if (birthFlag == 1) {
-                //转为农历类型
-                Solar solar = LunarStr2NextSolar(vip.getVipBirthdayNl());
-                LocalDate parse = LocalDate.parse(solar.toString());
-                vip.setNextVipBirthday(localDate2Date(parse));
-            } else {
-                //如果过公历
-                Solar nextSolarBirth = nextSolarTime(vip.getVipBirthday());
-                LocalDate parse = LocalDate.parse(nextSolarBirth.toString());
-                vip.setNextVipBirthday(localDate2Date(parse));
+            try {
+                Integer birthFlag = vip.getBirthFlag();
+                //如果过农历
+                if (birthFlag == 1) {
+                    //转为农历类型
+                    Solar solar = LunarStr2NextSolar(vip.getVipBirthdayNl());
+                    LocalDate parse = LocalDate.parse(solar.toString());
+                    vip.setNextVipBirthday(localDate2Date(parse));
+                } else {
+                    //如果过公历
+                    Solar nextSolarBirth = nextSolarTime(vip.getVipBirthday());
+                    LocalDate parse = LocalDate.parse(nextSolarBirth.toString());
+                    vip.setNextVipBirthday(localDate2Date(parse));
+                }
+                iVipService.update(vip, new EntityWrapper<Vip>().eq("id", vip.getId()));
+            }catch (Exception e){
+                log.error("更新下次生日数据错误:" +vip);
+            }finally {
+                continue;
             }
-            iVipService.update(vip, new EntityWrapper<Vip>().eq("id", vip.getId()));
         }
 
 

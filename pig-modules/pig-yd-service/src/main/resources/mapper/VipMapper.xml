@@ -353,12 +353,11 @@
         id,vip_birthday,vip_birthday_nl,birth_flag,next_vip_birthday
         from vip  v
         where
-        vip_birthday  like '____-__-__'
-        AND
-        vip_birthday_nl  like '____-__-__'
+        (vip_birthday  like '____-__-__'
+        OR
+        vip_birthday_nl  like '____-__-__' )
         AND
         ( next_vip_birthday is null or CURDATE() > next_vip_birthday  )
-        and vip_birthday not like '____-02-29'
     </select>
 
     <select id="selectBirthType1" resultMap="BaseResultMap"  >
