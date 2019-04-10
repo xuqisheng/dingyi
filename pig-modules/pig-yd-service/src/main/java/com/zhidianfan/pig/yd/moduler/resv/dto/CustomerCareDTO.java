@@ -23,7 +23,8 @@ public class CustomerCareDTO {
     private String businessId;
 
     /**
-     * 日期类型
+     * 日期类型 : 0 纪念日
+     *          1 生日
      */
     private Integer type;
     /**
