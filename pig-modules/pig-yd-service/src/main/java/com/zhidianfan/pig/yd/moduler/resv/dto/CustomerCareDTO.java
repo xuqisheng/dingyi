@@ -22,5 +22,16 @@ public class CustomerCareDTO {
     private String vipId;
     private String businessId;
 
+    /**
+     * 日期类型
+     */
+    private Integer type;
+    /**
+     * 1.如果为纪念日则是纪念日id
+     * 2.如果是生日则是客户id
+     */
+    private String calendarId;
+
+
 
 }

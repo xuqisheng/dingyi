@@ -39,7 +39,7 @@
         SELECT
             id, vip_name vipName,vip_sex vipSex,vip_phone vipPhone,vip_value_name vipValueName,vip_value_id vipValueId,business_id   businessId,
             vip_birthday vipBirthday,vip_birthday_nl vipBirthdayNl,hideFlag,is_leap isLeap,
-            anniversary_date  anniversaryDate,anniversary_title  title,calendar_type calendarType,nexttime,   surplusTime,type
+            anniversary_date  anniversaryDate,anniversary_title  title,calendar_type calendarType,nexttime,   surplusTime,type ,calendar_id as  calendarId
         FROM
             (
                 SELECT
@@ -60,7 +60,8 @@
                     next_vip_birthday AS nexttime,
                     /*剩余天数*/
                     datediff(next_vip_birthday,SYSDATE())  as  surplusTime,
-                    '1' AS type
+                    '1' AS type ,
+                    id as calendar_id
                     FROM
                     vip
                     WHERE
@@ -94,7 +95,8 @@
                     a.next_anniversary_time AS nexttime,
                     datediff(next_anniversary_time,
                     SYSDATE()) as surplusTime,
-                    /*剩余天数*/ '0' AS type
+                    /*剩余天数*/ '0' AS type ,
+                    a.id as calendar_id
                 FROM
                     (select * from anniversary	c	where business_id = #{businessId} and EXISTS( SELECT id FROM vip o WHERE o.id=c.vip_id and business_id = #{businessId})) a
                     LEFT JOIN

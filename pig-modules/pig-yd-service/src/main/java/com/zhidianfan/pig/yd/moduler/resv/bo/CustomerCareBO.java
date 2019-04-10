@@ -23,6 +23,11 @@ public class CustomerCareBO {
     private String vipBirthday;
     private String vipBirthdayNl;
     /**
+     * 1.如果为纪念日则是纪念日id
+     * 2.如果是生日则是客户id
+     */
+    private String calendarId;
+    /**
      * 0为公历
      * 1为农历
      */

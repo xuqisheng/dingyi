@@ -4,10 +4,13 @@ import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.baomidou.mybatisplus.plugins.Page;
 import com.zhidianfan.pig.common.util.PageFactory;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.Anniversary;
+import com.zhidianfan.pig.yd.moduler.common.dao.entity.Vip;
 import com.zhidianfan.pig.yd.moduler.common.service.IAnniversaryService;
+import com.zhidianfan.pig.yd.moduler.common.service.IVipService;
 import com.zhidianfan.pig.yd.moduler.resv.bo.CustomerCareBO;
 import com.zhidianfan.pig.yd.moduler.resv.dto.AnniversaryDTO;
 import com.zhidianfan.pig.yd.moduler.resv.dto.CustomerCareDTO;
+import com.zhidianfan.pig.yd.moduler.resv.dto.CustomerDateClearDTO;
 import com.zhidianfan.pig.yd.utils.Lunar;
 import com.zhidianfan.pig.yd.utils.LunarSolarConverter;
 import com.zhidianfan.pig.yd.utils.Solar;
@@ -40,6 +43,9 @@ public class AnniversaryService {
 
     @Autowired
     IAnniversaryService iAnniversaryService;
+
+    @Autowired
+    IVipService iVipService;
 
 
     /**
@@ -185,6 +191,8 @@ public class AnniversaryService {
             customerCareData.setCustomerValue(customerCareBO.getVipValueName());
             customerCareData.setCustomerValueId(customerCareBO.getVipValueId());
             customerCareData.setBusinessId(customerCareBO.getBusinessId().toString());
+            customerCareData.setType(customerCareBO.getType());
+            customerCareData.setCalendarId(customerCareBO.getCalendarId());
 
             //几天后 就(几周年 || 几岁)
             String surplusTime = getSurplusTime(customerCareBO);
@@ -202,6 +210,38 @@ public class AnniversaryService {
 
 
         return page;
+    }
+
+
+    /**
+     * 删除客户纪念日或者清空生日信息
+     *
+     * @param customerDateClearDTO 删除条件
+     * @return 操作结果
+     */
+    public boolean deleteOneDate(CustomerDateClearDTO customerDateClearDTO) {
+
+        boolean b ;
+
+        //对纪念日操作
+        if (customerDateClearDTO.getType() == 0) {
+
+            b = iAnniversaryService.deleteById(customerDateClearDTO.getCalendarId());
+
+        } else {
+            //对生日操作
+            //1. 查询该客户信息
+            Vip vip = iVipService.selectById(customerDateClearDTO.getCalendarId());
+            vip.setNextVipBirthday(null);
+            vip.setVipBirthdayNl(null);
+            vip.setVipBirthday(null);
+
+            //2.全字段更新他的生日 农历生日还有下次生日为null
+            b = iVipService.updateAllColumnById(vip);
+
+        }
+
+        return b;
     }
 
 
@@ -348,24 +388,25 @@ public class AnniversaryService {
 
     /**
      * 获取两个localdate的年份差,余数进1
+     *
      * @param beginDateTime 开始日期
-     * @param nexttime 结束日期
+     * @param nexttime      结束日期
      * @return 年份差值
      */
     private int getyearDif(LocalDate beginDateTime, LocalDate nexttime) {
 
-        int yearDif= 0;
+        int yearDif = 0;
 
-        if(nexttime.getMonthValue() > beginDateTime.getMonthValue()){
-            yearDif =nexttime.getYear() - beginDateTime.getYear() +1;
-        } else if (nexttime.getMonthValue() ==  beginDateTime.getMonthValue()){
-            if (nexttime.getDayOfMonth() > beginDateTime.getDayOfMonth()){
-                yearDif =nexttime.getYear() - beginDateTime.getYear() +1;
-            }else {
-                yearDif =nexttime.getYear() - beginDateTime.getYear() ;
+        if (nexttime.getMonthValue() > beginDateTime.getMonthValue()) {
+            yearDif = nexttime.getYear() - beginDateTime.getYear() + 1;
+        } else if (nexttime.getMonthValue() == beginDateTime.getMonthValue()) {
+            if (nexttime.getDayOfMonth() > beginDateTime.getDayOfMonth()) {
+                yearDif = nexttime.getYear() - beginDateTime.getYear() + 1;
+            } else {
+                yearDif = nexttime.getYear() - beginDateTime.getYear();
             }
-        }else {
-            yearDif =nexttime.getYear() - beginDateTime.getYear();
+        } else {
+            yearDif = nexttime.getYear() - beginDateTime.getYear();
 
         }
 
@@ -449,6 +490,7 @@ public class AnniversaryService {
 
     /**
      * 获取周年时间
+     *
      * @param customerCareBO
      * @return
      */
@@ -468,10 +510,10 @@ public class AnniversaryService {
                     flag = true;
                 }
                 String[] split = vipBirthdayNl.split("-");
-                Lunar lunar = new Lunar(Integer.valueOf(split[0]),Integer.valueOf(split[1]),Integer.valueOf(split[2]),flag);
+                Lunar lunar = new Lunar(Integer.valueOf(split[0]), Integer.valueOf(split[1]), Integer.valueOf(split[2]), flag);
                 //转为现在的公历
                 Solar solar = LunarSolarConverter.LunarToSolar(lunar);
-                date =solar.toString();
+                date = solar.toString();
 
 
             } else {
@@ -479,7 +521,7 @@ public class AnniversaryService {
                 date = customerCareBO.getVipBirthday();
 
             }
-        }  else if (customerCareBO.getType() == 0) {
+        } else if (customerCareBO.getType() == 0) {
 
             //2.对纪念日的展示
             date = customerCareBO.getAnniversaryDate();
@@ -492,6 +534,7 @@ public class AnniversaryService {
 
         return beginDateTime;
     }
+
 
 }
 

@@ -7,6 +7,7 @@ import com.zhidianfan.pig.yd.moduler.common.dto.SuccessTip;
 import com.zhidianfan.pig.yd.moduler.common.dto.Tip;
 import com.zhidianfan.pig.yd.moduler.resv.dto.AnniversaryDTO;
 import com.zhidianfan.pig.yd.moduler.resv.dto.CustomerCareDTO;
+import com.zhidianfan.pig.yd.moduler.resv.dto.CustomerDateClearDTO;
 import com.zhidianfan.pig.yd.moduler.resv.service.AnniversaryService;
 import jdk.nashorn.internal.objects.annotations.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -103,5 +104,20 @@ public class AnniversaryController {
 
 
         return ResponseEntity.ok(customerCarePage);
+    }
+
+    /**
+     * 清楚一个客户的生日或者删除一个纪念日
+     */
+    @PostMapping("/deleteonedate")
+    public ResponseEntity deleteOneDate(@RequestBody CustomerDateClearDTO customerDateClearDTO) {
+
+        log.info("请求删除方法: " + customerDateClearDTO.toString());
+        //客户关怀
+        boolean flag = anniversaryService.deleteOneDate(customerDateClearDTO);
+        Tip tip = (flag ? SuccessTip.SUCCESS_TIP : ErrorTip.ERROR_TIP);
+
+
+        return ResponseEntity.ok(tip);
     }
 }
