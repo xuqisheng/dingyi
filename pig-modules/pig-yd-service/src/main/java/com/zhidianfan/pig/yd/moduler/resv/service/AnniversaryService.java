@@ -265,7 +265,7 @@ public class AnniversaryService {
         if (calendar.get(Calendar.MONTH) + 1 > now.getMonthValue()) {
             year = now.getYear();
         } else if (calendar.get(Calendar.MONTH) + 1 == now.getMonthValue()) {
-            if (calendar.get(Calendar.DAY_OF_MONTH) > now.getDayOfMonth()) {
+            if (calendar.get(Calendar.DAY_OF_MONTH) >= now.getDayOfMonth()) {
                 year = now.getYear();
             } else {
                 year = now.getYear() + 1;
