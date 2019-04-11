@@ -152,17 +152,17 @@ public class PushService {
 
         BasePushLog pushLog = this.addBasePushLogs(jgPush, regId);
 
-//        Tip tip = pushMsgReal(jgPush, pushLog);
-//        if (tip instanceof SuccessTip) {
-//            SuccessTip s1 = (SuccessTip) tip;
-//            s1.setContent(pushLog.getId());
-//            return s1;
-//        } else if (tip instanceof ErrorTip) {
-//            ErrorTip e1 = (ErrorTip) tip;
-//            e1.setContent(pushLog.getId());
-//            return e1;
-//        }
-        return SuccessTip.SUCCESS_TIP;
+        Tip tip = pushMsgReal(jgPush, pushLog);
+        if (tip instanceof SuccessTip) {
+            SuccessTip s1 = (SuccessTip) tip;
+            s1.setContent(pushLog.getId());
+            return s1;
+        } else if (tip instanceof ErrorTip) {
+            ErrorTip e1 = (ErrorTip) tip;
+            e1.setContent(pushLog.getId());
+            return e1;
+        }
+        return tip;
     }
 
     /**

@@ -53,7 +53,7 @@ public class PushTask {
         List<BasePushLog> list = pushLogService.selectList(new EntityWrapper<BasePushLog>()
                 .lt("pushed_count", Integer.parseInt(ydPropertites.getJg().getMap().get("pad").get("retry")))
                 .notIn("push_status", status)//1-推送成功  3-无需推送 4-已被合并推送
-                .between("insert_time", DateUtils.addHours(now, -2), DateUtils.addSeconds(now, -2))
+                .between("insert_time", DateUtils.addHours(now, -2), DateUtils.addSeconds(now, -30))
                 .orderBy("insert_time", false)
         );
 
@@ -86,10 +86,6 @@ public class PushTask {
                     //Step s 置位被整合的批量推送
                     pushLog.setPushStatus(4);
                     pushLog.setNote("已被合并推送");
-                    f1 = true;
-                }else {
-                    pushLog.setPushStatus(2);
-                    pushLog.setNote("定时任务推送失败"+tip.getMsg());
                     f1 = true;
                 }
 
