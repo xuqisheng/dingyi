@@ -74,6 +74,10 @@ public class ResvOrderThird extends Model<ResvOrderThird> {
      */
     private String source;
     /**
+     * 微信公众号关联客户的id
+     */
+    private String openId;
+    /**
      * 处理结果 0未处理 1接受 2拒绝
      */
     private Integer result;
@@ -235,6 +239,14 @@ public class ResvOrderThird extends Model<ResvOrderThird> {
         this.mealTypeName = mealTypeName;
     }
 
+    public String getOpenId() {
+        return openId;
+    }
+
+    public void setOpenId(String openId) {
+        this.openId = openId;
+    }
+
     public Date getUpdatedAt() {
         return updatedAt;
     }
@@ -269,6 +281,7 @@ public class ResvOrderThird extends Model<ResvOrderThird> {
         ", flag=" + flag +
         ", source=" + source +
         ", result=" + result +
+        ", openId=" + openId +
         ", createdAt=" + createdAt +
         ", updatedAt=" + updatedAt +
         "}";
