@@ -240,7 +240,7 @@ public class AddOrderDTO {
     private String androidUserName;
 
     /**
-     * 第三方订单来源 id 2为美团/大众
+     * 第三方订单来源 id 2为美团/大众  4为易订公众号
      */
     private Integer thirdPartyId;
 

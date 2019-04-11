@@ -1,6 +1,8 @@
 package com.zhidianfan.pig.yd.moduler.meituan.controller;
 
 import com.alibaba.fastjson.JSONObject;
+import com.zhidianfan.pig.yd.moduler.common.dto.ErrorTip;
+import com.zhidianfan.pig.yd.moduler.common.dto.SuccessTip;
 import com.zhidianfan.pig.yd.moduler.common.dto.Tip;
 import com.zhidianfan.pig.yd.moduler.meituan.bo.BasicBO;
 import com.zhidianfan.pig.yd.moduler.meituan.bo.BusinessBo;
@@ -162,17 +164,32 @@ public class YdController {
 
 
     /**
-     * 微信公众号第三方订单
+     * 微信公众号第三方订单 生成
      * @param publicOrderDTO
      * @return
      */
     @PostMapping(value = "/publicaccount/order/create")
-    public ResponseEntity orderByPublic(@RequestBody PublicOrderDTO publicOrderDTO) {
+    public ResponseEntity orderCreateByPA(@RequestBody PublicOrderDTO publicOrderDTO) {
 
         boolean b = ydService.PACreatOrder(publicOrderDTO);
+        Tip tip = (b ? SuccessTip.SUCCESS_TIP : ErrorTip.ERROR_TIP);
+
+        return ResponseEntity.ok(tip);
+    }
+
+    /**
+     * 微信公众号第三方订单状态变更
+     * @param thirdOrderId
+     * @return
+     */
+    @PostMapping(value = "/publicaccount/order/update")
+    public ResponseEntity orderUpdateByPublic(@RequestBody String thirdOrderId) {
+
+        boolean b = ydService.PAOrderUpdate(thirdOrderId);
 
         return ResponseEntity.ok(b);
     }
+
 
     /**
      * apptoken回调接口

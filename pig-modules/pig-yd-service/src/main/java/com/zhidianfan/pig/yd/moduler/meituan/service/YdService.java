@@ -94,6 +94,9 @@ public class YdService {
     @Autowired
     private VipService vipService;
 
+    @Autowired
+    IVipService iVipService;
+
     /**
      * 订单日志记录
      */
@@ -408,7 +411,7 @@ public class YdService {
     public boolean checkBusinessReceipt(ResvOrderThird resvOrderThird, List<Table> tables) {
 
         AutoReceiptConfig autoReceiptConfig = autoReceiptConfigService.getAutoReceiptConfig(resvOrderThird.getBusinessId());
-        if (null == autoReceiptConfig) {
+        if (null == autoReceiptConfig || autoReceiptConfig.getStatus() == 0) {
             //如果不存在配置则无法自动接单
             return false;
         }
@@ -790,7 +793,27 @@ public class YdService {
             Integer tableId = rightTable.getId();
             String tableName = rightTable.getTableName();
             //查询区域名字
-            TableArea tableArea = iTableAreaService.selectOne(new EntityWrapper<TableArea>().eq("id", rightTable.getTableAreaId()));
+            TableArea tableArea = iTableAreaService.selectOne(new EntityWrapper<TableArea>()
+                                                                    .eq("id", rightTable.getTableAreaId()));
+
+            //查询客户,没有就插入新客户
+            Vip vip1 = iVipService.selectOne(new EntityWrapper<Vip>()
+                    .eq("business_id", resvOrderThird.getBusinessId())
+                    .eq("vip_phone", resvOrderThird.getVipPhone()));
+
+            if (vip1 == null){
+
+                Vip vip = new Vip();
+                vip.setVipPhone(resvOrderThird.getVipPhone());
+                vip.setBusinessId(business.getId());
+                vip.setBusinessName(business.getBusinessName());
+                vip.setVipName(resvOrderThird.getVipName());
+                vip.setVipSex( resvOrderThird.getVipSex().equals("先生") ? "男" : "女" );
+                iVipService.insert(vip);
+                log.info(vip.toString());
+                vip1 =  vip;
+            }
+
 
             ResvOrderAndroid resvOrderAndroid = new ResvOrderAndroid();
             BeanUtils.copyProperties(resvOrderThird, resvOrderAndroid);
@@ -806,9 +829,8 @@ public class YdService {
             String orderNo = IdUtils.makeOrderNo();
             resvOrderAndroid.setResvOrder(orderNo);
             resvOrderAndroid.setBatchNo("pc" + orderNo);
-            resvOrderAndroid.setVipSex(resvOrderThird.getVipSex().equals("先生") ? "男" : "女");
-
-            resvOrderAndroid.setVipId(0);
+            resvOrderAndroid.setVipSex(vip1.getVipSex());
+            resvOrderAndroid.setVipId(vip1.getId());
             boolean insert = iResvOrderAndroidService.insert(resvOrderAndroid);
             //插入订单自动接单日志
             insertAutoAcceptLogs(resvOrderAndroid.getResvOrder());
@@ -1055,5 +1077,30 @@ public class YdService {
             businessBo.setBusinessName(business.getBusinessName());
         }
         return businessBo;
+    }
+
+    /**
+     * 客户取消订单
+     * @param thirdOrderId 第三方订单号
+     * @return 操作结果
+     */
+    public boolean PAOrderUpdate(String thirdOrderId) {
+
+        //客户取消订单
+
+        //1.如果商家已经接单
+        //1.1修改订单状态为退订
+        //1.2插入该订单退订日志
+        //1.3修改第三方订单状态
+        //1.4通知商家已经客户退单,哪张桌子已经空闲
+
+
+        //2. 如果商家没有接单
+
+        //2.1 修改第三方订单状态
+        //2.2 提醒商家客户已经退单
+
+
+        return false;
     }
 }

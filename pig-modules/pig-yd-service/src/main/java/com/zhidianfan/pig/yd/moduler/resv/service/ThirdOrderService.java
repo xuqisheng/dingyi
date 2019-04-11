@@ -120,6 +120,38 @@ public class ThirdOrderService {
 
         }
 
+        if (addOrderDTO.getThirdPartyId() == 4) {
+
+            //只有安卓电话机端 有易订公众号
+            //修改订单状态,为接单
+            //已经接受
+            resvOrderThird.setResult(1);
+            resvOrderThird.setStatus(40);
+            resvOrderThird.setBatchNo(addOrderDTO.getBatchNo());
+            iResvOrderThirdService.update(resvOrderThird, new EntityWrapper<ResvOrderThird>().
+                    eq("third_order_no", addOrderDTO.getThirdOrderNo()));
+
+            //查询或者新增该客户然后更新订单表信息
+            Vip vip = new Vip();
+            BeanUtils.copyProperties(addOrderDTO, vip);
+            //去除订单信息中的tag 与 remark
+            vip.setTag(null);
+            vip.setRemark(null);
+            vipService.updateOrInsertVip(vip);
+
+            //更新订单表中的信息
+            Vip basicVipInfo = vipService.getBasicVipInfo(addOrderDTO.getBusinessId(), vip.getVipPhone());
+            ResvOrderAndroid resvOrder = new ResvOrderAndroid();
+            resvOrder.setVipPhone(basicVipInfo.getVipPhone());
+            resvOrder.setVipId(basicVipInfo.getId());
+            resvOrder.setVipName(basicVipInfo.getVipName());
+            resvOrder.setVipSex(basicVipInfo.getVipSex());
+            resvOrder.setVipCompany(basicVipInfo.getVipCompany());
+            iResvOrderService.update(resvOrder, new EntityWrapper<ResvOrderAndroid>()
+                    .eq("third_order_no", addOrderDTO.getThirdOrderNo()));
+
+        }
+
 
         return SuccessTip.SUCCESS_TIP;
     }
@@ -224,6 +256,7 @@ public class ThirdOrderService {
 
     /**
      * 美团订单接单
+     *
      * @param addOrderDTO
      * @param type
      * @param resvOrderThird
