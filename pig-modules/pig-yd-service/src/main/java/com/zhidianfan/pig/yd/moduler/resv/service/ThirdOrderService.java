@@ -123,6 +123,16 @@ public class ThirdOrderService {
         if (addOrderDTO.getThirdPartyId() == 4) {
 
             //只有安卓电话机端 有易订公众号
+
+            ResvOrderThird resvOrderThird1 = iResvOrderThirdService.selectOne(new EntityWrapper<ResvOrderThird>()
+                    .eq("third_order_no", addOrderDTO.getThirdOrderNo()));
+            if (resvOrderThird1.getStatus() != 10){
+                ErrorTip errorTip = new ErrorTip();
+                errorTip.setMsg("客户已经取消");
+                return errorTip;
+            }
+
+
             //修改订单状态,为接单
             //已经接受
             resvOrderThird.setResult(1);
