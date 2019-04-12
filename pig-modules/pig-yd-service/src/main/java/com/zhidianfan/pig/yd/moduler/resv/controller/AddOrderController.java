@@ -233,6 +233,7 @@ public class AddOrderController {
     @PostMapping("/thirdresv")
     public ResponseEntity newThirdOrder(@RequestBody AddOrderDTO addOrderDTO) {
 
+
         //根据传来的信息生成批次号
         String batchNo = "pc" + IdUtils.makeOrderNo();
         addOrderDTO.setBatchNo(batchNo);

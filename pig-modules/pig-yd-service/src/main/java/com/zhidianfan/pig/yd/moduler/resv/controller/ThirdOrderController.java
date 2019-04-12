@@ -104,5 +104,19 @@ public class ThirdOrderController {
     }
 
 
+    /**
+     * 拒绝yd公众号第三方订单
+     *
+     * @param orderno 第三方订单id
+     * @return 操作是否成功
+     */
+    @GetMapping(value = "/publicaccountorder")
+    public ResponseEntity rejectPublicAccountOrder(@RequestParam String orderno) {
+
+        Tip tip = thirdOrderService.rejectPublicAccountOrder(orderno);
+
+
+        return ResponseEntity.ok(tip);
+    }
 
 }

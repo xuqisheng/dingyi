@@ -178,16 +178,16 @@ public class YdController {
     }
 
     /**
-     * 微信公众号第三方订单状态变更
-     * @param thirdOrderId
-     * @return
+     * 微信公众号第三方订单状态变更 (客户取消)
+     * @param thirdOrderId 第三方订单id
+     * @return 操作结果
      */
-    @PostMapping(value = "/publicaccount/order/update")
-    public ResponseEntity orderUpdateByPublic(@RequestBody String thirdOrderId) {
+    @GetMapping(value = "/publicaccount/order/cancel")
+    public ResponseEntity orderUpdateByPublic(@RequestParam String thirdOrderId) {
 
-        boolean b = ydService.PAOrderUpdate(thirdOrderId);
+        Tip tip  = ydService.PAOrderUpdate(thirdOrderId);
 
-        return ResponseEntity.ok(b);
+        return ResponseEntity.ok(tip);
     }
 
 

@@ -102,6 +102,15 @@ public class ThirdOrderService {
         iResvOrderThirdService.update(resvOrderThird, new EntityWrapper<ResvOrderThird>().
                 eq("third_order_no", addOrderDTO.getThirdOrderNo()));
 
+        //只有安卓电话机端 有易订公众号
+        ResvOrderThird resvOrderThird1 = iResvOrderThirdService.selectOne(new EntityWrapper<ResvOrderThird>()
+                .eq("third_order_no", addOrderDTO.getThirdOrderNo()));
+        if (resvOrderThird1.getStatus() != 10){
+            ErrorTip errorTip = new ErrorTip();
+            errorTip.setMsg("客户已经取消");
+            return errorTip;
+        }
+
         Tip tip = addOrderService.inserOrder(addOrderDTO);
 
         //如果插入失败直接返回桌位被占用
@@ -120,18 +129,8 @@ public class ThirdOrderService {
 
         }
 
+        //易订公众号接单
         if (addOrderDTO.getThirdPartyId() == 4) {
-
-            //只有安卓电话机端 有易订公众号
-
-            ResvOrderThird resvOrderThird1 = iResvOrderThirdService.selectOne(new EntityWrapper<ResvOrderThird>()
-                    .eq("third_order_no", addOrderDTO.getThirdOrderNo()));
-            if (resvOrderThird1.getStatus() != 10){
-                ErrorTip errorTip = new ErrorTip();
-                errorTip.setMsg("客户已经取消");
-                return errorTip;
-            }
-
 
             //修改订单状态,为接单
             //已经接受
@@ -159,6 +158,7 @@ public class ThirdOrderService {
             resvOrder.setVipCompany(basicVipInfo.getVipCompany());
             iResvOrderService.update(resvOrder, new EntityWrapper<ResvOrderAndroid>()
                     .eq("third_order_no", addOrderDTO.getThirdOrderNo()));
+
 
         }
 
@@ -343,4 +343,35 @@ public class ThirdOrderService {
         return SuccessTip.SUCCESS_TIP;
     }
 
+    /**
+     * 拒绝yd 公众号订单
+     * @param orderno 第三方订单号
+     * @return 操作结果
+     */
+    public Tip rejectPublicAccountOrder(String orderno) {
+
+        //只有安卓电话机端 有易订公众号
+        ResvOrderThird resvOrderThird1 = iResvOrderThirdService.selectOne(new EntityWrapper<ResvOrderThird>()
+                .eq("third_order_no", orderno));
+        if (resvOrderThird1.getStatus() != 10){
+            ErrorTip errorTip = new ErrorTip();
+            errorTip.setMsg("客户已经取消");
+            return errorTip;
+        }
+
+        //如果客户没有取消, 商户取消订单更新 字段
+        ResvOrderThird resvOrderThird = new ResvOrderThird();
+        //设置为已读
+        resvOrderThird.setFlag(1);
+        //拒绝
+        resvOrderThird.setResult(2);
+        resvOrderThird.setUpdatedAt(new Date());
+        //设置为商家拒单
+        resvOrderThird.setStatus(30);
+
+        iResvOrderThirdService.update(resvOrderThird, new EntityWrapper<ResvOrderThird>()
+                .eq("third_order_no", orderno));
+
+        return SuccessTip.SUCCESS_TIP;
+    }
 }

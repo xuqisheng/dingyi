@@ -563,6 +563,8 @@ public class YdService {
         if (isUpdate) {
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("type", "8");
+            jsonObject.put("orderType", "mt");
+
             ResvOrderThird resvOrderThird1 = resvOrderThirdService.selectOne(new EntityWrapper<ResvOrderThird>().eq("third_order_no", meituanOrderUpdateDTO.getOrderSerializedId()));
             if (meituanOrderUpdateDTO.getStatus() == 70) {
                 if (StringUtils.isNotBlank(resvOrderThird1.getBatchNo())) {
@@ -753,6 +755,9 @@ public class YdService {
         if (success) {
             Business business = businessService.selectOne(new EntityWrapper<Business>().eq("id", resvOrderThird.getBusinessId()));
             autoAcceptOrder(resvOrderThird, business);
+
+            //todo 推送接单成功给客户
+
         } else {
             log.error("自动接单失败");
             return false;
@@ -794,24 +799,24 @@ public class YdService {
             String tableName = rightTable.getTableName();
             //查询区域名字
             TableArea tableArea = iTableAreaService.selectOne(new EntityWrapper<TableArea>()
-                                                                    .eq("id", rightTable.getTableAreaId()));
+                    .eq("id", rightTable.getTableAreaId()));
 
             //查询客户,没有就插入新客户
             Vip vip1 = iVipService.selectOne(new EntityWrapper<Vip>()
                     .eq("business_id", resvOrderThird.getBusinessId())
                     .eq("vip_phone", resvOrderThird.getVipPhone()));
 
-            if (vip1 == null){
+            if (vip1 == null) {
 
                 Vip vip = new Vip();
                 vip.setVipPhone(resvOrderThird.getVipPhone());
                 vip.setBusinessId(business.getId());
                 vip.setBusinessName(business.getBusinessName());
                 vip.setVipName(resvOrderThird.getVipName());
-                vip.setVipSex( resvOrderThird.getVipSex().equals("先生") ? "男" : "女" );
+                vip.setVipSex(resvOrderThird.getVipSex().equals("先生") ? "男" : "女");
                 iVipService.insert(vip);
                 log.info(vip.toString());
-                vip1 =  vip;
+                vip1 = vip;
             }
 
 
@@ -1081,26 +1086,89 @@ public class YdService {
 
     /**
      * 客户取消订单
+     *
      * @param thirdOrderId 第三方订单号
      * @return 操作结果
      */
-    public boolean PAOrderUpdate(String thirdOrderId) {
+    public Tip PAOrderUpdate(String thirdOrderId) {
 
         //客户取消订单
-
-        //1.如果商家已经接单
-        //1.1修改订单状态为退订
-        //1.2插入该订单退订日志
-        //1.3修改第三方订单状态
-        //1.4通知商家已经客户退单,哪张桌子已经空闲
+        ResvOrderThird resvOrderThird = iResvOrderThirdService.selectOne(new EntityWrapper<ResvOrderThird>()
+                .eq("third_order_no", thirdOrderId));
 
 
-        //2. 如果商家没有接单
+        Integer result = resvOrderThird.getResult();
+        //如果是未处理或者已经接单取消订单
+        if (result == 0 || result == 1) {
 
-        //2.1 修改第三方订单状态
-        //2.2 提醒商家客户已经退单
+            //修改第三方订单状态,设置为客户拒单
+            resvOrderThird.setStatus(70);
+            resvOrderThird.setRemark("客户取消易订公众号订单");
+            iResvOrderThirdService.updateById(resvOrderThird);
+
+            //根据有无订单是否修改订单状态
+            List<ResvOrderAndroid> orderAndroidList = iResvOrderAndroidService.selectList(new EntityWrapper<ResvOrderAndroid>()
+                    .eq("third_order_no", thirdOrderId));
 
 
-        return false;
+            ArrayList<ResvOrderLogs> resvOrderLogsList = new ArrayList<>();
+
+            //如果存在订单,就更新订单信息
+            if (orderAndroidList.size() != 0) {
+                for (ResvOrderAndroid resvOrderAndroid : orderAndroidList) {
+
+                    //退订
+                    resvOrderAndroid.setStatus("4");
+                    resvOrderAndroid.setRemark("顾客取消易订订单");
+
+                    ResvOrderLogs resvOrderLogs = new ResvOrderLogs();
+                    String log = "变更订单状态为退订-安卓电话机(系统)";
+                    //将订单操作日志插入订单日志表
+                    resvOrderLogs.setResvOrder(resvOrderAndroid.getResvOrder());
+                    resvOrderLogs.setCreatedAt(new Date());
+                    resvOrderLogs.setStatus("4");
+                    resvOrderLogs.setStatusName("已退订");
+                    resvOrderLogs.setLogs(log);
+
+                    resvOrderLogsList.add(resvOrderLogs);
+                }
+
+                //批量更新
+                iResvOrderAndroidService.updateBatchById(orderAndroidList);
+
+                //批量插入订单日志
+                iResvOrderLogsService.insertBatch(resvOrderLogsList);
+
+            }
+
+            //推送商家
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("type", "7");
+
+            //分类推送信息类型 yd公众号 和 美团
+            jsonObject.put("orderType", "yd");
+            JgPush jgPush = new JgPush();
+            jgPush.setBusinessId(resvOrderThird.getBusinessId().toString());
+            jgPush.setMsgSeq(String.valueOf(getNextDateId("YD_ORDER")));
+            jgPush.setUsername("13777575146");
+            String orderMsg = JsonUtils.obj2Json(resvOrderThird).replaceAll("\r|\n", "").replaceAll("\\s*", "");
+            jsonObject.put("data", orderMsg);
+            jgPush.setType("ANDROID_PHONE");
+            pushFeign.pushMsg(jgPush.getType(), jgPush.getUsername(), jgPush.getMsgSeq(), jgPush.getBusinessId(), jgPush.getMsg());
+
+
+            return SuccessTip.SUCCESS_TIP;
+
+        } else {
+
+            //提示商家已经拒单
+            ErrorTip errorTip = new ErrorTip();
+            errorTip.setCode(500);
+            errorTip.setMsg("商家已经拒单");
+
+            return errorTip;
+        }
+
+
     }
 }
