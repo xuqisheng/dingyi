@@ -408,7 +408,7 @@ public class YdService {
     public boolean checkBusinessReceipt(ResvOrderThird resvOrderThird, List<Table> tables) {
 
         AutoReceiptConfig autoReceiptConfig = autoReceiptConfigService.getAutoReceiptConfig(resvOrderThird.getBusinessId());
-        if (null == autoReceiptConfig) {
+        if (null == autoReceiptConfig || autoReceiptConfig.getStatus() == 0) {
             //如果不存在配置则无法自动接单
             return false;
         }
