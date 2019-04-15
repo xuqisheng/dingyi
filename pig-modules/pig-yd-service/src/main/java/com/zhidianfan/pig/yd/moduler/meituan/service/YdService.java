@@ -299,7 +299,6 @@ public class YdService {
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("data", orderMsg);
             jsonObject.put("type", "8");
-            jsonObject.put("orderType", "mt");
             jgPush.setMsg(jsonObject.toString());
             if (business.getDevice() == 2) {
                 //接单标识

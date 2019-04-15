@@ -71,7 +71,6 @@ public class UpdateThirdOrderInfoListener {
         JSONObject jsonObject1 = new JSONObject();
         jsonObject1.put("data", orderMsg1);
         jsonObject1.put("type", "10");
-        jsonObject1.put("orderType", "mt");
         jgPush.setMsg(jsonObject1.toString());
         jgPush.setBusinessId(String.valueOf(resvOrderAndroid.getBusinessId()));
         jgPush.setMsgSeq(String.valueOf(getNextDateId("MT_ORDER")));
