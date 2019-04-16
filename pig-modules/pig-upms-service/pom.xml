@@ -22,7 +22,7 @@
 
 	<groupId>com.zhidianfan.pig</groupId>
 	<artifactId>pig-upms-service</artifactId>
-	<version>0.0.2</version>
+	<version>0.0.5</version>
 	<packaging>jar</packaging>
 
 	<name>pig-upms-service</name>
