@@ -12,7 +12,7 @@
     <parent>
         <artifactId>pig-modules</artifactId>
         <groupId>com.zhidianfan.pig</groupId>
-        <version>0.0.1-Alpha</version>
+        <version>PV-0.0.1</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -94,14 +94,14 @@
 
         <!--阿里云短信-->
         <!--<dependency>-->
-            <!--<groupId>com.alibaba</groupId>-->
-            <!--<artifactId>aliyun-java-sdk-core</artifactId>-->
-            <!--<version>3.3.1</version>-->
+        <!--<groupId>com.alibaba</groupId>-->
+        <!--<artifactId>aliyun-java-sdk-core</artifactId>-->
+        <!--<version>3.3.1</version>-->
         <!--</dependency>-->
         <!--<dependency>-->
-            <!--<groupId>com.alibaba</groupId>-->
-            <!--<artifactId>aliyun-java-sdk-dysmsapi</artifactId>-->
-            <!--<version>1.0.0</version>-->
+        <!--<groupId>com.alibaba</groupId>-->
+        <!--<artifactId>aliyun-java-sdk-dysmsapi</artifactId>-->
+        <!--<version>1.0.0</version>-->
         <!--</dependency>-->
     </dependencies>
 
@@ -142,7 +142,8 @@
                 <artifactId>docker-maven-plugin</artifactId>
                 <version>0.4.13</version>
                 <configuration>
-                    <imageName>${docker.repository}/${docker.registry.name}/${project.artifactId}:${project.version}</imageName>
+                    <imageName>${docker.repository}/${docker.registry.name}/${project.artifactId}:${project.version}
+                    </imageName>
                     <dockerDirectory>./</dockerDirectory>
                     <serverId>docker-aliyun-yiding</serverId>
                     <resources>

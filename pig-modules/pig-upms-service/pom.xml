@@ -31,7 +31,7 @@
 	<parent>
 		<groupId>com.zhidianfan.pig</groupId>
 		<artifactId>pig-modules</artifactId>
-		<version>0.0.1-Alpha</version>
+		<version>PV-0.0.1</version>
 	</parent>
 
 	<dependencies>
@@ -121,7 +121,7 @@
 				<artifactId>docker-maven-plugin</artifactId>
 				<version>0.4.13</version>
 				<configuration>
-					<imageName>${docker.repository}/${docker.registry.name}/${project.artifactId}:${project.version}</imageName>
+					<imageName>${docker.repository}/${docker.registry.name}/${project.artifactId}:PV-0.0.1</imageName>
 					<dockerDirectory>./</dockerDirectory>
 					<serverId>docker-aliyun-yiding</serverId>
 					<resources>
