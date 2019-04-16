@@ -93,9 +93,9 @@ public class ThirdOrderController {
      * 退订消息知道了
      */
     @PostMapping(value = "/unsubscribeorder")
-    public ResponseEntity readUnsubscribeMes(@RequestParam String thridNo ) {
+    public ResponseEntity readUnsubscribeMes(@RequestParam String thridNo) {
 
-        boolean b  = thirdOrderService.readUnsubscribeOrder(thridNo);
+        boolean b = thirdOrderService.readUnsubscribeOrder(thridNo);
 
         Tip tip = (b ? SuccessTip.SUCCESS_TIP : ErrorTip.ERROR_TIP);
 
@@ -104,4 +104,8 @@ public class ThirdOrderController {
     }
 
 
+    @GetMapping(value = "/getWeChatOrder")
+    public ResponseEntity getWeChatOrder(ThirdQueryDTO thirdQueryDTO) {
+        return ResponseEntity.ok(thirdOrderService.getConditionWeChatThirdOrder(thirdQueryDTO));
+    }
 }

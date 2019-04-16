@@ -77,6 +77,22 @@ public class ThirdOrderService {
      * @param thirdQueryDTO 查询条件，酒店id必须
      * @return 返回第三方平台未处理订单信息
      */
+    public Page<ResvOrderThirdBO> getConditionWeChatThirdOrder(ThirdQueryDTO thirdQueryDTO) {
+
+        Page<ResvOrderThirdBO> page = new PageFactory().defaultPage();
+
+
+        Page<ResvOrderThirdBO> resvOrderThirds = iResvOrderThirdService.getWeChatThirdOrder(page, thirdQueryDTO);
+
+        return resvOrderThirds;
+    }
+
+    /**
+     * 获取第三方平台未处理订单信息
+     *
+     * @param thirdQueryDTO 查询条件，酒店id必须
+     * @return 返回第三方平台未处理订单信息
+     */
     public List<ResvOrderThirdBO> getAllConditionThirdOrder(ThirdQueryDTO thirdQueryDTO) {
 
 

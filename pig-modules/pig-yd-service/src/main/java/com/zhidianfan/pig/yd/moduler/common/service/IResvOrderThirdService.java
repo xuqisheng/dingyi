@@ -25,4 +25,5 @@ public interface IResvOrderThirdService extends IService<ResvOrderThird> {
 
     List<ResvOrderThirdBO> getAllThirdOrder(ThirdQueryDTO thirdQueryDTO);
 
+    Page<ResvOrderThirdBO> getWeChatThirdOrder(Page<ResvOrderThirdBO> page, ThirdQueryDTO thirdQueryDTO);
 }

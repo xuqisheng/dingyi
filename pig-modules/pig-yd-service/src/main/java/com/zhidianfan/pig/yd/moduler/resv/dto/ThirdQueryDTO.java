@@ -24,4 +24,9 @@ public class ThirdQueryDTO {
      * 订单状态
      */
     private String orderResult;
+
+    /**
+     * 微信openid
+     */
+    private String openid;
 }

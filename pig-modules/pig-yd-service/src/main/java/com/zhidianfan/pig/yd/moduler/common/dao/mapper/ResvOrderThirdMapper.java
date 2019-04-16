@@ -24,4 +24,6 @@ public interface ResvOrderThirdMapper extends BaseMapper<ResvOrderThird> {
     List<ResvOrderThirdBO> getThirdOrder(Page<ResvOrderThirdBO> page, ThirdQueryDTO tq);
 
     List<ResvOrderThirdBO> getAllThirdOrder(ThirdQueryDTO tq);
+
+    List<ResvOrderThirdBO> getWeChatThirdOrder(Page<ResvOrderThirdBO> page, ThirdQueryDTO tq);
 }

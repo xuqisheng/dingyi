@@ -94,6 +94,21 @@
 
     </select>
 
+    <select id="getWeChatThirdOrder" parameterType="com.zhidianfan.pig.yd.moduler.resv.dto.ThirdQueryDTO" resultMap="ResvOrderThirdBO">
+        select id,batch_no,business_id,third_order_no,vip_name,vip_phone,vip_sex,table_type,table_type_name,
+        remark,resv_num,status,flag,source,meal_type_id,meal_type_name,resv_source,resv_date,dest_date, created_at,
+        updated_at,order_result,status
+        FROM resv_order_third
+        WHERE  business_id = #{businessId}
+        <if test="null!=orderResult and ''!=orderResult">
+            AND  `status` = #{orderResult}
+        </if>
+        <if test="null!=openid and ''!=openid">
+            AND open_id = #{openid}
+        </if>
+        ORDER BY created_at DESC
+    </select>
+
     <select id="getAllThirdOrder" parameterType="com.zhidianfan.pig.yd.moduler.resv.dto.ThirdQueryDTO" resultMap="ResvOrderThirdBO">
         select id,batch_no,business_id,(select business_name from business where id = business_id) as business_name,third_order_no,vip_name,vip_phone,vip_sex,table_type,table_type_name,
         remark,resv_num,status,flag,source,meal_type_id,meal_type_name,resv_source,resv_date,dest_date, created_at,
