@@ -22,6 +22,7 @@
         <result column="result" property="result"/>
         <result column="meal_type_id" property="mealTypeId"/>
         <result column="meal_type_name" property="mealTypeName"/>
+        <result column="open_id" property="openId"/>
         <result column="created_at" property="createdAt"/>
         <result column="updated_at" property="updatedAt"/>
     </resultMap>

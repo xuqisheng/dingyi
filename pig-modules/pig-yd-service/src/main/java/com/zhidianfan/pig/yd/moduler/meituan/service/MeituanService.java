@@ -260,7 +260,7 @@ public class MeituanService {
     public Tip tableStatusUpdate(Integer businessId, String resvOrder) throws Exception {
         Tip tip;
         Business business = businessService.selectOne(new EntityWrapper<Business>().eq("id", businessId));
-        //todo 针对安卓电话机进行了修改
+        // 针对安卓电话机进行了修改
         ResvOrderAndroid resvOrder1 = new ResvOrderAndroid();
 
         ResvOrderAndroid resvOrderAndroid = iResvOrderAndroidService.selectOne(new EntityWrapper<ResvOrderAndroid>().eq("resv_order", resvOrder)

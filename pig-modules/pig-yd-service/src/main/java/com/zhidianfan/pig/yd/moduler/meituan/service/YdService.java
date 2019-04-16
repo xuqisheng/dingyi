@@ -32,6 +32,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.lang.reflect.Field;
 import java.text.ParseException;
@@ -298,6 +299,7 @@ public class YdService {
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("data", orderMsg);
             jsonObject.put("type", "8");
+            jsonObject.put("orderType", "mt");
             jgPush.setMsg(jsonObject.toString());
             if (business.getDevice() == 2) {
                 //接单标识
@@ -367,7 +369,7 @@ public class YdService {
             basicBO.setData(data);
             basicBO.setError(null);
             try {
-                if(business.getIsPadPush() == 1){
+                if (business.getIsPadPush() == 1) {
                     pushFeign.pushMsg(jgPush.getType(), jgPush.getUsername(), jgPush.getMsgSeq(), jgPush.getBusinessId(), jgPush.getMsg());
                 }
                 //如果自动接单则不推送这个消息
@@ -375,12 +377,12 @@ public class YdService {
                     jgPush.setType("ANDROID_PHONE");
                     pushFeign.pushMsg(jgPush.getType(), jgPush.getUsername(), jgPush.getMsgSeq(), jgPush.getBusinessId(), jgPush.getMsg());
                 }
-                List<Business> businessList = businessService.selectList(new EntityWrapper<Business>().eq("brand_id",business.getBrandId()).eq("status",'1'));
-                for(Business business1 : businessList){
-                    if(business1.getIsPcPush() == 1){
+                List<Business> businessList = businessService.selectList(new EntityWrapper<Business>().eq("brand_id", business.getBrandId()).eq("status", '1'));
+                for (Business business1 : businessList) {
+                    if (business1.getIsPcPush() == 1) {
                         jgPush.setType("WEB");
                         jgPush.setBusinessId(String.valueOf(business1.getId()));
-                        log.info("pc版推送:{}",business1.getId());
+                        log.info("pc版推送:{}", business1.getId());
                         pushFeign.pushMsg(jgPush.getType(), jgPush.getUsername(), jgPush.getMsgSeq(), jgPush.getBusinessId(), jgPush.getMsg());
                     }
                 }
@@ -403,10 +405,10 @@ public class YdService {
      *
      * @return
      */
-    private boolean checkBusinessReceipt(ResvOrderThird resvOrderThird, List<Table> tables) {
+    public boolean checkBusinessReceipt(ResvOrderThird resvOrderThird, List<Table> tables) {
 
         AutoReceiptConfig autoReceiptConfig = autoReceiptConfigService.getAutoReceiptConfig(resvOrderThird.getBusinessId());
-        if (null == autoReceiptConfig) {
+        if (null == autoReceiptConfig || autoReceiptConfig.getStatus() == 0) {
             //如果不存在配置则无法自动接单
             return false;
         }
@@ -484,7 +486,7 @@ public class YdService {
      * @param resvNum 预约的人数
      * @return 返回最适合的table
      */
-    private Table calRightTable(List<Table> tables, Integer resvNum) {
+    public Table calRightTable(List<Table> tables, Integer resvNum) {
 
         //最适合的桌位的位置
         int bestTableIndex = 0;
@@ -518,7 +520,7 @@ public class YdService {
         OrderBO orderBO = new OrderBO();
         ResvOrderThird resvOrderThird = new ResvOrderThird();
         MeituanOrderUpdateDTO meituanOrderUpdateDTO = JSONObject.parseObject(orderDTO.getData(), MeituanOrderUpdateDTO.class);
-        log.info("meituanOrderUpdateDTO:" +meituanOrderUpdateDTO);
+        log.info("meituanOrderUpdateDTO:" + meituanOrderUpdateDTO);
 
         resvOrderThird.setFlag(0);
 
@@ -708,6 +710,144 @@ public class YdService {
         }
     }
 
+
+    /**
+     * 微信公众号接收
+     */
+    public boolean PACreatOrder(PublicOrderDTO publicOrderDTO) {
+
+        //获得餐别
+        MealType mealType = mealTypeService.selectOne(new EntityWrapper<MealType>().eq("business_id", publicOrderDTO.getBusinessId())
+                .ge("resv_end_time", unixTimeToDate3(publicOrderDTO.getResvDate().getTime()))
+                .le("resv_start_time", unixTimeToDate3(publicOrderDTO.getResvDate().getTime()))
+                .eq("status", '1'));
+
+        if (mealType == null) {
+            log.error("该时间段没有餐别,入库失败");
+            return false;
+        }
+
+        ResvOrderThird resvOrderThird = new ResvOrderThird();
+        resvOrderThird.setBusinessId(publicOrderDTO.getBusinessId());
+        resvOrderThird.setResvNum(publicOrderDTO.getNumber());
+        resvOrderThird.setResvDate(publicOrderDTO.getResvDate());
+        resvOrderThird.setTableType(publicOrderDTO.getTableType());
+        resvOrderThird.setCreatedAt(new Date());
+        resvOrderThird.setStatus(publicOrderDTO.getStatus());
+        resvOrderThird.setTableTypeName(publicOrderDTO.getTableTypeName());
+        resvOrderThird.setVipName(publicOrderDTO.getName());
+        resvOrderThird.setVipPhone(publicOrderDTO.getPhone());
+        resvOrderThird.setSource("易订公众号");
+        resvOrderThird.setVipSex(publicOrderDTO.getGender() == 10 ? "先生" : "女士");
+        resvOrderThird.setMealTypeId(mealType.getId());
+        resvOrderThird.setMealTypeName(mealType.getMealTypeName());
+        resvOrderThird.setOpenId(publicOrderDTO.getOpenId());
+        //生成订单号
+        resvOrderThird.setThirdOrderNo(IdUtils.makeOrderNo());
+
+        boolean success = resvOrderThirdService.insert(resvOrderThird);
+
+        if (success) {
+            Business business = businessService.selectOne(new EntityWrapper<Business>().eq("id", resvOrderThird.getBusinessId()));
+            autoAcceptOrder(resvOrderThird, business);
+        } else {
+            log.error("自动接单失败");
+            return false;
+        }
+        return true;
+    }
+
+
+    /**
+     * 公众号自动接单
+     *
+     * @param resvOrderThird 第三方订单
+     * @param business       酒店
+     */
+    @Transactional
+    public void autoAcceptOrder(ResvOrderThird resvOrderThird, Business business) {
+
+        //默认为稍后接单
+        //默认推送自动接单内容
+        //接单标识
+        //1.查询酒店是否满足自动接单条件
+        //查询此时空闲桌的桌位
+        List<Table> tables = tableService.selectFreeTable(resvOrderThird.getBusinessId(), resvOrderThird.getResvDate(), resvOrderThird.getMealTypeId());
+        boolean receiptSign = checkBusinessReceipt(resvOrderThird, tables);
+
+        //能自动接单进行判断
+        //推送自动接单的第三方单号
+        JgPush jgPush = new JgPush();
+        jgPush.setUsername("13777575146");
+        //自动接单推送内容
+        jgPush.setMsgSeq(String.valueOf(getNextDateId("YD_ORDER")));
+        jgPush.setType("ANDROID_PHONE");
+        jgPush.setBusinessId(resvOrderThird.getBusinessId().toString());
+
+        if (receiptSign) {
+            //计算哪个桌位来接这个单
+            Table rightTable = calRightTable(tables, resvOrderThird.getResvNum());
+            Integer tableId = rightTable.getId();
+            String tableName = rightTable.getTableName();
+            //查询区域名字
+            TableArea tableArea = iTableAreaService.selectOne(new EntityWrapper<TableArea>().eq("id", rightTable.getTableAreaId()));
+
+            ResvOrderAndroid resvOrderAndroid = new ResvOrderAndroid();
+            BeanUtils.copyProperties(resvOrderThird, resvOrderAndroid);
+            //吃饭时间 14:00 之类
+            resvOrderAndroid.setDestTime(unixTimeToDate3(resvOrderThird.getResvDate().getTime()));
+            resvOrderAndroid.setStatus(OrderStatus.RESERVE.code);
+            resvOrderAndroid.setBusinessName(business.getBusinessName());
+            resvOrderAndroid.setResvNum(String.valueOf(resvOrderThird.getResvNum()));
+            resvOrderAndroid.setTableAreaId(tableArea.getId());
+            resvOrderAndroid.setTableAreaName(tableArea.getTableAreaName());
+            resvOrderAndroid.setTableId(tableId);
+            resvOrderAndroid.setTableName(tableName);
+            String orderNo = IdUtils.makeOrderNo();
+            resvOrderAndroid.setResvOrder(orderNo);
+            resvOrderAndroid.setBatchNo("pc" + orderNo);
+            resvOrderAndroid.setVipSex(resvOrderThird.getVipSex().equals("先生") ? "男" : "女");
+
+            resvOrderAndroid.setVipId(0);
+            boolean insert = iResvOrderAndroidService.insert(resvOrderAndroid);
+            //插入订单自动接单日志
+            insertAutoAcceptLogs(resvOrderAndroid.getResvOrder());
+
+
+            if (insert) {
+                //更新批次号
+                resvOrderThird.setBatchNo("pc" + orderNo);
+                resvOrderThird.setFlag(1);
+                resvOrderThird.setStatus(40);
+                iResvOrderThirdService.update(resvOrderThird, new EntityWrapper<ResvOrderThird>().eq("third_order_no", resvOrderThird.getThirdOrderNo()));
+
+                //推送消息
+                String orderMsg1 = JsonUtils.obj2Json(resvOrderAndroid).replaceAll("\r|\n", "").replaceAll("\\s*", "");
+                jgPush.setBusinessId(String.valueOf(resvOrderAndroid.getBusinessId()));
+                JSONObject jsonObject1 = new JSONObject();
+                jsonObject1.put("data", orderMsg1);
+                jsonObject1.put("type", "10");
+                jsonObject1.put("orderType", "yd");
+                jgPush.setMsg(jsonObject1.toString());
+
+                pushFeign.pushMsg(jgPush.getType(), jgPush.getUsername(), jgPush.getMsgSeq(), jgPush.getBusinessId(), jgPush.getMsg());
+            }
+        }
+        //如果自动接单则不推送这个消息
+        if (!receiptSign) {
+
+            //推送消息
+            JSONObject jsonObject = new JSONObject();
+            String orderMsg = JsonUtils.obj2Json(resvOrderThird).replaceAll("\r|\n", "").replaceAll("\\s*", "");
+            jsonObject.put("data", orderMsg);
+            jsonObject.put("type", "8");
+            jgPush.setMsg(jsonObject.toString());
+
+            pushFeign.pushMsg(jgPush.getType(), jgPush.getUsername(), jgPush.getMsgSeq(), jgPush.getBusinessId(), jgPush.getMsg());
+        }
+    }
+
+
     /**
      * apptoken回调接口
      *
@@ -765,11 +905,11 @@ public class YdService {
     /**
      * 插入日志
      */
-    public void insertAutoAcceptLogs(String  orderNo){
+    public void insertAutoAcceptLogs(String orderNo) {
         //订单日志记录
         ResvOrderLogs resvOrderLogs = new ResvOrderLogs();
 
-        String log = "订单预订成功-安卓电话机(系统自动接单)" ;
+        String log = "订单预订成功-安卓电话机(系统自动接单)";
         //将订单操作日志插入订单日志表
         resvOrderLogs.setResvOrder(orderNo);
         resvOrderLogs.setCreatedAt(new Date());
@@ -863,6 +1003,31 @@ public class YdService {
     }
 
     /**
+     * Long 时间戳转换HH:mm
+     *
+     * @param unixTime
+     * @return
+     */
+    public static String unixTimeToDate3(Long unixTime) {
+        SimpleDateFormat format = new SimpleDateFormat("HH:mm");
+        String d = format.format(unixTime);
+        return d;
+    }
+
+    /**
+     * Long时间戳转换yyyy-MM-dd HH:mm:ss
+     *
+     * @param unixTime
+     * @return
+     * @throws ParseException
+     */
+    public static Date unixTimeToDate4(Long unixTime) throws ParseException {
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String d = format.format(unixTime);
+        return format.parse(d);
+    }
+
+    /**
      * 获取序列
      *
      * @param type
@@ -877,14 +1042,15 @@ public class YdService {
 
     /**
      * 根据口碑门店id获取酒店信息
+     *
      * @param shopId
      * @param merchantPid
      * @return
      */
-    public BusinessBo getBusinessInfo(String shopId, String merchantPid){
-        Business business = businessService.selectOne(new EntityWrapper<Business>().eq("shop_id",shopId).eq("merchant_pid",merchantPid).eq("status",'1'));
+    public BusinessBo getBusinessInfo(String shopId, String merchantPid) {
+        Business business = businessService.selectOne(new EntityWrapper<Business>().eq("shop_id", shopId).eq("merchant_pid", merchantPid).eq("status", '1'));
         BusinessBo businessBo = null;
-        if(business != null){
+        if (business != null) {
             businessBo.setBusinessId(business.getId());
             businessBo.setBusinessName(business.getBusinessName());
         }

@@ -1,6 +1,5 @@
 package com.zhidianfan.pig.yd.moduler.meituan.controller;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.zhidianfan.pig.yd.moduler.common.dto.Tip;
 import com.zhidianfan.pig.yd.moduler.meituan.bo.BasicBO;
@@ -159,6 +158,20 @@ public class YdController {
     public ResponseEntity kbOrderCreate(@RequestBody KbOrderDTO kbOrderDTO){
         Tip tip = ydService.kbOrderCreate(kbOrderDTO);
         return ResponseEntity.ok(tip);
+    }
+
+
+    /**
+     * 微信公众号第三方订单
+     * @param publicOrderDTO
+     * @return
+     */
+    @PostMapping(value = "/publicaccount/order/create")
+    public ResponseEntity orderByPublic(@RequestBody PublicOrderDTO publicOrderDTO) {
+
+        boolean b = ydService.PACreatOrder(publicOrderDTO);
+
+        return ResponseEntity.ok(b);
     }
 
     /**
