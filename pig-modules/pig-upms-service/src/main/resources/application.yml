@@ -143,6 +143,8 @@ qiniu:
   qiniuHost: http://p0hpm86wj.bkt.clouddn.com/
 
 
+
+
 ### 开发环境 ###
 ---
 spring:
@@ -205,18 +207,20 @@ eureka:
     serviceUrl:
       defaultZone: http://${eureka.auth.username}:${eureka.auth.password}@server1:${eureka.auth.port}/eureka/,http://${eureka.auth.username}:${eureka.auth.password}@server2:${eureka.auth.port}/eureka/,http://${eureka.auth.username}:${eureka.auth.password}@server3:${eureka.auth.port}/eureka/
 
+mysqlhost: localhost
+
 # 分库分表支持
 sharding:
   jdbc:
     defaultDataSourceName:
       username: root
       password: 123456
-      jdbc-url: jdbc:mysql://mysqlhost:3306/pig?characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false
+      jdbc-url: jdbc:mysql://192.168.3.202:3306/pig?characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false
     datasource:
       ds:
         username: root
         password: 123456
-        jdbc-url: jdbc:mysql://mysqlhost:3306/pig?characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false
+        jdbc-url: jdbc:mysql://192.168.3.202:3306/pig?characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false
 
 ### 生产环境 ###
 
