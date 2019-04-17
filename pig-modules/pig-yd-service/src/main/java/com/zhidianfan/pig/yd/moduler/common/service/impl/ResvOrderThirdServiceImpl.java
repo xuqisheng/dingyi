@@ -37,6 +37,13 @@ public class ResvOrderThirdServiceImpl extends ServiceImpl<ResvOrderThirdMapper,
     }
 
     @Override
+    public Page<ResvOrderThirdBO> getWeChatThirdOrder(Page<ResvOrderThirdBO> page, ThirdQueryDTO thirdQueryDTO) {
+
+        List<ResvOrderThirdBO> thirdOrderList  = baseMapper.getWeChatThirdOrder(page,thirdQueryDTO);
+        return page.setRecords(thirdOrderList);
+    }
+
+    @Override
     public List<ResvOrderThirdBO> getAllThirdOrder(ThirdQueryDTO thirdQueryDTO) {
 
         List<ResvOrderThirdBO> thirdOrderList  = baseMapper.getAllThirdOrder(thirdQueryDTO);
