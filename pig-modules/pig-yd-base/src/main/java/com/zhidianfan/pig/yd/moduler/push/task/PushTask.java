@@ -32,7 +32,7 @@ public class PushTask {
     private IBasePushLogService pushLogService;
 
 
-    private Integer[] status = new Integer[]{0, 2};
+    private Integer[] status = new Integer[]{1, 3, 4};
 
     @Autowired
     private YdPropertites ydPropertites;
@@ -48,17 +48,13 @@ public class PushTask {
      */
     @Scheduled(fixedDelay = 5_000)
     public void pushMsg() {
-
-        log.info("执行推送定时任务-------------------------start");
-
         Date now = new Date();
         //查询出需要推送的设备：推送次数<3的，2小时前至今30秒前，推送非成功状态的数据；30秒前至今的数据，可能还在被正常推送中
         List<BasePushLog> list = pushLogService.selectList(new EntityWrapper<BasePushLog>()
                 .lt("pushed_count", Integer.parseInt(ydPropertites.getJg().getMap().get("pad").get("retry")))
-                .notIn("push_status", status)//0-待推送  1-推送成功 2-推送失败 3-无需推送 4-已被合并推送
-                .between("insert_time", DateUtils.addSeconds(now, -300), DateUtils.addSeconds(now, 1))
+                .notIn("push_status", status)//1-推送成功  3-无需推送 4-已被合并推送
+                .between("insert_time", DateUtils.addHours(now, -2), DateUtils.addSeconds(now, -30))
                 .orderBy("insert_time", false)
-                .last(" limit 1000")
         );
 
 
@@ -66,6 +62,8 @@ public class PushTask {
         List<String> regIds = null;
         for (BasePushLog pushLog : list) {
             log.info("准备合并推送...............合并 {} 笔推送", list.size());
+            list.stream()
+                    .forEach(basePushLog -> log.info(basePushLog.toString()));
 
             if (f1) {
                 //Step s 置位被整合的批量推送
@@ -77,7 +75,7 @@ public class PushTask {
             //Step  新增一笔批量推送日志
 
             if (!f1) {
-                regIds = createRegIds(list, 100000);
+                regIds = createRegIds(list, 1000);
                 Map<String, Object> map = new HashMap<>();
                 map.put("code", 500);
                 map.put("msg", "订单已更新，请刷新当前页面");
@@ -89,14 +87,9 @@ public class PushTask {
                     pushLog.setPushStatus(4);
                     pushLog.setNote("已被合并推送");
                     f1 = true;
-                } else {
-                    pushLog.setPushStatus(2);
-                    pushLog.setNote("定时任务推送失败：" + tip.getMsg());
-                    //状态直接更新掉
-                    f1 = true;
                 }
 
-                pushLog.setPushedCount(pushLog.getPushedCount() == null ? 1 : pushLog.getPushedCount() + 1);
+                pushLog.setPushedCount(pushLog.getPushedCount() + 1);
                 pushLogService.updateById(pushLog);
             }
 
@@ -124,8 +117,6 @@ public class PushTask {
             basePushLog.setPushedCount(1);
             pushLogService.insert(basePushLog);
         }
-
-        log.info("执行推送定时任务-------------------------end");
 
     }
 

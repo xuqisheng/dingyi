@@ -131,20 +131,17 @@ spring:
   datasource:
     username: root
     password: 123456
-    url: jdbc:mysql://mysql:3306/pig?characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false
+    url: jdbc:mysql://192.168.3.202:3306/pig?characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false
   redis:
     remote: false        #cachecloud 获取
-    host: 127.0.0.1
+    host: 192.168.3.202
     port: 6379
-    password:
     pool:
       max-active: 100
       max-idle: 20
   rabbitmq:
-    host: 127.0.0.1
+    host: 192.168.3.202
     port: 5672
-    username: pig
-    password: pig
 eureka:
   environment: ${spring.profiles}
   client:
@@ -158,17 +155,17 @@ spring:
   datasource:
     username: root
     password: 123456
-    url: jdbc:mysql://mysqlhost:3306/pig?characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false
+    url: jdbc:mysql://192.168.3.202:3306/pig?characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false
   redis:
     remote: false        #cachecloud 获取
-    host: redishost
+    host: 192.168.3.202
     port: 6379
     password:
     pool:
       max-active: 100
       max-idle: 20
   rabbitmq:
-    host: rabbithost
+    host: 192.168.3.202
     port: 5672
     username: guest
     password: guest
@@ -176,7 +173,8 @@ eureka:
   environment: ${spring.profiles}
   client:
     serviceUrl:
-      defaultZone: http://${eureka.auth.username}:${eureka.auth.password}@server1:${eureka.auth.port}/eureka/,http://${eureka.auth.username}:${eureka.auth.password}@server2:${eureka.auth.port}/eureka/,http://${eureka.auth.username}:${eureka.auth.password}@server3:${eureka.auth.port}/eureka/
+#      defaultZone: http://${eureka.auth.username}:${eureka.auth.password}@server1:${eureka.auth.port}/eureka/,http://${eureka.auth.username}:${eureka.auth.password}@server2:${eureka.auth.port}/eureka/,http://${eureka.auth.username}:${eureka.auth.password}@server3:${eureka.auth.port}/eureka/
+      defaultZone: http://localhost:1025/eureka/
 
 
 ### 生产环境 ###

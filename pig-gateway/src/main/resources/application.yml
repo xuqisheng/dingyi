@@ -116,26 +116,26 @@ hystrix:
 
 ignore:
   urls:
-  - /mobile/**
-  - /auth/**
-  - /admin/code/*
-  - /admin/smsCode/*
-  - /admin/user/info
-  - /admin/menu/userMenu
-  - /swagger-resources/**
-  - /swagger-ui.html
-  - /*/v2/api-docs
-  - /swagger/api-docs
-  - /webjars/**
-  - /ydservice/yd/**
-  - /ydbase/**
-  - /ydsms/**
-  - /ydservice/sms/alipay_notify
-  - /ydservice/login/reset/password/code/send
-  - /ydservice/login/reset/password/code/verify
-  - /ydservice/login/reset/password
+    - /mobile/**
+    - /auth/**
+    - /admin/code/*
+    - /admin/smsCode/*
+    - /admin/user/info
+    - /admin/menu/userMenu
+    - /swagger-resources/**
+    - /swagger-ui.html
+    - /*/v2/api-docs
+    - /swagger/api-docs
+    - /webjars/**
+    - /ydservice/yd/**
+    - /ydbase/**
+    - /ydsms/**
+    - /ydservice/sms/alipay_notify
+    - /ydservice/login/reset/password/code/send
+    - /ydservice/login/reset/password/code/verify
+    - /ydservice/login/reset/password
   clients:
-  - app
+    - app
 
 
 
@@ -147,17 +147,14 @@ spring:
   profiles: dev
   redis:
     remote: false        #cachecloud 获取
-    host: 127.0.0.1
+    host: 192.168.3.202
     port: 6379
-    password:
     pool:
       max-active: 100
       max-idle: 20
   rabbitmq:
-    host: 127.0.0.1
+    host: 192.168.3.202
     port: 5672
-    username: pig
-    password: pig
 eureka:
   environment: ${spring.profiles}
   client:
@@ -168,7 +165,7 @@ eureka:
 #认证服务器地址
 security:
   auth:
-    server: http://localhost:3000
+    server: http://auth:3000
   validate:
     code: false # 验证码开关 测试环境先关闭
     preview: false
@@ -189,9 +186,9 @@ zuul:
       quota: 6000 #可选-  每个刷新时间窗口对应的请求时间限制（秒）
       refresh-interval: 60 # 刷新时间窗口的时间，默认值 (秒)
       type: #可选 限流方式  - user  - origin  - url
-      - ORIGIN
-      - USER
-      - URL
+        - ORIGIN
+        - USER
+        - URL
     # 特定路由配置
     policies:
       pig-auth:
@@ -202,23 +199,23 @@ zuul:
         #        单位时间
         refresh-interval: 60
         type: #可选 限流方式  - user(认证用户、匿名用户)  - origin(ip)  - url(path)
-        - ORIGIN
-        - USER
-        - URL
+          - ORIGIN
+          - USER
+          - URL
 ### 测试环境
 ---
 spring:
   profiles: test
   redis:
     remote: false        #cachecloud 获取
-    host: redishost
+    host: 192.168.3.202
     port: 6379
     password:
     pool:
       max-active: 100
       max-idle: 20
   rabbitmq:
-    host: rabbithost
+    host: 192.168.3.202
     port: 5672
     username: guest
     password: guest
@@ -226,23 +223,24 @@ eureka:
   environment: ${spring.profiles}
   client:
     serviceUrl:
-      defaultZone: http://${eureka.auth.username}:${eureka.auth.password}@server1:${eureka.auth.port}/eureka/,http://${eureka.auth.username}:${eureka.auth.password}@server2:${eureka.auth.port}/eureka/,http://${eureka.auth.username}:${eureka.auth.password}@server3:${eureka.auth.port}/eureka/
+      #      defaultZone: http://${eureka.auth.username}:${eureka.auth.password}@server1:${eureka.auth.port}/eureka/,http://${eureka.auth.username}:${eureka.auth.password}@server2:${eureka.auth.port}/eureka/,http://${eureka.auth.username}:${eureka.auth.password}@server3:${eureka.auth.port}/eureka/
+      defaultZone: http://pig:gip6666@192.168.3.204:1025/eureka/
 
 #认证服务器地址
-security:
-  auth:
-    server: http://auth:3000
-  validate:
-    code: false # 验证码开关 测试环境先关闭
-    preview: false
-  sessions: stateless
-  oauth2:
-    client:
-      client-id: pig
-      client-secret: pig
-    resource:
-      jwt:
-        key-uri: ${security.auth.server}/oauth/token_key #解析jwt令牌所需要密钥的地址
+#security
+#  auth:
+#    server: http://192.168.3.204:3000
+#  validate:
+#    code: false # 验证码开关 测试环境先关闭
+#    preview: false
+#  sessions: stateless
+#  oauth2:
+#    client:
+#      client-id: pig
+#      client-secret: pig
+#    resource:
+#      jwt:
+#        key-uri: http://192.168.3.204:3000/oauth/token_key #解析jwt令牌所需要密钥的地址
 
 zuul:
   ratelimit:
@@ -320,9 +318,9 @@ zuul:
       quota: 600 #可选-  每个刷新时间窗口对应的请求时间限制（秒）
       refresh-interval: 60 # 刷新时间窗口的时间，默认值 (秒)
       type: #可选 限流方式  - user  - origin  - url
-      - ORIGIN
-      - USER
-      - URL
+        - ORIGIN
+        - USER
+        - URL
     # 特定路由配置
     policies:
       pig-auth:
@@ -333,6 +331,6 @@ zuul:
         #        单位时间
         refresh-interval: 60
         type: #可选 限流方式  - user(认证用户、匿名用户)  - origin(ip)  - url(path)
-        - ORIGIN
-        - USER
-        - URL
+          - ORIGIN
+          - USER
+          - URL
