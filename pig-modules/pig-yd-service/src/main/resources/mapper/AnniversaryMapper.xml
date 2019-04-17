@@ -15,6 +15,9 @@
         <result column="business_id" property="businessId" />
         <result column="next_anniversary_time" property="nextAnniversaryTime" />
         <result column="anniversary_year_flag" property="anniversaryYearFlag" />
+        <result column="remark" property="remark" />
+        <result column="anniversary_pic" property="anniversaryPic" />
+        <result column="anniversary_title" property="anniversaryTitle" />
     </resultMap>
 
     <select id="getPastAnniversaryVip" resultMap="BaseResultMap">
@@ -29,6 +32,91 @@
         next_anniversary_time is null
         OR CURDATE() &gt; next_anniversary_time)
         and  calendar_type is not null
+    </select>
+
+    <select id="selectCustomerCareInfoByPage" parameterType="com.zhidianfan.pig.yd.moduler.resv.dto.CustomerCareDTO" resultType="com.zhidianfan.pig.yd.moduler.resv.bo.CustomerCareBO">
+        /*基本信息*/
+        SELECT
+            id, vip_name vipName,vip_sex vipSex,vip_phone vipPhone,vip_value_name vipValueName,vip_value_id vipValueId,business_id   businessId,
+            vip_birthday vipBirthday,vip_birthday_nl vipBirthdayNl,hideFlag,is_leap isLeap,
+            anniversary_date  anniversaryDate,anniversary_title  title,calendar_type calendarType,nexttime,   surplusTime,type ,calendar_id as  calendarId
+        FROM
+            (
+                SELECT
+                    id,
+                    business_id,
+                    vip_name,
+                    vip_sex,
+                    vip_phone,
+                    vip_value_name,
+                    vip_value_id,
+                    vip_birthday,
+                    vip_birthday_nl,
+                    birth_flag as calendar_type,
+                    '' AS anniversary_date,
+                    CONCAT( vip_name, IF ( vip_sex = '女', ' 小姐', ' 先生' ), '的生日' ) AS anniversary_title,
+                    hide_birthday_year as hideFlag,
+                    is_leap,
+                    next_vip_birthday AS nexttime,
+                    /*剩余天数*/
+                    datediff(next_vip_birthday,SYSDATE())  as  surplusTime,
+                    '1' AS type ,
+                    id as calendar_id
+                    FROM
+                    vip
+                    WHERE
+                    business_id = #{businessId}
+                    and vip_phone is not null /*客户存在的条件*/
+                    and vip_birthday is not null
+                    and vip_birthday != ''
+                    /*客户价值条件*/
+                    <if test="customerValueId != null and customerValueId != ''">
+                        AND vip_value_id = #{customerValueId}
+                    </if>
+                    <if test="name != null and name != ''">
+                        AND vip_name like concat('%',#{name},'%')
+                    </if>
+            UNION ALL
+                SELECT
+                    b.id AS id,
+                    a.business_id,
+                    b.vip_name,
+                    b.vip_sex,
+                    b.vip_phone,
+                    b.vip_value_name,
+                    b.vip_value_id,
+                    '' AS vip_birthday,
+                    '' AS vip_birthday_nl,
+                    a.calendar_type AS calendar_type,
+                    a.anniversary_date,
+                    a.anniversary_title,
+                    anniversary_year_flag as hideFlag,
+                    a.is_leap,
+                    a.next_anniversary_time AS nexttime,
+                    datediff(next_anniversary_time,
+                    SYSDATE()) as surplusTime,
+                    /*剩余天数*/ '0' AS type ,
+                    a.id as calendar_id
+                FROM
+                    (select * from anniversary	c	where business_id = #{businessId} and EXISTS( SELECT id FROM vip o WHERE o.id=c.vip_id and business_id = #{businessId})) a
+                    LEFT JOIN
+                    (select * from vip where business_id = #{businessId}
+                    and vip_phone is not null
+                    <if test="customerValueId != null and customerValueId != ''">
+                        AND vip_value_id = #{customerValueId}
+                    </if>
+                    <if test="name != null and name != ''">
+                        AND vip_name like concat('%',#{name},'%')
+                    </if>) b
+                    ON a.vip_id = b.id
+            ) c
+            where
+                surplusTime >= 0
+                and id is not null
+            <if test="surplusTime != null and surplusTime != ''">
+                AND surplusTime &lt;= #{surplusTime}
+            </if>
+
     </select>
 
 </mapper>

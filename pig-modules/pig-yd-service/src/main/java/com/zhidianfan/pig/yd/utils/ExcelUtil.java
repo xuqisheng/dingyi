@@ -24,7 +24,7 @@ import java.util.*;
 /**
  * @Author: huzp
  * @Date: 2018/11/13 13:47
- * @DESCRIPTION excel 下载
+ * @DESCRIPTION excel 下载 与导入
  */
 public class ExcelUtil {
 
@@ -240,17 +240,18 @@ public class ExcelUtil {
 
 
     /**
-     * 客户信息excel导入生成list 专用方法
-     *
-     * @param file 文件
-     * @return 返回
+     * Excel 读取数据
+     * @param file Excel文件
+     * @param sign 读取的 行与值对应 标志
+     * @param firstRowIndex 从第几行开始读取数据
+     * @return
      */
-    public static List<Map<String, Object>> ReadExcel(Part file, String sgin) {
+    public static List<Map<String, Object>> ReadExcel(Part file, String sign,Integer firstRowIndex) {
 
 
         //cellName 为数据库字段 , cellNameC为excel中文字段名
-        String[] cellName = namesMap.get(sgin),
-                cellNameC = headsMap.get(sgin);
+        String[] cellName = namesMap.get(sign),
+                cellNameC = headsMap.get(sign);
 
         List<Map<String, Object>> list = new ArrayList<>();
 
@@ -268,7 +269,7 @@ public class ExcelUtil {
                 return list;
             }
 
-            int firstRowIndex = sheet.getFirstRowNum();
+//            int firstRowIndex = sheet.getFirstRowNum();
             int lastRowIndex = sheet.getLastRowNum();
             // 读取首行 即,表头
             Row firstRow = sheet.getRow(firstRowIndex);
@@ -286,7 +287,7 @@ public class ExcelUtil {
             // 读取数据行
             int firstColumnIndex = 0;
             int lastColumnIndex = cellName.length;
-            for (int rowIndex = 1; rowIndex <= lastRowIndex; rowIndex++) {
+            for (int rowIndex = 1 + firstRowIndex; rowIndex <= lastRowIndex; rowIndex++) {
                 Row currentRow = sheet.getRow(rowIndex);// 当前行
                 Map<String, Object> map = new LinkedHashMap<>();
                 for (int columnIndex = firstColumnIndex; columnIndex < lastColumnIndex; columnIndex++) {
@@ -294,10 +295,7 @@ public class ExcelUtil {
                     map.put(cellName[columnIndex], currentCellValue);
 
                 }
-                //客户电话号码不为空
                 list.add(map);
-
-
             }
             is.close();
 
@@ -376,10 +374,10 @@ public class ExcelUtil {
                     cellValue = cell.getCellFormula();
                     break;
                 default:
-                    cellValue = "";
+                    cellValue = null;
             }
         } else {
-            cellValue = "";
+            cellValue = null;
         }
         return cellValue;
     }

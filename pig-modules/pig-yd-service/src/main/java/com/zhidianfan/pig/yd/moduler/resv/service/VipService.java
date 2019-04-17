@@ -1,5 +1,6 @@
 package com.zhidianfan.pig.yd.moduler.resv.service;
 
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.baomidou.mybatisplus.plugins.Page;
 import com.zhidianfan.pig.common.util.PageFactory;
@@ -17,6 +18,9 @@ import com.zhidianfan.pig.yd.moduler.resv.bo.VipValueCountBo;
 import com.zhidianfan.pig.yd.moduler.resv.dto.*;
 import com.zhidianfan.pig.yd.moduler.resv.enums.OrderStatus;
 import com.zhidianfan.pig.yd.utils.ExcelUtil;
+import com.zhidianfan.pig.yd.utils.Lunar;
+import com.zhidianfan.pig.yd.utils.LunarSolarConverter;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.beans.BeanUtils;
@@ -28,17 +32,21 @@ import javax.servlet.http.Part;
 import java.io.FileNotFoundException;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import static com.zhidianfan.pig.yd.moduler.resv.service.VipNextBirthDayAnniversaryService.*;
 
 /**
  * @Author: huzp
  * @Date: 2018/9/20 15:25
  */
 @Service
+@Slf4j
 public class VipService {
 
     @Autowired
@@ -57,6 +65,7 @@ public class VipService {
     @Resource
     private IResvOrderRatingService iResvOrderRatingService;
 
+
     /**
      * 根据酒店id与手机号更新或者新增Vip
      *
@@ -73,6 +82,13 @@ public class VipService {
                 .eq("business_id", vip.getBusinessId())
                 .eq("vip_phone", vip.getVipPhone()));
 
+        try {
+            //更新客户的生日
+            conversionVipBirth(vip);
+        } catch (ParseException e) {
+            log.error("updateOrInsertVip : 客户信息出错" + e.getMessage());
+        }
+
         //如果为null 则进行新增操作
         if (null == vipInfo) {
             b = iVipService.insert(vip);
@@ -82,6 +98,8 @@ public class VipService {
             vip.setUpdatedAt(new Date());
             b = iVipService.updateById(vip);
         }
+
+
         return b;
     }
 
@@ -117,9 +135,9 @@ public class VipService {
         Date lastEatTime = iResvOrderAndroidService.selectLastEatTime(vipInfo.getId(), OrderStatus.SETTLE_ACCOUNTS.code);
 
         //查询上一次就餐评分
-
         VipInfoDTO vipInfoDTO = new VipInfoDTO();
         BeanUtils.copyProperties(vipInfo, vipInfoDTO);
+
 
         vipInfoDTO.setResvTimes(resvTimes);
         vipInfoDTO.setActResvTimes(actResvTimes);
@@ -136,8 +154,8 @@ public class VipService {
     /**
      * 价值类别客户统计
      *
-     * @param businessId
-     * @return
+     * @param businessId 酒店id
+     * @return 统计数据
      */
     public VipValueCountBo valueCount(Integer businessId) {
 
@@ -155,11 +173,12 @@ public class VipService {
 
         return vipValueCountBo;
     }
+
     /**
      * 客户订单查询（状态是正在进行的）
      *
-     * @param orderConditionDTO
-     * @return
+     * @param orderConditionDTO 查询条件
+     * @return 查询结果
      */
     public List<ResvOrderAndroid> orders(OrderConditionDTO orderConditionDTO) {
 
@@ -174,7 +193,7 @@ public class VipService {
      * 粗略条件查询查询一个酒店的客户
      *
      * @param vipConditionCountDTO businessId酒店id必须
-     * @return
+     * @return 查询结果
      */
     public Page<VipTableDTO> getConditionVip(VipConditionCountDTO vipConditionCountDTO) {
 
@@ -208,8 +227,15 @@ public class VipService {
      */
     public boolean updateVipInfo(Vip vip) {
 
+        try {
+            conversionVipBirth(vip);
+        } catch (ParseException e) {
+            log.error("updateVipInfo转换生日日期error" + e.getMessage());
+        }
+
         return iVipService.update(vip, new EntityWrapper<Vip>().eq("id", vip.getId()));
     }
+
 
     /**
      * 模糊查询客户list
@@ -291,43 +317,74 @@ public class VipService {
         }
 
         //读取
-        List<Map<String, Object>> list = ExcelUtil.ReadExcel(file, "vip");
+        List<Map<String, Object>> list = ExcelUtil.ReadExcel(file, "vip", 2);
 
         //查询出酒店信息
         Business businessInfo = businessService.selectOne(new EntityWrapper<Business>()
                 .eq("id", id).eq("status", 1));
 
-        List<Vip> vips = new ArrayList<>();
+        List<Vip> sucVips = new ArrayList<>();
+        List<Vip> failVips = new ArrayList<>();
+
         Date date = new Date();
 
         for (Map<String, Object> map : list) {
+
+
+            Vip vip = new Vip();
+            //拷贝对应字段到vip中
+            org.apache.commons.beanutils.BeanUtils.populate(vip, map);
+
             //剔除名字和手机号码字段为空的
-            if ((map.get("vipPhone") != null && !"".equals(map.get("vipPhone")))
-                    && (map.get("vipName") != null && !"".equals(map.get("vipName")))) {
-                Vip vip = new Vip();
-                org.apache.commons.beanutils.BeanUtils.populate(vip, map);
+            if ((map.get("vipName") != null && !"".equals(map.get("vipName")))
+                    && StringUtils.isNotEmpty(map.get("vipPhone").toString())
+                    && isMobileNO(map.get("vipPhone").toString())) {
+
+                //剔除生日格式不正确的
+                if (StringUtils.isNotEmpty(map.get("vipBirthday").toString())
+                        && !valiDateTimeWithLongFormat(map.get("vipBirthday").toString())) {
+                    //加入录入失败的客户信息
+                    failVips.add(vip);
+                    continue;
+                }
+
                 vip.setBusinessId(businessInfo.getId());
                 vip.setBusinessName(businessInfo.getBusinessName());
                 vip.setCreatedAt(date);
-                vips.add(vip);
-            }
+                sucVips.add(vip);
 
+            } else {
+
+                //加入失败的客户信息
+                failVips.add(vip);
+
+            }
         }
+
+
+        if (sucVips.size() != 0) {
+            iVipService.excelInsertVIPInfo(sucVips);
+        }
+
+
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("total", list.size());
+        jsonObject.put("successNum", sucVips.size());
+        jsonObject.put("failNum", failVips.size());
+        jsonObject.put("failData", failVips);
+
 
         SuccessTip successTip = new SuccessTip();
-
-        if (vips.size() == 0 ){
-            successTip.setMsg("表内数据为空或者请检查字段");
-        }else {
-            iVipService.excelInsertVIPInfo(vips);
-            successTip.setMsg("成功导入数据"+ vips.size()+"条");
-        }
+        successTip.setMsg(jsonObject.toString());
 
 
         return successTip;
     }
 
 
+    /**
+     * 下载Excel模板
+     */
     public void downLoadExcelDemo() {
 
         String sign = "vip";
@@ -344,9 +401,9 @@ public class VipService {
         resvOrderRating.setBusinessId(businessId);
         ResvOrderRating orderDate = iResvOrderRatingService.selectOne(new EntityWrapper<>(resvOrderRating).orderBy("order_date", false));
 
-        VipMealInfoBo orderRating=new VipMealInfoBo();
-        if(orderDate!=null)
-            BeanUtils.copyProperties(orderDate,orderRating);
+        VipMealInfoBo orderRating = new VipMealInfoBo();
+        if (orderDate != null)
+            BeanUtils.copyProperties(orderDate, orderRating);
 
         //指定日期范围订单统计
         ResvOrderAndroid resvOrder = new ResvOrderAndroid();
@@ -355,11 +412,11 @@ public class VipService {
         resvOrder.setBusinessId(businessId);
         EntityWrapper<ResvOrderAndroid> wrapper = new EntityWrapper<>(resvOrder);
 
-        wrapper.gt("resv_date", DateUtils.addDays(new Date(),-ageDay));
-        wrapper.le("resv_date",new Date());
+        wrapper.gt("resv_date", DateUtils.addDays(new Date(), -ageDay));
+        wrapper.le("resv_date", new Date());
 
-        List<ResvOrderAndroid> resvOrders = iResvOrderAndroidService.selectList(wrapper.orderBy("resv_date",false));
-        if(resvOrders==null){
+        List<ResvOrderAndroid> resvOrders = iResvOrderAndroidService.selectList(wrapper.orderBy("resv_date", false));
+        if (resvOrders == null) {
             orderRating.setPayAmount("0");
             orderRating.setPeopleNum(0);
             orderRating.setTableNum(0);
@@ -371,22 +428,22 @@ public class VipService {
         orderRating.setTimes(collect.size());
 
         orderRating.setTableNum(resvOrders.size());
-        int peopleNum=0;
-        BigDecimal payAmount=new BigDecimal(0);
+        int peopleNum = 0;
+        BigDecimal payAmount = new BigDecimal(0);
         for (ResvOrderAndroid order : resvOrders) {
             String actualNum = order.getActualNum();
             String payamount = order.getPayamount();
-            if(StringUtils.isNotBlank(actualNum))
-                peopleNum+=Integer.valueOf(actualNum);
+            if (StringUtils.isNotBlank(actualNum))
+                peopleNum += Integer.valueOf(actualNum);
 
-            if(StringUtils.isNotBlank(payamount))
-                payAmount=payAmount.add(new BigDecimal(payamount));
+            if (StringUtils.isNotBlank(payamount))
+                payAmount = payAmount.add(new BigDecimal(payamount));
         }
         orderRating.setPeopleNum(peopleNum);
         orderRating.setPayAmount(payAmount.toString());
 
         //最后一次就餐
-        if(resvOrders.size()>0){
+        if (resvOrders.size() > 0) {
             orderRating.setLastAmount(resvOrders.get(0).getPayamount());
             orderRating.setLastTime(resvOrders.get(0).getResvDate());
         }
@@ -394,4 +451,77 @@ public class VipService {
 
         return orderRating;
     }
+
+
+    /**
+     * 设置客户的农历生日阳历生日等方法
+     *
+     * @param vip 客户
+     */
+    private void conversionVipBirth(Vip vip) throws ParseException {
+
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        //对生日的处理,接收到阳历的转为农历
+        String vipBirthday = vip.getVipBirthday();
+        if (StringUtils.isNotBlank(vipBirthday)) {
+            Lunar lunarBirth = getLunarBirthDay(vipBirthday);
+            vip.setIsLeap(lunarBirth.isleap ? 1 : 0);
+            String lunarBirthDayString = lunarBirth.toString();
+            vip.setVipBirthdayNl(lunarBirthDayString);
+            Integer birthFlag = vip.getBirthFlag();
+
+            //1.判断过农历还是阳历,默认为阳历
+            if (birthFlag != null && birthFlag == 1) {
+                //如果过农历,转为农历生日为阳历,拿出月日,计算下次生日时间
+                //1.根据阳历生日计算出农历
+                Lunar lastLunarBirth = nextLunarTime(vipBirthday);
+                String solar = LunarSolarConverter.LunarToSolar(lastLunarBirth).toString();
+                vip.setNextVipBirthday(sdf.parse(solar));
+            } else {
+                vip.setBirthFlag(0);
+                String lastSolarBirth = nextSolarTime(vipBirthday).toString();
+                vip.setNextVipBirthday(sdf.parse(lastSolarBirth));
+            }
+        }
+
+    }
+
+
+    private static boolean isMobileNO(String mobiles) {
+
+        Pattern p = Pattern.compile("^.\\d{10}$");
+        Matcher m = p.matcher(mobiles);
+        System.out.println(m.matches() + "---");
+        return m.matches();
+    }
+
+    /**
+     * 判断是否为时间字符串
+     *
+     * @param timeStr 时间字符串
+     * @return 是否为YYYY-MM-DD格式的字符串
+     */
+    private static boolean valiDateTimeWithLongFormat(String timeStr) {
+        String format = "((19|20)[0-9]{2})-(0?[1-9]|1[012])-(0?[1-9]|[12][0-9]|3[01])";
+        Pattern pattern = Pattern.compile(format);
+        Matcher matcher = pattern.matcher(timeStr);
+        if (matcher.matches()) {
+            pattern = Pattern.compile("(\\d{4})-(\\d+)-(\\d+).*");
+            matcher = pattern.matcher(timeStr);
+            if (matcher.matches()) {
+                int y = Integer.valueOf(matcher.group(1));
+                int m = Integer.valueOf(matcher.group(2));
+                int d = Integer.valueOf(matcher.group(3));
+                if (d > 28) {
+                    Calendar c = Calendar.getInstance();
+                    c.set(y, m - 1, 1);
+                    int lastDay = c.getActualMaximum(Calendar.DAY_OF_MONTH);
+                    return (lastDay >= d);
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+
 }

@@ -226,7 +226,18 @@ public class VipController {
         boolean b = vipService.updateOrInsertVip(vip);
 
         //成功错误标志
-        Tip tip = (b ? SuccessTip.SUCCESS_TIP : ErrorTip.ERROR_TIP);
+        Tip tip;
+
+        //成功则查询该客户信息
+        if (b){
+            Vip basicVipInfo = vipService.getBasicVipInfo(vip.getBusinessId(), vip.getVipPhone());
+            SuccessTip successTip = new SuccessTip();
+            successTip.setCode(200);
+            successTip.setMsg(basicVipInfo.toString());
+            tip = successTip;
+        }else {
+            tip = ErrorTip.ERROR_TIP;
+        }
 
         return ResponseEntity.ok(tip);
     }
