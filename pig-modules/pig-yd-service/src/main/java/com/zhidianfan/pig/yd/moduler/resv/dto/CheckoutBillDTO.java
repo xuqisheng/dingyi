@@ -25,4 +25,6 @@ public class CheckoutBillDTO {
      * 每笔订单金额
      */
     private Integer everypay;
+
+    private String thirdOrderNo;
 }

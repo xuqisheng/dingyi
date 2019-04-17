@@ -18,6 +18,7 @@ import com.zhidianfan.pig.yd.moduler.sms.bo.message.MessageResultBO;
 import com.zhidianfan.pig.yd.moduler.sms.dto.MessageDTO;
 import com.zhidianfan.pig.yd.moduler.sms.service.MessageService;
 import com.zhidianfan.pig.yd.utils.IdUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -68,6 +69,13 @@ public class AddOrderService {
      */
     @Autowired
     private IResvOrderLogsService iResvOrderLogsService;
+
+    /**
+     * 第三方订单
+     */
+    @Autowired
+    private IResvOrderThirdService iResvOrderThirdService;
+
     /**
      * 订单状态对应表
      */
@@ -361,9 +369,10 @@ public class AddOrderService {
 
         boolean b;
 
+        List<CheckoutBillDTO> checkoutBills1 = editStatusDTO.getCheckoutBills();
         if ("3".equals(editStatusDTO.getStatus())) {
             //更新订单状态 结账
-            List<CheckoutBillDTO> checkoutBills = editStatusDTO.getCheckoutBills();
+            List<CheckoutBillDTO> checkoutBills = checkoutBills1;
             //计算浮动金额
             Integer payamount = Integer.valueOf(editStatusDTO.getPayamount());
             int size = checkoutBills.size();
@@ -395,6 +404,25 @@ public class AddOrderService {
         } else {
             //更新订单状态 入座  退订
             b = iResvOrderService.updateStatusByOrder(resvOrders, editStatusDTO);
+
+            //订单更新入座时候需要判断是否为微信订单生成的第三方订单
+            if (editStatusDTO.getStatus().equals("2") && b) {
+                for (CheckoutBillDTO checkoutBillDTO : checkoutBills1) {
+                    String thirdOrderNo = checkoutBillDTO.getThirdOrderNo();
+                    if (StringUtils.isEmpty(thirdOrderNo))
+                        continue;
+
+                    ResvOrderThird resvOrderThird = iResvOrderThirdService.selectOne(new EntityWrapper<ResvOrderThird>()
+                            .eq("third_order_no", thirdOrderNo));
+                    //如果是易订公众号接口
+                    if (resvOrderThird.getSource().equals("易订公众号")) {
+                        // 设置resvOrderThird 的状态为到店
+                        resvOrderThird.setStatus(50);
+                        iResvOrderThirdService.updateById(resvOrderThird);
+                    }
+                }
+            }
+
         }
 
 

@@ -26,8 +26,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 
-
 import javax.annotation.Resource;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -68,7 +68,7 @@ public class TableService {
         Table condition = new Table();
         condition.setBusinessId(businessId);
         condition.setStatus(status);
-        List<Table> list = iTableService.selectList(new EntityWrapper(condition).orderBy("created_at",true));
+        List<Table> list = iTableService.selectList(new EntityWrapper(condition).orderBy("created_at", true));
 
         List<DeskBo> deskBos = new ArrayList<>();
         for (Table table : list) {
@@ -89,7 +89,7 @@ public class TableService {
     }
 
 
-    public Tip tableAdd(TablesDTO tablesDTO){
+    public Tip tableAdd(TablesDTO tablesDTO) {
         Table table = new Table();
 
         table.setTableName(tablesDTO.getTableName());
@@ -97,27 +97,27 @@ public class TableService {
         table.setStatus("1");
         //判断名字是否有重复
         int i = iTableService.selectCount(new EntityWrapper<>(table));
-        if(i>0){
+        if (i > 0) {
             throw new RuntimeException("桌位名称已存在");
         }
         //插入
-        BeanUtils.copyProperties(tablesDTO,table);
-        if(StringUtils.isBlank(tablesDTO.getAreaCode())){
+        BeanUtils.copyProperties(tablesDTO, table);
+        if (StringUtils.isBlank(tablesDTO.getAreaCode())) {
             TableArea tableArea = iTableAreaService.selectById(tablesDTO.getTableAreaId());
-            if(tableArea!=null){
+            if (tableArea != null) {
                 //区域名称
                 table.setAreaCode(tableArea.getTableAreaName());
             }
         }
         TableType tableType = iTableTypeService.selectById(tablesDTO.getTableTypeId());
-        if(tableType!=null){
-            table.setMinPeopleNum(tableType.getMinPeopleNum()+"");
-            table.setMaxPeopleNum(tableType.getMaxPeopleNum()+"");
+        if (tableType != null) {
+            table.setMinPeopleNum(tableType.getMinPeopleNum() + "");
+            table.setMaxPeopleNum(tableType.getMaxPeopleNum() + "");
         }
 
 
         Integer ttype = tablesDTO.getTtype();
-        if(ttype!=null){
+        if (ttype != null) {
             table.settType(ttype);
         }
         table.setCreatedAt(new Date());
@@ -125,20 +125,20 @@ public class TableService {
         Table sort = new Table();
         sort.setBusinessId(tablesDTO.getBusinessId());
         Table one = iTableService.selectOne(new EntityWrapper<>(sort).orderBy("sort_id", false));
-        if(one!=null){
-            table.setSortId(one.getSortId()+1);
+        if (one != null) {
+            table.setSortId(one.getSortId() + 1);
         }
         boolean insert = iTableService.insert(table);
 
-        return insert? SuccessTip.SUCCESS_TIP: ErrorTip.ERROR_TIP;
+        return insert ? SuccessTip.SUCCESS_TIP : ErrorTip.ERROR_TIP;
     }
 
 
-    public Object tableEdit(TablesDTO tablesDTO){
+    public Object tableEdit(TablesDTO tablesDTO) {
 
         //排序
         List<SortIds> idAndSortIds = tablesDTO.getIdAndSortIds();
-        if(idAndSortIds!=null&&idAndSortIds.size()>0) {
+        if (idAndSortIds != null && idAndSortIds.size() > 0) {
             ArrayList<Table> list = new ArrayList<>();
             for (SortIds idAndSortId : idAndSortIds) {
                 Table area = new Table();
@@ -147,56 +147,56 @@ public class TableService {
                 list.add(area);
             }
             boolean b = iTableService.updateBatchById(list);
-            return b? SuccessTip.SUCCESS_TIP: ErrorTip.ERROR_TIP;
+            return b ? SuccessTip.SUCCESS_TIP : ErrorTip.ERROR_TIP;
         }
 
         //更新其他
         Table table = new Table();
         Integer id = tablesDTO.getId();
-        if(id==null){
+        if (id == null) {
             throw new RuntimeException("id不能为空");
         }
 
         //删除
-        if(tablesDTO.getDelete()!=null&&tablesDTO.getDelete()){
+        if (tablesDTO.getDelete() != null && tablesDTO.getDelete()) {
 
             //判断是否有订单
-            List<OrderBO> orderBos = haveOrder(tablesDTO.getBusinessId(),tablesDTO.getId());
+            List<OrderBO> orderBos = haveOrder(tablesDTO.getBusinessId(), tablesDTO.getId());
             if (orderBos != null) {
                 //同一批次值展示一条
-                orderBos= orderBos.stream().collect(
+                orderBos = orderBos.stream().collect(
                         Collectors.collectingAndThen(
-                                Collectors.toCollection(()->new TreeSet<>(Comparator.comparing(OrderBO::getBatchNo))),ArrayList::new));
+                                Collectors.toCollection(() -> new TreeSet<>(Comparator.comparing(OrderBO::getBatchNo))), ArrayList::new));
                 return orderBos;
             }
             //删除
             boolean delete = iTableService.deleteById(tablesDTO.getId());
-            return delete? SuccessTip.SUCCESS_TIP: ErrorTip.ERROR_TIP;
+            return delete ? SuccessTip.SUCCESS_TIP : ErrorTip.ERROR_TIP;
         }
         //更新
-        if("0".equals(tablesDTO.getStatus())){
-            List<OrderBO> orderBos = haveOrder(tablesDTO.getBusinessId(),tablesDTO.getId());
-            if(orderBos!=null){
+        if ("0".equals(tablesDTO.getStatus())) {
+            List<OrderBO> orderBos = haveOrder(tablesDTO.getBusinessId(), tablesDTO.getId());
+            if (orderBos != null) {
                 //同一批次值展示一条
-                orderBos= orderBos.stream().collect(
+                orderBos = orderBos.stream().collect(
                         Collectors.collectingAndThen(
-                                Collectors.toCollection(()->new TreeSet<>(Comparator.comparing(OrderBO::getBatchNo))),ArrayList::new));
+                                Collectors.toCollection(() -> new TreeSet<>(Comparator.comparing(OrderBO::getBatchNo))), ArrayList::new));
                 return orderBos;
             }
         }
-        BeanUtils.copyProperties(tablesDTO,table, IgnorePropertiesUtil.getNullPropertyNames(tablesDTO));
+        BeanUtils.copyProperties(tablesDTO, table, IgnorePropertiesUtil.getNullPropertyNames(tablesDTO));
 
         //更新桌型
         Integer tableTypeId = tablesDTO.getTableTypeId();
-        if(tableTypeId!=null){
+        if (tableTypeId != null) {
             TableType tableType = iTableTypeService.selectById(tableTypeId);
-            if(tableType!=null) {
+            if (tableType != null) {
                 table.setMinPeopleNum(tableType.getMinPeopleNum() + "");
                 table.setMaxPeopleNum(tableType.getMaxPeopleNum() + "");
             }
         }
         //更新区域
-        if(tablesDTO.getTableAreaId()!=null) {
+        if (tablesDTO.getTableAreaId() != null) {
             Table sort = new Table();
             sort.setTableAreaId(tablesDTO.getTableAreaId());
             sort.setBusinessId(tablesDTO.getBusinessId());
@@ -207,27 +207,28 @@ public class TableService {
         }
 
         Integer ttype = tablesDTO.getTtype();
-        if(ttype!=null){
+        if (ttype != null) {
             table.settType(ttype);
         }
         boolean update = iTableService.updateById(table);
 
-        return update? SuccessTip.SUCCESS_TIP: ErrorTip.ERROR_TIP;
+        return update ? SuccessTip.SUCCESS_TIP : ErrorTip.ERROR_TIP;
     }
 
 
     /**
      * 桌位是否有订单 返回整个批次
-      * @return
+     *
+     * @return
      */
-    private List<OrderBO> haveOrder(Integer businessId,Integer tableId) {
+    private List<OrderBO> haveOrder(Integer businessId, Integer tableId) {
         OrderDTO orderDTO = new OrderDTO();
         orderDTO.setBusinessId(businessId);
         orderDTO.setTableId(tableId);
         //已预订和已入座
-        orderDTO.setStatus(Arrays.asList(1,2));
+        orderDTO.setStatus(Arrays.asList(1, 2));
         List<ResvOrderAndroid> orderBos = orderService.searchOrders(orderDTO);
-        if(orderBos!=null&&orderBos.size()>0){
+        if (orderBos != null && orderBos.size() > 0) {
             ArrayList<OrderBO> batch = new ArrayList<>();
             //所有批次号
             HashSet<String> batchNos = new HashSet<>();
@@ -243,7 +244,7 @@ public class TableService {
                 for (ResvOrderAndroid orderBo : resvOrder) {
                     tableNames.add(orderBo.getTableName());
                     OrderBO bo = new OrderBO();
-                    BeanUtils.copyProperties(orderBo,bo);
+                    BeanUtils.copyProperties(orderBo, bo);
                     bo.setTableNames(tableNames);
                     batch.add(bo);
                 }
@@ -259,14 +260,14 @@ public class TableService {
         TableArea condition = new TableArea();
         condition.setBusinessId(tableAreaDTO.getBusinessId());
         EntityWrapper<TableArea> wrapper = new EntityWrapper<>(condition);
-        wrapper.orderBy("sort_id",false);
+        wrapper.orderBy("sort_id", false);
         TableArea one = iTableAreaService.selectOne(wrapper);
 
 
         TableArea tableArea = new TableArea();
-        BeanUtils.copyProperties(tableAreaDTO,tableArea);
-        if(one!=null){
-            tableArea.setSortId(one.getSortId()+1);
+        BeanUtils.copyProperties(tableAreaDTO, tableArea);
+        if (one != null) {
+            tableArea.setSortId(one.getSortId() + 1);
         }
 
         return iTableAreaService.insert(tableArea);
@@ -278,7 +279,7 @@ public class TableService {
 
         //排序操作
         List<SortIds> idAndSortIds = tableAreaDTO.getIdAndSortIds();
-        if(idAndSortIds!=null) {
+        if (idAndSortIds != null) {
             ArrayList<TableArea> list = new ArrayList<>();
             for (SortIds idAndSortId : idAndSortIds) {
                 TableArea area = new TableArea();
@@ -293,33 +294,33 @@ public class TableService {
 
         //编辑
         Integer id = tableAreaDTO.getId();
-        if(id==null){
+        if (id == null) {
             throw new RuntimeException("id不能为空");
         }
         TableArea byId = iTableAreaService.selectById(id);
-        if(byId==null){
+        if (byId == null) {
             throw new RuntimeException("桌位区域不存在");
         }
 
         TableArea tableArea = new TableArea();
-        BeanUtils.copyProperties(tableAreaDTO,tableArea);
+        BeanUtils.copyProperties(tableAreaDTO, tableArea);
         Boolean delete = tableAreaDTO.getDelete();
         boolean b;
 
         //删除
-        if(delete!=null&&delete){
+        if (delete != null && delete) {
             //判断是否有桌位
             Table table = new Table();
             table.setTableAreaId(id);
             int i = iTableService.selectCount(new EntityWrapper<>(table));
-            if(i>0){
+            if (i > 0) {
                 throw new RuntimeException("操作失败，请先删除区域内所有桌位");
             }
             b = iTableAreaService.deleteById(tableAreaDTO.getId());
-        }else {
+        } else {
             String status = tableAreaDTO.getStatus();
             //禁用区域
-            if( "0".equals(status)){
+            if ("0".equals(status)) {
                 Table condition = new Table();
                 condition.setTableAreaId(id);
                 condition.setBusinessId(tableAreaDTO.getBusinessId());
@@ -328,32 +329,32 @@ public class TableService {
                 List<Table> tables = iTableService.selectList(new EntityWrapper<>(condition));
                 for (Table table : tables) {
                     List<OrderBO> orderBOS = haveOrder(table.getBusinessId(), table.getId());
-                    if(orderBOS!=null&&orderBOS.size()>0){
+                    if (orderBOS != null && orderBOS.size() > 0) {
                         throw new RuntimeException("操作失败，请先完成区域内桌位的订单");
                     }
                 }
                 //记录停用的桌位
                 List<Integer> tableIds = tables.stream().map(Table::getId).collect(Collectors.toList());
-                tableArea.setStatusChangeTableIds(StringUtils.join(tableIds,","));
+                tableArea.setStatusChangeTableIds(StringUtils.join(tableIds, ","));
 
 
                 //禁用区域下的所有桌位
                 Table update = new Table();
                 update.setStatus("0");
-                iTableService.update(update,new EntityWrapper<>(condition));
-            }else if ("1".equals(status)){
+                iTableService.update(update, new EntityWrapper<>(condition));
+            } else if ("1".equals(status)) {
                 //启用区域
                 Integer recover = tableAreaDTO.getRecover();
-                if("0".equals(recover)){
+                if ("0".equals(recover)) {
                     String statusChangeTableIds = byId.getStatusChangeTableIds();
-                    if(StringUtils.isBlank(statusChangeTableIds)){
+                    if (StringUtils.isBlank(statusChangeTableIds)) {
                         //上次状态为空 启动全部
-                        recover=1;
+                        recover = 1;
                     }
                     //启用上次记录桌位
-                    iTableService.updateTableAreaOpen(statusChangeTableIds,id);
+                    iTableService.updateTableAreaOpen(statusChangeTableIds, id);
                 }
-                if("1".equals(recover)){
+                if ("1".equals(recover)) {
                     //启用所有
                     Table condition = new Table();
                     condition.setTableAreaId(tableAreaDTO.getId());
@@ -361,7 +362,7 @@ public class TableService {
 
                     Table table = new Table();
                     table.setStatus("1");
-                    iTableService.update(table,new EntityWrapper<>(condition));
+                    iTableService.update(table, new EntityWrapper<>(condition));
                 }
 
             }
@@ -374,6 +375,7 @@ public class TableService {
 
     /**
      * 获取空闲桌位状态
+     *
      * @param deskOrderDTO
      * @return 桌位状态
      */
@@ -395,9 +397,9 @@ public class TableService {
             resvOrderEntityWrapper3.eq("table_area_id", deskOrderDTO.getTableAreaId());
             tableEntityWrapper.eq("table_area_id", deskOrderDTO.getTableAreaId());
         }
-        resvOrderEntityWrapper.eq("business_id",deskOrderDTO.getBusinessId());
-        resvOrderEntityWrapper.eq("resv_date",deskOrderDTO.getResvDate());
-        resvOrderEntityWrapper.eq("meal_type_id",deskOrderDTO.getMealTypeId());
+        resvOrderEntityWrapper.eq("business_id", deskOrderDTO.getBusinessId());
+        resvOrderEntityWrapper.eq("resv_date", deskOrderDTO.getResvDate());
+        resvOrderEntityWrapper.eq("meal_type_id", deskOrderDTO.getMealTypeId());
 
 
         //查询入座的桌位数量
@@ -407,9 +409,9 @@ public class TableService {
                 .eq("status", OrderStatus.HAVE_SEAT.code));
 
 
-        resvOrderEntityWrapper2.eq("business_id",deskOrderDTO.getBusinessId());
-        resvOrderEntityWrapper2.eq("resv_date",deskOrderDTO.getResvDate());
-        resvOrderEntityWrapper2.eq("meal_type_id",deskOrderDTO.getMealTypeId());
+        resvOrderEntityWrapper2.eq("business_id", deskOrderDTO.getBusinessId());
+        resvOrderEntityWrapper2.eq("resv_date", deskOrderDTO.getResvDate());
+        resvOrderEntityWrapper2.eq("meal_type_id", deskOrderDTO.getMealTypeId());
 
         //查询预定的桌位数量
         int reserveCount = iResvOrderService.selectCount(resvOrderEntityWrapper2.eq("business_id", deskOrderDTO.getBusinessId())
@@ -440,5 +442,26 @@ public class TableService {
         deskStatusMap.put("freeTbaleNum", freeTbaleNum);
 
         return deskStatusMap;
+    }
+
+
+    /**
+     * 获取空闲桌子最大容纳数
+     * @param businessid 酒店id
+     * @param mealtypeid 餐别id
+     * @param resvdate   预约日期
+     * @return
+     */
+    public Integer getFreeTableMaxCapacity(Integer businessid, Integer mealtypeid, Date resvdate) {
+
+        List<Table> tables = iTableService.selectFreeTable(businessid, resvdate, mealtypeid);
+        if (tables.size() != 0){
+            Integer maxNum = 0;
+            for (Table table: tables) {
+                maxNum =  (Integer.valueOf(table.getMaxPeopleNum()) > maxNum ? Integer.valueOf(table.getMaxPeopleNum()) : maxNum);
+            }
+            return  maxNum;
+        }
+        return  0 ;
     }
 }

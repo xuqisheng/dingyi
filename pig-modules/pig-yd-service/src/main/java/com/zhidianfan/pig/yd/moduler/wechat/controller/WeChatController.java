@@ -63,7 +63,7 @@ public class WeChatController {
             if (accessToken == null || StringUtils.isEmpty(accessToken.getAccessToken()))
                 return "code已失效";
             else
-                redisTemplate.opsForValue().set(openid, accessToken);
+                redisTemplate.opsForValue().set(accessToken.getOpenid(), accessToken);
         }
 
         HttpGet httpGet = new HttpGet(WeChatUtils.getUserInfoUrl(accessToken.getOpenid(), accessToken.getAccessToken()));

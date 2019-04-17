@@ -12,17 +12,21 @@ import com.zhidianfan.pig.yd.moduler.common.service.ITableAreaService;
 import com.zhidianfan.pig.yd.moduler.common.service.ITableTypeService;
 import com.zhidianfan.pig.yd.moduler.resv.bo.DeskBo;
 import com.zhidianfan.pig.yd.moduler.resv.dto.BusinessTableTypeDTO;
+import com.zhidianfan.pig.yd.moduler.resv.dto.FreeTableCapacityDTO;
 import com.zhidianfan.pig.yd.moduler.resv.dto.TableAreaDTO;
 import com.zhidianfan.pig.yd.moduler.resv.dto.TablesDTO;
 import com.zhidianfan.pig.yd.moduler.resv.service.BusinessTableTypeService;
 import com.zhidianfan.pig.yd.moduler.resv.service.TableService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.cglib.core.Local;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
+import java.time.LocalDate;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -136,8 +140,18 @@ public class TableController {
 
         boolean b = tableService.areaEdit(tableAreaDTO);
         return ResponseEntity.ok(b? SuccessTip.SUCCESS_TIP:ErrorTip.ERROR_TIP);
-
-
     }
+
+    /**
+     * 查询一个酒店该天该餐别的空闲桌位的最大容纳人数
+     */
+    @ApiOperation("查询一个酒店该天该餐别的空闲桌位的最大容纳人数")
+    @GetMapping(value = "/capacity")
+    public  ResponseEntity<Integer> getFreeTableMaxCapacity(FreeTableCapacityDTO freeTableCapacityDTO){
+
+        Integer num = tableService.getFreeTableMaxCapacity(freeTableCapacityDTO.getBusinessid(),freeTableCapacityDTO.getMealtypeid(),freeTableCapacityDTO.getResvdate());
+        return ResponseEntity.ok(num);
+    }
+
 
 }

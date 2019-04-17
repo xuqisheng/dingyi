@@ -95,9 +95,16 @@
     </select>
 
     <select id="getWeChatThirdOrder" parameterType="com.zhidianfan.pig.yd.moduler.resv.dto.ThirdQueryDTO" resultMap="ResvOrderThirdBO">
-        select id,batch_no,business_id,third_order_no,vip_name,vip_phone,vip_sex,table_type,table_type_name,
-        remark,resv_num,status,flag,source,meal_type_id,meal_type_name,resv_source,resv_date,dest_date, created_at,
-        updated_at,order_result,status
+        select id,batch_no,business_id,(select business_name from business where id = business_id) as business_name,third_order_no,vip_name,vip_phone,vip_sex,table_type,table_type_name,
+        remark,resv_num,status,flag,source,meal_type_id,meal_type_name,source AS resv_source,resv_date,DATE_FORMAT(resv_date,"%H:%i") dest_date, created_at,
+        updated_at,CASE
+        WHEN status = '10' THEN '未处理'
+        WHEN status = '20' OR status = '70' OR status = '80'  THEN '客户取消'
+        WHEN status = '30' THEN '已拒单'
+        WHEN status = '40' OR status = '50' OR status = '60' THEN '已接单'
+        WHEN status = '45' THEN '已接单未选座'
+        END  order_result,
+        status
         FROM resv_order_third
         WHERE  business_id = #{businessId}
         <if test="null!=orderResult and ''!=orderResult">
