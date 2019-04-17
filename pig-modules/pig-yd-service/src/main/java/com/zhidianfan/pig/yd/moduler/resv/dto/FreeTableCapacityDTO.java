@@ -1,6 +1,8 @@
 package com.zhidianfan.pig.yd.moduler.resv.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.Date;
@@ -15,5 +17,8 @@ public class FreeTableCapacityDTO {
 
     private Integer businessid;
     private Integer mealtypeid;
+
+    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
+    @DateTimeFormat(pattern = "yyyy-MM-dd", iso = DateTimeFormat.ISO.DATE)
     private  Date resvdate;
 }
