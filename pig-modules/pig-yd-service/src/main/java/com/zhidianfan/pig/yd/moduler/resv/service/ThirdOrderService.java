@@ -19,6 +19,7 @@ import com.zhidianfan.pig.yd.moduler.resv.dto.AddOrderDTO;
 import com.zhidianfan.pig.yd.moduler.resv.dto.ThirdQueryDTO;
 import com.zhidianfan.pig.yd.moduler.wechat.util.OrderTemplate;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -36,6 +37,7 @@ import static com.zhidianfan.pig.yd.moduler.meituan.service.YdService.wechatPush
  */
 @Service
 @Transactional
+@Slf4j
 public class ThirdOrderService {
 
     @Autowired
@@ -183,6 +185,8 @@ public class ThirdOrderService {
             Business business = iBusinessService.selectOne(new EntityWrapper<Business>().eq("id", resvOrderThird.getBusinessId()));
 
             //微信推送
+            log.info("商家接单成功,推送接单成功给微信客户.");
+
             wechatPushMes(resvOrder, resvOrderThird , OrderTemplate.ORDER_RESV_SUCCESS,business);
 
         }
@@ -402,6 +406,7 @@ public class ThirdOrderService {
         resvOrderAndroid.setBusinessName(business.getBusinessName());
         resvOrderAndroid.setTableName("");
 
+        log.info("商家接单成功,推送商家拒单给微信客户.");
         wechatPushMes(resvOrderAndroid, resvOrderThird , OrderTemplate.ORDER_RESV_HOTEL_CANCEL,business);
 
 

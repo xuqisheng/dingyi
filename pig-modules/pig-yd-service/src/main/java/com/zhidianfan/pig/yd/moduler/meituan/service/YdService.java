@@ -862,9 +862,11 @@ public class YdService {
                 jgPush.setMsg(jsonObject1.toString());
 
                 //推送给安卓电话机用户
+                log.info("自动接单完成,推送给安卓电话机用户.");
                 pushFeign.pushMsg(jgPush.getType(), jgPush.getUsername(), jgPush.getMsgSeq(), jgPush.getBusinessId(), jgPush.getMsg());
 
                 //推送接单成功给微信客户
+                log.info("自动接单完成,推送接单成功给微信客户.");
                 wechatPushMes(resvOrderAndroid, resvOrderThird, OrderTemplate.ORDER_RESV_SUCCESS,business);
 
             }
