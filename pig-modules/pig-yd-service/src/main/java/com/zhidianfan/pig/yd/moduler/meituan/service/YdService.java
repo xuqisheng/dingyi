@@ -752,6 +752,7 @@ public class YdService {
         resvOrderThird.setMealTypeId(mealType.getId());
         resvOrderThird.setMealTypeName(mealType.getMealTypeName());
         resvOrderThird.setOpenId(publicOrderDTO.getOpenId());
+        resvOrderThird.setRemark(publicOrderDTO.getRemark());
         //生成订单号
         resvOrderThird.setThirdOrderNo(IdUtils.makeOrderNo());
 
@@ -865,8 +866,8 @@ public class YdService {
                 pushFeign.pushMsg(jgPush.getType(), jgPush.getUsername(), jgPush.getMsgSeq(), jgPush.getBusinessId(), jgPush.getMsg());
 
                 //推送接单成功给微信客户
+                wechatPushMes(resvOrderAndroid, resvOrderThird, OrderTemplate.ORDER_RESV_SUCCESS);
 
-                wechatPushMes (resvOrderAndroid, resvOrderThird , OrderTemplate.ORDER_RESV_SUCCESS);
             }
         }
         //如果自动接单则不推送这个消息
@@ -1180,9 +1181,7 @@ public class YdService {
     }
 
 
-
-
-    public  static  void wechatPushMes(ResvOrderAndroid resvOrderAndroid , ResvOrderThird resvOrderThird , OrderTemplate  orderTemplate){
+    public static void wechatPushMes(ResvOrderAndroid resvOrderAndroid, ResvOrderThird resvOrderThird, OrderTemplate orderTemplate) {
         PushMessageVO pushMessageVO = new PushMessageVO();
         pushMessageVO.setDate(resvOrderThird.getResvDate().toString());
         pushMessageVO.setName(resvOrderThird.getVipName());

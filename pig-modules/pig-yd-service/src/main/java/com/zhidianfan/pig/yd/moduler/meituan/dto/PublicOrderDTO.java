@@ -46,6 +46,7 @@ public class PublicOrderDTO {
     private String tableTypeName;
     private String openId;
 
+    private String remark;
 
 
 

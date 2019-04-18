@@ -18,8 +18,7 @@ import com.zhidianfan.pig.yd.moduler.resv.bo.ResvOrderThirdBO;
 import com.zhidianfan.pig.yd.moduler.resv.dto.AddOrderDTO;
 import com.zhidianfan.pig.yd.moduler.resv.dto.ThirdQueryDTO;
 import com.zhidianfan.pig.yd.moduler.wechat.util.OrderTemplate;
-import com.zhidianfan.pig.yd.moduler.wechat.util.WeChatUtils;
-import com.zhidianfan.pig.yd.moduler.wechat.vo.PushMessageVO;
+
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -29,7 +28,6 @@ import java.util.Date;
 import java.util.List;
 
 import static com.zhidianfan.pig.yd.moduler.meituan.service.YdService.wechatPushMes;
-import static com.zhidianfan.pig.yd.moduler.wechat.controller.WeChatController.getMessageContent;
 
 
 /**
