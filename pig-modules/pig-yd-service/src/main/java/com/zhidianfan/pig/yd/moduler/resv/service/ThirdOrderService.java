@@ -157,10 +157,10 @@ public class ThirdOrderService {
 
             //修改订单状态,为接单
             //已经接受
-            resvOrderThird.setResult(1);
-            resvOrderThird.setStatus(40);
-            resvOrderThird.setBatchNo(addOrderDTO.getBatchNo());
-            iResvOrderThirdService.update(resvOrderThird, new EntityWrapper<ResvOrderThird>().
+            resvOrderThird1.setResult(1);
+            resvOrderThird1.setStatus(40);
+            resvOrderThird1.setBatchNo(addOrderDTO.getBatchNo());
+            iResvOrderThirdService.update(resvOrderThird1, new EntityWrapper<ResvOrderThird>().
                     eq("third_order_no", addOrderDTO.getThirdOrderNo()));
 
             //查询或者新增该客户然后更新订单表信息
@@ -182,12 +182,12 @@ public class ThirdOrderService {
             iResvOrderService.update(resvOrder, new EntityWrapper<ResvOrderAndroid>()
                     .eq("third_order_no", addOrderDTO.getThirdOrderNo()));
 
-            Business business = iBusinessService.selectOne(new EntityWrapper<Business>().eq("id", resvOrderThird.getBusinessId()));
+            Business business = iBusinessService.selectOne(new EntityWrapper<Business>().eq("id", resvOrderThird1.getBusinessId()));
 
             //微信推送
             log.info("商家接单成功,推送接单成功给微信客户.");
 
-            wechatPushMes(resvOrder, resvOrderThird , OrderTemplate.ORDER_RESV_SUCCESS,business);
+            wechatPushMes(resvOrder, resvOrderThird1 , OrderTemplate.ORDER_RESV_SUCCESS,business);
 
         }
 
@@ -406,8 +406,9 @@ public class ThirdOrderService {
         resvOrderAndroid.setBusinessName(business.getBusinessName());
         resvOrderAndroid.setTableName("");
 
+
         log.info("商家接单成功,推送商家拒单给微信客户.");
-        wechatPushMes(resvOrderAndroid, resvOrderThird , OrderTemplate.ORDER_RESV_HOTEL_CANCEL,business);
+        wechatPushMes(resvOrderAndroid, resvOrderThird1 , OrderTemplate.ORDER_RESV_HOTEL_CANCEL,business);
 
 
         return SuccessTip.SUCCESS_TIP;
