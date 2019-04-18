@@ -1,6 +1,7 @@
 package com.zhidianfan.pig.yd.moduler.wechat.util;
 
 import com.alibaba.fastjson.JSONObject;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.zhidianfan.pig.yd.moduler.wechat.vo.PushMessageVO;
 import org.apache.commons.collections.MapUtils;
@@ -21,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import java.net.URI;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -34,25 +36,25 @@ public class WeChatUtils {
      */
     private static final Logger logger = LoggerFactory.getLogger(WeChatUtils.class);
 
+    /**
+     * 微信appId
+     */
+    private static final String APP_ID = "wx5042f1d476e0bd6e";
+
+    /**
+     * 微信appSecret
+     */
+    private static final String APP_SECRET = "1feff45482416be546a80e0094d08981";
+
 //    /**
-//     * 微信appId
+//     * 测试微信appId
 //     */
-//    private static final String APP_ID = "wx5042f1d476e0bd6e";
+//    private static final String APP_ID = "wxb3cbb793920508de";
 //
 //    /**
-//     * 微信appSecret
+//     * 测试微信appSecret
 //     */
-//    private static final String APP_SECRET = "1feff45482416be546a80e0094d08981";
-
-    /**
-     * 测试微信appId
-     */
-    private static final String APP_ID = "wxb3cbb793920508de";
-
-    /**
-     * 测试微信appSecret
-     */
-    private static final String APP_SECRET = "6a3af28d5c23a79af96dd5247171ecb1";
+//    private static final String APP_SECRET = "6a3af28d5c23a79af96dd5247171ecb1";
 
     /**
      * 微信请求地址
@@ -264,7 +266,7 @@ public class WeChatUtils {
      *
      * @return 请求地址
      */
-    public static URI getRefreshUserInfoUrl(String refreshToken) {
+    private static URI getRefreshUserInfoUrl(String refreshToken) {
         try {
             return new URIBuilder()
                     .setScheme("https")
@@ -288,9 +290,11 @@ public class WeChatUtils {
      * @param url        详情页的url
      * @param data       推送的内容
      */
-    public static String pushMessage(final String touser, final String templateId, final String url, final String data) {
+    public static String pushMessage(final String touser, final String templateId, final String url, final JSONObject data) {
         if (touser == null)
             return "";
+
+        logger.info(data.toJSONString());
 
         Map<String, Object> bodyParam = Maps.newLinkedHashMap();
         bodyParam.put("touser", touser);
@@ -300,6 +304,7 @@ public class WeChatUtils {
 
         HttpPost httpPost = new HttpPost(getPushMessageUrl());
         httpPost.setHeader(HTTP.CONTENT_TYPE, CONTENT_JSON_TYPE);
+
         StringEntity entity = new StringEntity(JSONObject.toJSONString(bodyParam), ENCODING);
         httpPost.setEntity(entity);
 
@@ -315,78 +320,63 @@ public class WeChatUtils {
         return "";
     }
 
-    public static String getMessageContent(PushMessageVO vo) {
-        JSONObject jsonObject = new JSONObject(Boolean.TRUE);
+    public static JSONObject getMessageContent(PushMessageVO vo) {
+        Map<String, Object> first = Maps.newHashMap();
+        Map<String, Object> keyword1 = Maps.newHashMap();
+        Map<String, Object> keyword2 = Maps.newHashMap();
+        Map<String, Object> keyword3 = Maps.newHashMap();
+        Map<String, Object> keyword4 = Maps.newHashMap();
+        Map<String, Object> remark = Maps.newHashMap();
+
 
         if (OrderTemplate.ORDER_RESV_SUCCESS.equals(vo.getOrderTemplate())) {
-            Map<String, Object> first = Maps.newHashMap();
-            first.put("value", vo.getBusinessName() + "已接单");
-            jsonObject.put("first", first);
-
-            Map<String, Object> keyword1 = Maps.newHashMap();
-            keyword1.put("value", vo.getPersonNum() + "位 " + vo.getTableArea() + " " + vo.getPhone() + " " + vo.getName() + (vo.getSex().equals("1") ? "先生" : "女士"));
-            jsonObject.put("keyword1", keyword1);
-
-            Map<String, Object> keyword2 = Maps.newHashMap();
-            keyword2.put("value", vo.getDate());
-            jsonObject.put("keyword2", keyword2);
-
-            Map<String, Object> remark = Maps.newHashMap();
-            remark.put("value", "期待您的光临！");
-            jsonObject.put("remark", remark);
-        }
-        //非常抱歉，餐厅已满座，请预约其它时段。
-        //餐厅名称：“餐厅名称”
-        //餐厅地址：“地址”
-        //订座信息：“就餐日期”“就餐时间”，“人数”“桌位类型”
-        //备注：“备注”
-        //
-        if (vo.getOrderTemplate().equals(OrderTemplate.ORDER_RESV_RESULT)) {
-            Map<String, Object> first = Maps.newHashMap();
-            first.put("value", "非常抱歉，餐厅已满座，请预约其它时段。");
-            jsonObject.put("first", first);
-
-            Map<String, Object> keyword1 = Maps.newHashMap();
-            keyword1.put("value", vo.getPersonNum() + "位 " + vo.getTableArea() + " " + vo.getPhone() + " " + vo.getName() + (vo.getSex().equals("1") ? "先生" : "女士"));
-            jsonObject.put("keyword1", keyword1);
-
-            Map<String, Object> keyword2 = Maps.newHashMap();
-            keyword2.put("value", vo.getBusinessName());
-            jsonObject.put("keyword2", keyword2);
-
-            Map<String, Object> keyword3 = Maps.newHashMap();
-            keyword3.put("value", vo.getDate() + "," + vo.getPersonNum() + vo.getTableArea() + " " + vo.getTableType());
-            jsonObject.put("keyword3", keyword2);
-
-            Map<String, Object> keyword4 = Maps.newHashMap();
+            first.put("value", "您好，您在" + vo.getBusinessName() + "订位成功");
+            keyword1.put("value", vo.getDate());
+            keyword2.put("value", vo.getPersonNum() + "位 ");
+            keyword3.put("value", vo.getName() + (vo.getSex().equals("1") ? "先生" : "女士") + " " + vo.getPhone());
             keyword4.put("value", vo.getDesc());
-            jsonObject.put("keyword4", keyword2);
-
-            Map<String, Object> remark = Maps.newHashMap();
+            remark.put("value", "感谢您的使用");
+        }
+        if (OrderTemplate.ORDER_RESV_HOTEL_CANCEL.equals(vo.getOrderTemplate())) {
+            first.put("value", "非常抱歉，餐厅已满座，请预约其它时段。");
+            keyword1.put("value", vo.getBusinessName());
+            keyword2.put("value", vo.getBusinessAddr());
+            keyword3.put("value", vo.getDate() + " " + vo.getPersonNum() + "人 " + vo.getTableType());
+            keyword4.put("value", vo.getDesc());
             remark.put("value", "再次抱歉。");
-            jsonObject.put("remark", remark);
-
         }
-        if (vo.getOrderTemplate().equals(OrderTemplate.ORDER_RESV_HOTEL_CANCEL)) {
-            Map<String, Object> first = Maps.newHashMap();
-            first.put("value", vo.getBusinessName() + "已接单");
-            jsonObject.put("first", first);
-
-            Map<String, Object> keyword1 = Maps.newHashMap();
-            keyword1.put("value", vo.getPersonNum() + "位 " + vo.getTableArea() + " " + vo.getPhone() + " " + vo.getName() + (vo.getSex().equals("1") ? "先生" : "女士"));
-            jsonObject.put("keyword1", keyword1);
-
-            Map<String, Object> keyword2 = Maps.newHashMap();
+        if (OrderTemplate.ORDER_RESV_REMIND.equals(vo.getOrderTemplate())) {
+            first.put("value", "尊敬的客户您好，易订提醒您离就餐还有一个小时。");
+            keyword1.put("value", vo.getBusinessName());
             keyword2.put("value", vo.getDate());
-            jsonObject.put("keyword2", keyword2);
-
-            Map<String, Object> remark = Maps.newHashMap();
-            remark.put("value", "期待您的光临！");
-            jsonObject.put("remark", remark);
+            keyword3.put("value", vo.getTableArea());
+            keyword4.put("value", vo.getBusinessAddr());
+            remark.put("value", "谢谢你的预约！");
         }
 
-        return jsonObject.toJSONString();
+        first.put("color", "#173177");
+        keyword1.put("color", "#173177");
+        keyword2.put("color", "#173177");
+        keyword3.put("color", "#173177");
+        keyword4.put("color", "#173177");
+        remark.put("color", "#173177");
+
+        return getMessageData(Lists.newArrayList(first, keyword1, keyword2, keyword3, keyword4, remark));
     }
+
+    private static JSONObject getMessageData(List<Map<String, Object>> data) {
+        if (data == null || data.size() == 0)
+            return null;
+        JSONObject jsonObject = new JSONObject(Boolean.TRUE);
+        jsonObject.put("first", data.get(0));
+        for (int i = 1; i < data.size() - 1; i++) {
+            if (data.get(i).size() > 0)
+                jsonObject.put("keyword" + i, data.get(i));
+        }
+        jsonObject.put("remark", data.get(data.size() - 1));
+        return jsonObject;
+    }
+
 
     /**
      * 刷新token

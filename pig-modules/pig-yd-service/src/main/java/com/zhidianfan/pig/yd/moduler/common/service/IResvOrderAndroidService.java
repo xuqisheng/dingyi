@@ -6,11 +6,13 @@ import com.baomidou.mybatisplus.service.IService;
 import com.zhidianfan.pig.yd.moduler.resv.bo.DeskOrderBo;
 import com.zhidianfan.pig.yd.moduler.resv.bo.MessageOrderBO;
 import com.zhidianfan.pig.yd.moduler.resv.bo.OrderBO;
+import com.zhidianfan.pig.yd.moduler.resv.bo.ResvOrderThirdBO;
 import com.zhidianfan.pig.yd.moduler.resv.dto.*;
 import com.zhidianfan.pig.yd.moduler.resv.qo.AllResvOrderQO;
 import com.zhidianfan.pig.yd.moduler.resv.qo.LockTablQO;
 import com.zhidianfan.pig.yd.moduler.resv.qo.MessageOrderQO;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -75,4 +77,6 @@ public interface IResvOrderAndroidService extends IService<ResvOrderAndroid> {
 
 
     List<Map<String, Integer>> getOrderDistribution(Integer businessId, String calDate);
+
+    List<Map<String, Object>> getAllWeChatThirdOrder( LocalDateTime localDateTime);
 }

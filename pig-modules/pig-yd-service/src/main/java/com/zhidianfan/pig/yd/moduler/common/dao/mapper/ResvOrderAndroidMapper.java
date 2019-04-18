@@ -12,6 +12,7 @@ import com.zhidianfan.pig.yd.moduler.resv.qo.LockTablQO;
 import com.zhidianfan.pig.yd.moduler.resv.qo.MessageOrderQO;
 import org.apache.ibatis.annotations.Param;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -70,4 +71,6 @@ public interface ResvOrderAndroidMapper extends BaseMapper<ResvOrderAndroid> {
     List<Integer> getYesterdayBusniness();
 
     List<Map<String, Integer>> getOrderDistribution(@Param("businessId")Integer businessId, @Param("calDate")String calDate);
+
+    List<Map<String, Object>> getAllWeChatThirdOrder(@Param("resvDate") LocalDateTime localDateTime);
 }

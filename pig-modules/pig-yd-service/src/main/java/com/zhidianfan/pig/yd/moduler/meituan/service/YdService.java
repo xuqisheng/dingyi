@@ -867,7 +867,7 @@ public class YdService {
 
                 //推送接单成功给微信客户
                 log.info("自动接单完成,推送接单成功给微信客户.");
-                wechatPushMes(resvOrderAndroid, resvOrderThird, OrderTemplate.ORDER_RESV_SUCCESS,business);
+                wechatPushMes(resvOrderAndroid, resvOrderThird, OrderTemplate.ORDER_RESV_SUCCESS, business);
 
             }
         }
@@ -914,7 +914,7 @@ public class YdService {
     /**
      * 请求校验失败返回结果
      *
-     * @param code code
+     * @param code    code
      * @param message 信息
      * @return BasicBO
      */
@@ -940,9 +940,9 @@ public class YdService {
     }
 
 
-
     /**
      * 自动接单插入订单日志
+     *
      * @param orderNo 订单id
      */
     private void insertAutoAcceptLogs(String orderNo) {
@@ -1078,7 +1078,7 @@ public class YdService {
     /**
      * 根据口碑门店id获取酒店信息
      *
-     * @param shopId 门店id
+     * @param shopId      门店id
      * @param merchantPid pid
      * @return 酒店信息
      */
@@ -1182,12 +1182,13 @@ public class YdService {
 
     /**
      * 微信退搜经
+     *
      * @param resvOrderAndroid 安卓电话机订单
-     * @param resvOrderThird 第三方订单信息
-     * @param orderTemplate 模板
-     * @param business 酒店信息
+     * @param resvOrderThird   第三方订单信息
+     * @param orderTemplate    模板
+     * @param business         酒店信息
      */
-    public static void wechatPushMes(ResvOrderAndroid resvOrderAndroid, ResvOrderThird resvOrderThird, OrderTemplate orderTemplate,Business business) {
+    public static void wechatPushMes(ResvOrderAndroid resvOrderAndroid, ResvOrderThird resvOrderThird, OrderTemplate orderTemplate, Business business) {
         PushMessageVO pushMessageVO = new PushMessageVO();
         pushMessageVO.setDate(resvOrderThird.getResvDate().toString());
         pushMessageVO.setName(resvOrderThird.getVipName());
@@ -1198,7 +1199,7 @@ public class YdService {
         pushMessageVO.setOrderTemplate(orderTemplate);
 
         pushMessageVO.setBusinessName(resvOrderAndroid.getBusinessName());
-        pushMessageVO.setTableArea(resvOrderThird.getTableTypeName()+resvOrderAndroid.getTableName());
+        pushMessageVO.setTableArea(resvOrderThird.getTableTypeName() + resvOrderAndroid.getTableName());
         pushMessageVO.setDesc(resvOrderThird.getRemark());
         pushMessageVO.setBusinessAddr(business.getBusinessAddress());
 
@@ -1206,7 +1207,7 @@ public class YdService {
                 pushMessageVO.getOpenId(),
                 pushMessageVO.getOrderTemplate().getCode(),
                 "",
-                JSONObject.toJSONString(WeChatUtils.getMessageContent(pushMessageVO)));
+                WeChatUtils.getMessageContent(pushMessageVO));
     }
 
 }

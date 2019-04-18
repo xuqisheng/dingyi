@@ -1,9 +1,12 @@
 package com.zhidianfan.pig.yd.moduler.wechat.controller;
 
 import com.alibaba.fastjson.JSONObject;
+import com.zhidianfan.pig.yd.moduler.common.service.IResvOrderAndroidService;
 import com.zhidianfan.pig.yd.moduler.wechat.util.AccessToken;
+import com.zhidianfan.pig.yd.moduler.wechat.util.OrderTemplate;
 import com.zhidianfan.pig.yd.moduler.wechat.util.WeChatUtils;
 import com.zhidianfan.pig.yd.moduler.wechat.vo.PushMessageVO;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -16,10 +19,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 微信
@@ -34,6 +42,9 @@ public class WeChatController {
     @Autowired
     private RedisTemplate<String, AccessToken> redisTemplate;
 
+    @Autowired
+    private IResvOrderAndroidService resvOrderAndroidService;
+
     /**
      * 日志
      */
@@ -45,7 +56,7 @@ public class WeChatController {
                 pushMessageVO.getOpenId(),
                 pushMessageVO.getOrderTemplate().getCode(),
                 "",
-                JSONObject.toJSONString(WeChatUtils.getMessageContent(pushMessageVO)));
+                WeChatUtils.getMessageContent(pushMessageVO));
     }
 
     @GetMapping("getUserInfo")
@@ -73,7 +84,32 @@ public class WeChatController {
         }
         return "token已失效";
     }
+    
+    //    @GetMapping("testsync")
+    @Scheduled(cron = "0 0/30 * * * ? *")
+    public void getThirdOrder() {
+        LocalDateTime now = LocalDateTime.now().withNano(0);
+        //防止延迟
+        if (now.getMinute() < 10)
+            now = now.withMinute(0).withSecond(0);
+        else
+            now = now.withMinute(30).withSecond(0);
 
+        List<Map<String, Object>> list = resvOrderAndroidService.getAllWeChatThirdOrder(now.plusHours(1));
+        for (Map<String, Object> order : list) {
+            PushMessageVO pushMessageVO = new PushMessageVO();
+            pushMessageVO.setBusinessName(MapUtils.getString(order, "business_name"));
+            pushMessageVO.setDate(MapUtils.getString(order, "resv_date"));
+            pushMessageVO.setTableArea(MapUtils.getString(order, "table_area_name") + "-" + MapUtils.getString(order, "table_name"));
+            pushMessageVO.setBusinessAddr(MapUtils.getString(order, "business_addr"));
+            pushMessageVO.setOrderTemplate(OrderTemplate.ORDER_RESV_REMIND);
+            WeChatUtils.pushMessage(
+                    MapUtils.getString(order, "openid"),
+                    OrderTemplate.ORDER_RESV_REMIND.getCode(),
+                    "",
+                    WeChatUtils.getMessageContent(pushMessageVO));
+        }
+    }
 
     @Bean("accessTokenTemplate")
     public RedisTemplate<String, AccessToken> accessTokenTemplate(RedisConnectionFactory redisConnectionFactory) {

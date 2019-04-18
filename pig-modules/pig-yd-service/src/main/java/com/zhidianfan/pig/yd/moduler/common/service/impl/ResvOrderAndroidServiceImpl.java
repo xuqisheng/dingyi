@@ -14,6 +14,7 @@ import com.zhidianfan.pig.yd.moduler.resv.qo.LockTablQO;
 import com.zhidianfan.pig.yd.moduler.resv.qo.MessageOrderQO;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -135,5 +136,10 @@ public class ResvOrderAndroidServiceImpl extends ServiceImpl<ResvOrderAndroidMap
     public List<Map<String, Integer>> getOrderDistribution(Integer businessId, String calDate) {
 
         return baseMapper.getOrderDistribution(businessId,calDate);
+    }
+
+    @Override
+    public  List<Map<String, Object>> getAllWeChatThirdOrder(LocalDateTime localDateTime){
+        return baseMapper.getAllWeChatThirdOrder(localDateTime);
     }
 }
