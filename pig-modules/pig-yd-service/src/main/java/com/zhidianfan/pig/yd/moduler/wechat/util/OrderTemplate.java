@@ -7,9 +7,9 @@ package com.zhidianfan.pig.yd.moduler.wechat.util;
  * @version v 0.1 2019-04-15 16:39 wangyz Exp $
  */
 public enum OrderTemplate {
-    ORDER_RESV_SUCCESS("jyVhDFUxT7GOPMglkyGeaInP6Gj0VIS4nZhs2wsBTjs", "预定成功"),
-    ORDER_RESV_RESULT("yQO05VNN8dkGVopzDOAjHFDzAjAy6LpdBLXZNO-QEoU", "客户取消"),
-    ORDER_RESV_HOTEL_CANCEL("mMLp3YGpYV_9avUP-P8VegmpRoTGOVSlorH6zb8QKfw", "商家取消");
+    ORDER_RESV_SUCCESS("4wmP_1PvP3Wr17dyTm-v5bioYFqpNxJ_kB6nFxlvQCI", "预定成功"),
+    ORDER_RESV_REMIND("cHyDgiQtKO8H0KFEHUSDxM7I7zqrDzGcOiMmNX7kziM", "预约提醒"),
+    ORDER_RESV_HOTEL_CANCEL("mMLp3YGpYV_9avUP-P8VegmpRoTGOVSlorH6zb8QKfw", "订座失败通知");
 
 
     OrderTemplate(String code, String desc) {
