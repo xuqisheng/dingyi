@@ -22,6 +22,9 @@ import com.zhidianfan.pig.yd.moduler.meituan.service.rmi.dto.JgPush;
 import com.zhidianfan.pig.yd.moduler.resv.enums.OrderStatus;
 import com.zhidianfan.pig.yd.moduler.resv.service.AutoReceiptConfigService;
 import com.zhidianfan.pig.yd.moduler.resv.service.VipService;
+import com.zhidianfan.pig.yd.moduler.wechat.util.OrderTemplate;
+import com.zhidianfan.pig.yd.moduler.wechat.util.WeChatUtils;
+import com.zhidianfan.pig.yd.moduler.wechat.vo.PushMessageVO;
 import com.zhidianfan.pig.yd.utils.IdUtils;
 import com.zhidianfan.pig.yd.utils.SignUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +41,8 @@ import java.lang.reflect.Field;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+
+import static com.zhidianfan.pig.yd.moduler.wechat.controller.WeChatController.getMessageContent;
 
 /**
  * @Author qqx
@@ -756,7 +761,6 @@ public class YdService {
             Business business = businessService.selectOne(new EntityWrapper<Business>().eq("id", resvOrderThird.getBusinessId()));
             autoAcceptOrder(resvOrderThird, business);
 
-            //todo 推送接单成功给客户
 
         } else {
             log.error("自动接单失败");
@@ -857,7 +861,12 @@ public class YdService {
                 jsonObject1.put("orderType", "yd");
                 jgPush.setMsg(jsonObject1.toString());
 
+                //推送给安卓电话机用户
                 pushFeign.pushMsg(jgPush.getType(), jgPush.getUsername(), jgPush.getMsgSeq(), jgPush.getBusinessId(), jgPush.getMsg());
+
+                //推送接单成功给微信客户
+
+                wechatPushMes (resvOrderAndroid, resvOrderThird , OrderTemplate.ORDER_RESV_SUCCESS);
             }
         }
         //如果自动接单则不推送这个消息
@@ -1168,7 +1177,29 @@ public class YdService {
 
             return errorTip;
         }
-
-
     }
+
+
+
+
+    public  static  void wechatPushMes(ResvOrderAndroid resvOrderAndroid , ResvOrderThird resvOrderThird , OrderTemplate  orderTemplate){
+        PushMessageVO pushMessageVO = new PushMessageVO();
+        pushMessageVO.setDate(resvOrderThird.getResvDate().toString());
+        pushMessageVO.setName(resvOrderThird.getVipName());
+        pushMessageVO.setOpenId(resvOrderThird.getOpenId());
+        pushMessageVO.setPersonNum(resvOrderThird.getResvNum());
+        pushMessageVO.setPhone(resvOrderThird.getVipPhone());
+        pushMessageVO.setSex(resvOrderThird.getVipSex().equals("先生") ? "1" : "0");
+        pushMessageVO.setOrderTemplate(orderTemplate);
+
+        pushMessageVO.setBusinessName(resvOrderAndroid.getBusinessName());
+        pushMessageVO.setTableArea(resvOrderAndroid.getTableName());
+
+        WeChatUtils.pushMessage(
+                pushMessageVO.getOpenId(),
+                pushMessageVO.getOrderTemplate().getCode(),
+                "",
+                JSONObject.toJSONString(getMessageContent(pushMessageVO)));
+    }
+
 }

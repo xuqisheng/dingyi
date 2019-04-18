@@ -4,13 +4,11 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.baomidou.mybatisplus.plugins.Page;
 import com.zhidianfan.pig.common.util.PageFactory;
-import com.zhidianfan.pig.yd.moduler.common.dao.entity.ResvOrder;
-import com.zhidianfan.pig.yd.moduler.common.dao.entity.ResvOrderAndroid;
-import com.zhidianfan.pig.yd.moduler.common.dao.entity.ResvOrderThird;
-import com.zhidianfan.pig.yd.moduler.common.dao.entity.Vip;
+import com.zhidianfan.pig.yd.moduler.common.dao.entity.*;
 import com.zhidianfan.pig.yd.moduler.common.dto.ErrorTip;
 import com.zhidianfan.pig.yd.moduler.common.dto.SuccessTip;
 import com.zhidianfan.pig.yd.moduler.common.dto.Tip;
+import com.zhidianfan.pig.yd.moduler.common.service.IBusinessService;
 import com.zhidianfan.pig.yd.moduler.common.service.IResvOrderAndroidService;
 import com.zhidianfan.pig.yd.moduler.common.service.IResvOrderService;
 import com.zhidianfan.pig.yd.moduler.common.service.IResvOrderThirdService;
@@ -19,6 +17,9 @@ import com.zhidianfan.pig.yd.moduler.meituan.service.MeituanService;
 import com.zhidianfan.pig.yd.moduler.resv.bo.ResvOrderThirdBO;
 import com.zhidianfan.pig.yd.moduler.resv.dto.AddOrderDTO;
 import com.zhidianfan.pig.yd.moduler.resv.dto.ThirdQueryDTO;
+import com.zhidianfan.pig.yd.moduler.wechat.util.OrderTemplate;
+import com.zhidianfan.pig.yd.moduler.wechat.util.WeChatUtils;
+import com.zhidianfan.pig.yd.moduler.wechat.vo.PushMessageVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.List;
+
+import static com.zhidianfan.pig.yd.moduler.meituan.service.YdService.wechatPushMes;
+import static com.zhidianfan.pig.yd.moduler.wechat.controller.WeChatController.getMessageContent;
 
 
 /**
@@ -53,6 +57,9 @@ public class ThirdOrderService {
 
     @Autowired
     private IResvOrderService resvOrderService;
+
+    @Autowired
+    private IBusinessService iBusinessService;
 
 
     /**
@@ -175,6 +182,8 @@ public class ThirdOrderService {
             iResvOrderService.update(resvOrder, new EntityWrapper<ResvOrderAndroid>()
                     .eq("third_order_no", addOrderDTO.getThirdOrderNo()));
 
+            //微信推送
+            wechatPushMes(resvOrder, resvOrderThird , OrderTemplate.ORDER_RESV_SUCCESS);
 
         }
 
@@ -387,6 +396,14 @@ public class ThirdOrderService {
 
         iResvOrderThirdService.update(resvOrderThird, new EntityWrapper<ResvOrderThird>()
                 .eq("third_order_no", orderno));
+
+        Business business = iBusinessService.selectById(resvOrderThird.getBusinessId());
+        ResvOrderAndroid resvOrderAndroid = new ResvOrderAndroid();
+        resvOrderAndroid.setBusinessName(business.getBusinessName());
+        resvOrderAndroid.setTableName("");
+
+        wechatPushMes(resvOrderAndroid, resvOrderThird , OrderTemplate.ORDER_RESV_HOTEL_CANCEL);
+
 
         return SuccessTip.SUCCESS_TIP;
     }

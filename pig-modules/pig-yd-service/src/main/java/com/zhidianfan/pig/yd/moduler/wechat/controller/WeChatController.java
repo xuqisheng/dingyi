@@ -78,7 +78,7 @@ public class WeChatController {
         return "token已失效";
     }
 
-    private static String getMessageContent(PushMessageVO vo) {
+    public static String getMessageContent(PushMessageVO vo) {
         JSONObject jsonObject = new JSONObject(Boolean.TRUE);
 
         if (OrderTemplate.ORDER_RESV_SUCCESS.equals(vo.getOrderTemplate())) {

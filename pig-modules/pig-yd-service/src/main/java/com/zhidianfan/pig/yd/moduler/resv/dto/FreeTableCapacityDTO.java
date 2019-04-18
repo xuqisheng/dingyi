@@ -3,7 +3,6 @@ package com.zhidianfan.pig.yd.moduler.resv.dto;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.Date;
 
