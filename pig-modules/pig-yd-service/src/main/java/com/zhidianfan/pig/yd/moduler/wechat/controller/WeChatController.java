@@ -1,6 +1,5 @@
 package com.zhidianfan.pig.yd.moduler.wechat.controller;
 
-import com.alibaba.fastjson.JSONObject;
 import com.zhidianfan.pig.yd.moduler.common.service.IResvOrderAndroidService;
 import com.zhidianfan.pig.yd.moduler.wechat.util.AccessToken;
 import com.zhidianfan.pig.yd.moduler.wechat.util.OrderTemplate;
@@ -84,9 +83,9 @@ public class WeChatController {
         }
         return "token已失效";
     }
-    
+
     //    @GetMapping("testsync")
-    @Scheduled(cron = "0 0/30 * * * ? *")
+    @Scheduled(cron = "0 0/30 * * * ?")
     public void getThirdOrder() {
         LocalDateTime now = LocalDateTime.now().withNano(0);
         //防止延迟
