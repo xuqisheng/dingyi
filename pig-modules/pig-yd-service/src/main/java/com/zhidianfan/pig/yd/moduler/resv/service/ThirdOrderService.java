@@ -180,8 +180,10 @@ public class ThirdOrderService {
             iResvOrderService.update(resvOrder, new EntityWrapper<ResvOrderAndroid>()
                     .eq("third_order_no", addOrderDTO.getThirdOrderNo()));
 
+            Business business = iBusinessService.selectOne(new EntityWrapper<Business>().eq("id", resvOrderThird.getBusinessId()));
+
             //微信推送
-            wechatPushMes(resvOrder, resvOrderThird , OrderTemplate.ORDER_RESV_SUCCESS);
+            wechatPushMes(resvOrder, resvOrderThird , OrderTemplate.ORDER_RESV_SUCCESS,business);
 
         }
 
@@ -400,7 +402,7 @@ public class ThirdOrderService {
         resvOrderAndroid.setBusinessName(business.getBusinessName());
         resvOrderAndroid.setTableName("");
 
-        wechatPushMes(resvOrderAndroid, resvOrderThird , OrderTemplate.ORDER_RESV_HOTEL_CANCEL);
+        wechatPushMes(resvOrderAndroid, resvOrderThird , OrderTemplate.ORDER_RESV_HOTEL_CANCEL,business);
 
 
         return SuccessTip.SUCCESS_TIP;

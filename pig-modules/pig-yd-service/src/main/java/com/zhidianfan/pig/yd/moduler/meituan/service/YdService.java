@@ -42,8 +42,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-import static com.zhidianfan.pig.yd.moduler.wechat.controller.WeChatController.getMessageContent;
-
 /**
  * @Author qqx
  * @Description
@@ -111,8 +109,8 @@ public class YdService {
     /**
      * 易订桌位查询接口
      *
-     * @param tableDTO
-     * @return BasicBO
+     * @param tableDTO 桌位dto
+     * @return BasicBO 基础bo
      */
     public BasicBO tablesQuery(TableDTO tableDTO) {
         BasicBO basicBO = new BasicBO();
@@ -149,8 +147,8 @@ public class YdService {
     /**
      * 易订已订桌位查询接口
      *
-     * @param tablesOccDTO
-     * @return BasicBO
+     * @param tablesOccDTO 已经预定桌位dto
+     * @return BasicBO 基础bo
      */
     public BasicBO tableOccupiedQuery(TablesOccDTO tablesOccDTO) throws Exception {
         BasicBO basicBO = new BasicBO();
@@ -164,8 +162,8 @@ public class YdService {
             businessId = Integer.parseInt(businessId.toString());
             Business business = businessService.selectOne(new EntityWrapper<Business>().eq("id", businessId));
             JSONObject result = new JSONObject();
-            Date date3 = unixTimeToDate(timeDTO.getStartTime());
-            Date date4 = unixTimeToDate(timeDTO.getEndTime());
+//            Date date3 = unixTimeToDate(timeDTO.getStartTime());
+//            Date date4 = unixTimeToDate(timeDTO.getEndTime());
             List<ResvOrderAndroid> resvOrders = iResvOrderAndroidService.selectList(new EntityWrapper<ResvOrderAndroid>().eq("business_id", businessId)
                     .ge("resv_date", unixTimeToDate(timeDTO.getStartTime())).le("resv_date", unixTimeToDate(timeDTO.getEndTime())).in("status", new String[]{"1", "2", "5"}));
 
@@ -210,8 +208,8 @@ public class YdService {
     /**
      * 门店时段查询
      *
-     * @param mealDTO
-     * @return BasicBO
+     * @param mealDTO 餐别dto
+     * @return BasicBO 基础dto
      */
     public BasicBO mealQuery(MealDTO mealDTO) {
         BasicBO basicBO = new BasicBO();
@@ -261,8 +259,8 @@ public class YdService {
     /**
      * 易订接收美团订单
      *
-     * @param orderDTO
-     * @return BasicBO
+     * @param orderDTO 订单dto
+     * @return BasicBO 基础dto
      */
     public BasicBO orderCreate(OrderDTO orderDTO) throws Exception {
         BasicBO basicBO = new BasicBO();
@@ -411,9 +409,9 @@ public class YdService {
     /**
      * 判断酒店是否能否自动接单
      *
-     * @return
+     * @return true 成功 false 失败
      */
-    public boolean checkBusinessReceipt(ResvOrderThird resvOrderThird, List<Table> tables) {
+    private boolean checkBusinessReceipt(ResvOrderThird resvOrderThird, List<Table> tables) {
 
         AutoReceiptConfig autoReceiptConfig = autoReceiptConfigService.getAutoReceiptConfig(resvOrderThird.getBusinessId());
         if (null == autoReceiptConfig || autoReceiptConfig.getStatus() == 0) {
@@ -487,6 +485,7 @@ public class YdService {
         return false;
     }
 
+
     /**
      * 计算最适合的table
      *
@@ -494,7 +493,7 @@ public class YdService {
      * @param resvNum 预约的人数
      * @return 返回最适合的table
      */
-    public Table calRightTable(List<Table> tables, Integer resvNum) {
+    private Table calRightTable(List<Table> tables, Integer resvNum) {
 
         //最适合的桌位的位置
         int bestTableIndex = 0;
@@ -520,8 +519,8 @@ public class YdService {
     /**
      * 易订接收美团订单修改
      *
-     * @param orderDTO
-     * @return OrderBO
+     * @param orderDTO 订单dto
+     * @return OrderBO 订单bo
      */
     public OrderBO orderChange(OrderDTO orderDTO) {
         log.info("-------订单状态变更-------");
@@ -537,7 +536,7 @@ public class YdService {
 //            resvOrderThird.setRemark(meituanOrderUpdateDTO.getDetail().getReason() == null ? "" : meituanOrderUpdateDTO.getDetail().getReason());
 //        }
 
-        Integer status = meituanOrderUpdateDTO.getStatus();
+        int status = meituanOrderUpdateDTO.getStatus();
         log.info("-------订单状态为status:" + status + "-------");
 
         ResvOrderThird thisResvOrderThird = iResvOrderThirdService.selectOne(new EntityWrapper<ResvOrderThird>().eq("third_order_no", meituanOrderUpdateDTO.getOrderSerializedId()));
@@ -676,7 +675,7 @@ public class YdService {
     /**
      * 口碑订单接收
      *
-     * @return
+     * @return 成功失败标志
      */
     public Tip kbOrderCreate(KbOrderDTO kbOrderDTO) {
         ResvOrderThird resvOrderThird = new ResvOrderThird();
@@ -702,7 +701,7 @@ public class YdService {
             jgPush.setType("PAD");
             jgPush.setUsername("13777575146");
 //            String orderMsg1 = JSONUtils.toJSONString(object2Map(resvOrderThird));
-            String orderMsg = JsonUtils.obj2Json(resvOrderThird).replaceAll("\r|\n", "").replaceAll("\\s*", "");
+            String orderMsg = JsonUtils.obj2Json(resvOrderThird).replaceAll("[\r\n]", "").replaceAll("\\s*", "");
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("data", orderMsg);
             jsonObject.put("type", "8");
@@ -854,7 +853,7 @@ public class YdService {
                 iResvOrderThirdService.update(resvOrderThird, new EntityWrapper<ResvOrderThird>().eq("third_order_no", resvOrderThird.getThirdOrderNo()));
 
                 //推送消息
-                String orderMsg1 = JsonUtils.obj2Json(resvOrderAndroid).replaceAll("\r|\n", "").replaceAll("\\s*", "");
+                String orderMsg1 = JsonUtils.obj2Json(resvOrderAndroid).replaceAll("[\r\n]", "").replaceAll("\\s*", "");
                 jgPush.setBusinessId(String.valueOf(resvOrderAndroid.getBusinessId()));
                 JSONObject jsonObject1 = new JSONObject();
                 jsonObject1.put("data", orderMsg1);
@@ -866,7 +865,7 @@ public class YdService {
                 pushFeign.pushMsg(jgPush.getType(), jgPush.getUsername(), jgPush.getMsgSeq(), jgPush.getBusinessId(), jgPush.getMsg());
 
                 //推送接单成功给微信客户
-                wechatPushMes(resvOrderAndroid, resvOrderThird, OrderTemplate.ORDER_RESV_SUCCESS);
+                wechatPushMes(resvOrderAndroid, resvOrderThird, OrderTemplate.ORDER_RESV_SUCCESS,business);
 
             }
         }
@@ -875,7 +874,7 @@ public class YdService {
 
             //推送消息
             JSONObject jsonObject = new JSONObject();
-            String orderMsg = JsonUtils.obj2Json(resvOrderThird).replaceAll("\r|\n", "").replaceAll("\\s*", "");
+            String orderMsg = JsonUtils.obj2Json(resvOrderThird).replaceAll("[\r\n]", "").replaceAll("\\s*", "");
             jsonObject.put("data", orderMsg);
             jsonObject.put("type", "8");
             jgPush.setMsg(jsonObject.toString());
@@ -888,7 +887,7 @@ public class YdService {
     /**
      * apptoken回调接口
      *
-     * @param callBackDTO
+     * @param callBackDTO 回调dto
      * @return boolean
      */
     public boolean callBackToken(CallBackDTO callBackDTO) {
@@ -901,7 +900,7 @@ public class YdService {
     /**
      * apptoken解绑回调接口
      *
-     * @param callBackDTO
+     * @param callBackDTO 回调dto
      * @return boolean
      */
     public boolean callBackUnToken(CallBackDTO callBackDTO) {
@@ -913,8 +912,8 @@ public class YdService {
     /**
      * 请求校验失败返回结果
      *
-     * @param code
-     * @param message
+     * @param code code
+     * @param message 信息
      * @return BasicBO
      */
     public BasicBO failSign(Integer code, String message) {
@@ -931,7 +930,7 @@ public class YdService {
     /**
      * 校验美团签名
      *
-     * @param params
+     * @param params 参数
      * @return boolean
      */
     public boolean verifySignature(Map<String, Object> params) {
@@ -939,10 +938,12 @@ public class YdService {
     }
 
 
+
     /**
-     * 插入日志
+     * 自动接单插入订单日志
+     * @param orderNo 订单id
      */
-    public void insertAutoAcceptLogs(String orderNo) {
+    private void insertAutoAcceptLogs(String orderNo) {
         //订单日志记录
         ResvOrderLogs resvOrderLogs = new ResvOrderLogs();
 
@@ -960,7 +961,7 @@ public class YdService {
     /**
      * 生成美团签名
      *
-     * @param params
+     * @param params 参数
      * @return String
      */
     private static String createMeituanSgin(Map<String, Object> params) {
@@ -969,17 +970,12 @@ public class YdService {
 
 
     /**
-     * 自动接单插入订单日志
-     */
-
-
-    /**
      * 实体对象转成Map
      *
      * @param obj 实体对象
      * @return
      */
-    public static Map<String, Object> object2Map(Object obj) {
+    private static Map<String, Object> object2Map(Object obj) {
         Map<String, Object> map = new HashMap<>();
         if (obj == null) {
             return map;
@@ -1000,13 +996,13 @@ public class YdService {
     /**
      * 时间戳转换yyyy-MM-dd
      *
-     * @param unixTime
-     * @return
-     * @throws ParseException
+     * @param unixTime 时间戳
+     * @return yyyy-MM-dd
+     * @throws ParseException 转化异常
      */
-    public static Date unixTimeToDate(int unixTime) throws ParseException {
+    private static Date unixTimeToDate(int unixTime) throws ParseException {
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-        Long time = new Long(unixTime) * 1000;
+        Long time = (long) unixTime * 1000;
         String d = format.format(time);
         return format.parse(d);
     }
@@ -1014,13 +1010,13 @@ public class YdService {
     /**
      * 时间戳转换yyyy-MM-dd HH:mm:ss
      *
-     * @param unixTime
-     * @return
-     * @throws ParseException
+     * @param unixTime 时间戳
+     * @return yyyy-MM-dd HH:mm:ss
+     * @throws ParseException 转化异常
      */
-    public static Date unixTimeToDate2(int unixTime) throws ParseException {
+    private static Date unixTimeToDate2(int unixTime) throws ParseException {
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        Long time = new Long(unixTime) * 1000;
+        Long time = (long) unixTime * 1000;
         String d = format.format(time);
         return format.parse(d);
     }
@@ -1028,13 +1024,13 @@ public class YdService {
     /**
      * 时间戳转换HH:mm
      *
-     * @param unixTime
-     * @return
-     * @throws ParseException
+     * @param unixTime 时间戳
+     * @return 返回HH:mm
+     * @throws ParseException 转化异常
      */
-    public static String unixTimeToDate1(int unixTime) {
+    private static String unixTimeToDate1(int unixTime) {
         SimpleDateFormat format = new SimpleDateFormat("HH:mm");
-        Long time = new Long(unixTime) * 1000;
+        Long time = (long) unixTime * 1000;
         String d = format.format(time);
         return d;
     }
@@ -1042,10 +1038,10 @@ public class YdService {
     /**
      * Long 时间戳转换HH:mm
      *
-     * @param unixTime
-     * @return
+     * @param unixTime 时间戳
+     * @return HH:mm
      */
-    public static String unixTimeToDate3(Long unixTime) {
+    private static String unixTimeToDate3(Long unixTime) {
         SimpleDateFormat format = new SimpleDateFormat("HH:mm");
         String d = format.format(unixTime);
         return d;
@@ -1054,9 +1050,9 @@ public class YdService {
     /**
      * Long时间戳转换yyyy-MM-dd HH:mm:ss
      *
-     * @param unixTime
-     * @return
-     * @throws ParseException
+     * @param unixTime 时间戳
+     * @return 返回日期
+     * @throws ParseException 日期转换异常
      */
     public static Date unixTimeToDate4(Long unixTime) throws ParseException {
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -1067,8 +1063,8 @@ public class YdService {
     /**
      * 获取序列
      *
-     * @param type
-     * @return
+     * @param type 类型
+     * @return 序列
      */
     private long getNextDateId(String type) {
         String todayStr = DateFormatUtils.format(System.currentTimeMillis(), "yyyyMMdd");//历史遗留Key暂不考虑，一天也就一个。
@@ -1080,9 +1076,9 @@ public class YdService {
     /**
      * 根据口碑门店id获取酒店信息
      *
-     * @param shopId
-     * @param merchantPid
-     * @return
+     * @param shopId 门店id
+     * @param merchantPid pid
+     * @return 酒店信息
      */
     public BusinessBo getBusinessInfo(String shopId, String merchantPid) {
         Business business = businessService.selectOne(new EntityWrapper<Business>().eq("shop_id", shopId).eq("merchant_pid", merchantPid).eq("status", '1'));
@@ -1161,9 +1157,10 @@ public class YdService {
             jgPush.setBusinessId(resvOrderThird.getBusinessId().toString());
             jgPush.setMsgSeq(String.valueOf(getNextDateId("YD_ORDER")));
             jgPush.setUsername("13777575146");
-            String orderMsg = JsonUtils.obj2Json(resvOrderThird).replaceAll("\r|\n", "").replaceAll("\\s*", "");
+            String orderMsg = JsonUtils.obj2Json(resvOrderThird).replaceAll("[\r\n]", "").replaceAll("\\s*", "");
             jsonObject.put("data", orderMsg);
             jgPush.setType("ANDROID_PHONE");
+            jgPush.setMsg(jsonObject.toString());
             pushFeign.pushMsg(jgPush.getType(), jgPush.getUsername(), jgPush.getMsgSeq(), jgPush.getBusinessId(), jgPush.getMsg());
 
 
@@ -1181,7 +1178,14 @@ public class YdService {
     }
 
 
-    public static void wechatPushMes(ResvOrderAndroid resvOrderAndroid, ResvOrderThird resvOrderThird, OrderTemplate orderTemplate) {
+    /**
+     * 微信退搜经
+     * @param resvOrderAndroid 安卓电话机订单
+     * @param resvOrderThird 第三方订单信息
+     * @param orderTemplate 模板
+     * @param business 酒店信息
+     */
+    public static void wechatPushMes(ResvOrderAndroid resvOrderAndroid, ResvOrderThird resvOrderThird, OrderTemplate orderTemplate,Business business) {
         PushMessageVO pushMessageVO = new PushMessageVO();
         pushMessageVO.setDate(resvOrderThird.getResvDate().toString());
         pushMessageVO.setName(resvOrderThird.getVipName());
@@ -1192,13 +1196,15 @@ public class YdService {
         pushMessageVO.setOrderTemplate(orderTemplate);
 
         pushMessageVO.setBusinessName(resvOrderAndroid.getBusinessName());
-        pushMessageVO.setTableArea(resvOrderAndroid.getTableName());
+        pushMessageVO.setTableArea(resvOrderThird.getTableTypeName()+resvOrderAndroid.getTableName());
+        pushMessageVO.setDesc(resvOrderThird.getRemark());
+        pushMessageVO.setBusinessAddr(business.getBusinessAddress());
 
         WeChatUtils.pushMessage(
                 pushMessageVO.getOpenId(),
                 pushMessageVO.getOrderTemplate().getCode(),
                 "",
-                JSONObject.toJSONString(getMessageContent(pushMessageVO)));
+                JSONObject.toJSONString(WeChatUtils.getMessageContent(pushMessageVO)));
     }
 
 }

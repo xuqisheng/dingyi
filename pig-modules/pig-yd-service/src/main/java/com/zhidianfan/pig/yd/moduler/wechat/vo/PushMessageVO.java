@@ -55,7 +55,7 @@ public class PushMessageVO {
     /**
      * 餐厅地址
      */
-    private Integer businessAddr;
+    private String businessAddr;
     /**
      * 订单模板
      */
