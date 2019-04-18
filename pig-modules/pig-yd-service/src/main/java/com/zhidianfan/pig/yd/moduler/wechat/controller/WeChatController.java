@@ -1,5 +1,6 @@
 package com.zhidianfan.pig.yd.moduler.wechat.controller;
 
+import com.alibaba.fastjson.JSONObject;
 import com.zhidianfan.pig.yd.moduler.common.service.IResvOrderAndroidService;
 import com.zhidianfan.pig.yd.moduler.wechat.util.AccessToken;
 import com.zhidianfan.pig.yd.moduler.wechat.util.OrderTemplate;
@@ -64,7 +65,7 @@ public class WeChatController {
         if (StringUtils.isNotEmpty(openid))
             accessToken = redisTemplate.opsForValue().get(openid);
 
-        if (accessToken == null) {
+        if (accessToken == null || WeChatUtils.isExpiredToken(accessToken)) {
             accessToken = WeChatUtils.getAccessToken(0, code);
             if (accessToken == null || StringUtils.isEmpty(accessToken.getAccessToken()))
                 return "code已失效";
@@ -84,7 +85,7 @@ public class WeChatController {
         return "token已失效";
     }
 
-    //    @GetMapping("testsync")
+    @GetMapping("pushThirdOrder")
     @Scheduled(cron = "0 0/30 * * * ?")
     public void getThirdOrder() {
         LocalDateTime now = LocalDateTime.now().withNano(0);
@@ -95,6 +96,8 @@ public class WeChatController {
             now = now.withMinute(30).withSecond(0);
 
         List<Map<String, Object>> list = resvOrderAndroidService.getAllWeChatThirdOrder(now.plusHours(1));
+        logger.info("执行定时推送:" + list.size() + "行数据");
+        logger.info("内容:" + JSONObject.toJSONString(list));
         for (Map<String, Object> order : list) {
             PushMessageVO pushMessageVO = new PushMessageVO();
             pushMessageVO.setBusinessName(MapUtils.getString(order, "business_name"));

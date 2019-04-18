@@ -127,9 +127,7 @@ public class WeChatUtils {
                 return accessToken;
             }
 
-            //如果过期了 重新获取
-            Long timeout = (Duration.between(accessToken.getAccessTokenTime(), LocalDateTime.now()).toMillis()) / 1000;
-            if (timeout >= accessToken.getExpiresIn())
+            if (isExpiredToken(accessToken))
                 accessToken = getToken(getTokenUrl());
 
             return accessToken;
@@ -141,6 +139,17 @@ public class WeChatUtils {
 
             return null;
         }
+    }
+
+    /**
+     * 验证token是否在有效期内
+     *
+     * @param accessToken
+     * @return
+     */
+    public static Boolean isExpiredToken(AccessToken accessToken) {
+        Long timeout = (Duration.between(accessToken.getAccessTokenTime(), LocalDateTime.now()).toMillis()) / 1000;
+        return timeout >= accessToken.getExpiresIn();
     }
 
     /**
@@ -326,15 +335,17 @@ public class WeChatUtils {
         Map<String, Object> keyword2 = Maps.newHashMap();
         Map<String, Object> keyword3 = Maps.newHashMap();
         Map<String, Object> keyword4 = Maps.newHashMap();
+        Map<String, Object> keyword5 = Maps.newHashMap();
         Map<String, Object> remark = Maps.newHashMap();
 
 
         if (OrderTemplate.ORDER_RESV_SUCCESS.equals(vo.getOrderTemplate())) {
             first.put("value", "您好，您在" + vo.getBusinessName() + "订位成功");
             keyword1.put("value", vo.getDate());
-            keyword2.put("value", vo.getPersonNum() + "位 ");
-            keyword3.put("value", vo.getName() + (vo.getSex().equals("1") ? "先生" : "女士") + " " + vo.getPhone());
-            keyword4.put("value", vo.getDesc());
+            keyword2.put("value", vo.getTableType() + " " + vo.getTableArea());
+            keyword3.put("value", vo.getPersonNum() + "位");
+            keyword4.put("value", vo.getName() + (vo.getSex().equals("1") ? "先生" : "女士") + " " + vo.getPhone());
+            keyword5.put("value", StringUtils.isEmpty(vo.getDesc()) ? "无" : vo.getDesc());
             remark.put("value", "感谢您的使用");
         }
         if (OrderTemplate.ORDER_RESV_HOTEL_CANCEL.equals(vo.getOrderTemplate())) {
@@ -342,7 +353,7 @@ public class WeChatUtils {
             keyword1.put("value", vo.getBusinessName());
             keyword2.put("value", vo.getBusinessAddr());
             keyword3.put("value", vo.getDate() + " " + vo.getPersonNum() + "人 " + vo.getTableType());
-            keyword4.put("value", vo.getDesc());
+            keyword4.put("value", StringUtils.isEmpty(vo.getDesc()) ? "无" : vo.getDesc());
             remark.put("value", "再次抱歉。");
         }
         if (OrderTemplate.ORDER_RESV_REMIND.equals(vo.getOrderTemplate())) {
@@ -359,9 +370,10 @@ public class WeChatUtils {
         keyword2.put("color", "#173177");
         keyword3.put("color", "#173177");
         keyword4.put("color", "#173177");
+        keyword5.put("color", "#173177");
         remark.put("color", "#173177");
 
-        return getMessageData(Lists.newArrayList(first, keyword1, keyword2, keyword3, keyword4, remark));
+        return getMessageData(Lists.newArrayList(first, keyword1, keyword2, keyword3, keyword4, keyword5, remark));
     }
 
     private static JSONObject getMessageData(List<Map<String, Object>> data) {

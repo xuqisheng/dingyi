@@ -183,11 +183,13 @@ public class ThirdOrderService {
                     .eq("third_order_no", addOrderDTO.getThirdOrderNo()));
 
             Business business = iBusinessService.selectOne(new EntityWrapper<Business>().eq("id", resvOrderThird1.getBusinessId()));
+            ResvOrderAndroid resvOrderAndroid = iResvOrderService.selectOne(new EntityWrapper<ResvOrderAndroid>().
+                    eq("third_order_no", addOrderDTO.getThirdOrderNo()));
 
             //微信推送
             log.info("商家接单成功,推送接单成功给微信客户.");
 
-            wechatPushMes(resvOrder, resvOrderThird1 , OrderTemplate.ORDER_RESV_SUCCESS,business);
+            wechatPushMes(resvOrderAndroid, resvOrderThird1 , OrderTemplate.ORDER_RESV_SUCCESS,business);
 
         }
 
@@ -401,7 +403,7 @@ public class ThirdOrderService {
         iResvOrderThirdService.update(resvOrderThird, new EntityWrapper<ResvOrderThird>()
                 .eq("third_order_no", orderno));
 
-        Business business = iBusinessService.selectById(resvOrderThird.getBusinessId());
+        Business business = iBusinessService.selectById(resvOrderThird1.getBusinessId());
         ResvOrderAndroid resvOrderAndroid = new ResvOrderAndroid();
         resvOrderAndroid.setBusinessName(business.getBusinessName());
         resvOrderAndroid.setTableName("");

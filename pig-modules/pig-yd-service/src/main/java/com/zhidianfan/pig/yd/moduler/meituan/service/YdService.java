@@ -1189,8 +1189,11 @@ public class YdService {
      * @param business         酒店信息
      */
     public static void wechatPushMes(ResvOrderAndroid resvOrderAndroid, ResvOrderThird resvOrderThird, OrderTemplate orderTemplate, Business business) {
+
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+
         PushMessageVO pushMessageVO = new PushMessageVO();
-        pushMessageVO.setDate(resvOrderThird.getResvDate().toString());
+        pushMessageVO.setDate(sdf.format(resvOrderThird.getResvDate()));
         pushMessageVO.setName(resvOrderThird.getVipName());
         pushMessageVO.setOpenId(resvOrderThird.getOpenId());
         pushMessageVO.setPersonNum(resvOrderThird.getResvNum());
@@ -1198,10 +1201,13 @@ public class YdService {
         pushMessageVO.setSex(resvOrderThird.getVipSex().equals("先生") ? "1" : "0");
         pushMessageVO.setOrderTemplate(orderTemplate);
 
-        pushMessageVO.setBusinessName(resvOrderAndroid.getBusinessName());
-        pushMessageVO.setTableArea(resvOrderThird.getTableTypeName() + resvOrderAndroid.getTableName());
+        pushMessageVO.setBusinessName(business.getBusinessName());
+        pushMessageVO.setTableType(resvOrderThird.getTableTypeName());
+        pushMessageVO.setTableArea(resvOrderAndroid.getTableAreaName() + " " + resvOrderAndroid.getTableName());
         pushMessageVO.setDesc(resvOrderThird.getRemark());
         pushMessageVO.setBusinessAddr(business.getBusinessAddress());
+
+        log.info("调用微信推送:" + pushMessageVO.toString());
 
         WeChatUtils.pushMessage(
                 pushMessageVO.getOpenId(),
