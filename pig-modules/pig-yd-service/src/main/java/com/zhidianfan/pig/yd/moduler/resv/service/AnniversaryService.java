@@ -276,11 +276,11 @@ public class AnniversaryService {
 
         if (calendarType == 1) {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            String[] split = sdf.format(anniversaryDate).split("-");
 
-
-            Solar solar = new Solar(year,
-                    calendar.get(Calendar.MONTH) + 1,
-                    calendar.get(Calendar.DAY_OF_MONTH));
+            Solar solar = new Solar(Integer.valueOf(split[0]),
+                    Integer.valueOf(split[1]),
+                    Integer.valueOf(split[2]));
 
             Lunar lastLunarBirth = nextLunarTime(solar.toString());
             String solarString = LunarSolarConverter.LunarToSolar(lastLunarBirth).toString();
@@ -315,7 +315,10 @@ public class AnniversaryService {
             // 隐藏年份
             if (anniversaryYearFlag == 1) {
 
-                return anniversaryDateLocalDate.getMonth() + "-" + anniversaryDateLocalDate.getDayOfMonth();
+                String monthValue = String.valueOf(anniversaryDateLocalDate.getMonthValue());
+                String month = monthValue.length() == 1 ? 0+monthValue : monthValue ;
+
+                return month + "-" + anniversaryDateLocalDate.getDayOfMonth();
             } else {
 
                 return anniversaryDateLocalDate.toString();
