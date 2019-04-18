@@ -25,6 +25,10 @@ public class PushMessageVO {
      */
     private String date;
     /**
+     * 备注
+     */
+    private String desc;
+    /**
      * 电话
      */
     private String phone;
@@ -37,6 +41,10 @@ public class PushMessageVO {
      */
     private String tableArea;
     /**
+     * 桌位类型
+     */
+    private String tableType;
+    /**
      * 预定人数
      */
     private Integer personNum;
@@ -44,6 +52,10 @@ public class PushMessageVO {
      * 酒店名称
      */
     private String businessName;
+    /**
+     * 餐厅地址
+     */
+    private Integer businessAddr;
     /**
      * 订单模板
      */

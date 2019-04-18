@@ -2,6 +2,7 @@ package com.zhidianfan.pig.yd.moduler.wechat.util;
 
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Maps;
+import com.zhidianfan.pig.yd.moduler.wechat.vo.PushMessageVO;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.Consts;
@@ -291,11 +292,11 @@ public class WeChatUtils {
         if (touser == null)
             return "";
 
-        Map<String, Object> bodyParam = Maps.newHashMap();
+        Map<String, Object> bodyParam = Maps.newLinkedHashMap();
+        bodyParam.put("touser", touser);
+        bodyParam.put("template_id", templateId);
         bodyParam.put("url", url);
         bodyParam.put("data", data);
-        bodyParam.put("touser", touser);
-        bodyParam.put("templateId", templateId);
 
         HttpPost httpPost = new HttpPost(getPushMessageUrl());
         httpPost.setHeader(HTTP.CONTENT_TYPE, CONTENT_JSON_TYPE);
@@ -312,6 +313,79 @@ public class WeChatUtils {
             logger.error("推送失败:", e);
         }
         return "";
+    }
+
+    public static String getMessageContent(PushMessageVO vo) {
+        JSONObject jsonObject = new JSONObject(Boolean.TRUE);
+
+        if (OrderTemplate.ORDER_RESV_SUCCESS.equals(vo.getOrderTemplate())) {
+            Map<String, Object> first = Maps.newHashMap();
+            first.put("value", vo.getBusinessName() + "已接单");
+            jsonObject.put("first", first);
+
+            Map<String, Object> keyword1 = Maps.newHashMap();
+            keyword1.put("value", vo.getPersonNum() + "位 " + vo.getTableArea() + " " + vo.getPhone() + " " + vo.getName() + (vo.getSex().equals("1") ? "先生" : "女士"));
+            jsonObject.put("keyword1", keyword1);
+
+            Map<String, Object> keyword2 = Maps.newHashMap();
+            keyword2.put("value", vo.getDate());
+            jsonObject.put("keyword2", keyword2);
+
+            Map<String, Object> remark = Maps.newHashMap();
+            remark.put("value", "期待您的光临！");
+            jsonObject.put("remark", remark);
+        }
+        //非常抱歉，餐厅已满座，请预约其它时段。
+        //餐厅名称：“餐厅名称”
+        //餐厅地址：“地址”
+        //订座信息：“就餐日期”“就餐时间”，“人数”“桌位类型”
+        //备注：“备注”
+        //
+        if (vo.getOrderTemplate().equals(OrderTemplate.ORDER_RESV_RESULT)) {
+            Map<String, Object> first = Maps.newHashMap();
+            first.put("value", "非常抱歉，餐厅已满座，请预约其它时段。");
+            jsonObject.put("first", first);
+
+            Map<String, Object> keyword1 = Maps.newHashMap();
+            keyword1.put("value", vo.getPersonNum() + "位 " + vo.getTableArea() + " " + vo.getPhone() + " " + vo.getName() + (vo.getSex().equals("1") ? "先生" : "女士"));
+            jsonObject.put("keyword1", keyword1);
+
+            Map<String, Object> keyword2 = Maps.newHashMap();
+            keyword2.put("value", vo.getBusinessName());
+            jsonObject.put("keyword2", keyword2);
+
+            Map<String, Object> keyword3 = Maps.newHashMap();
+            keyword3.put("value", vo.getDate() + "," + vo.getPersonNum() + vo.getTableArea() + " " + vo.getTableType());
+            jsonObject.put("keyword3", keyword2);
+
+            Map<String, Object> keyword4 = Maps.newHashMap();
+            keyword4.put("value", vo.getDesc());
+            jsonObject.put("keyword4", keyword2);
+
+            Map<String, Object> remark = Maps.newHashMap();
+            remark.put("value", "再次抱歉。");
+            jsonObject.put("remark", remark);
+
+        }
+        if (vo.getOrderTemplate().equals(OrderTemplate.ORDER_RESV_HOTEL_CANCEL)) {
+            Map<String, Object> first = Maps.newHashMap();
+            first.put("value", vo.getBusinessName() + "已接单");
+            jsonObject.put("first", first);
+
+            Map<String, Object> keyword1 = Maps.newHashMap();
+            keyword1.put("value", vo.getPersonNum() + "位 " + vo.getTableArea() + " " + vo.getPhone() + " " + vo.getName() + (vo.getSex().equals("1") ? "先生" : "女士"));
+            jsonObject.put("keyword1", keyword1);
+
+            Map<String, Object> keyword2 = Maps.newHashMap();
+            keyword2.put("value", vo.getDate());
+            jsonObject.put("keyword2", keyword2);
+
+            Map<String, Object> remark = Maps.newHashMap();
+            remark.put("value", "期待您的光临！");
+            jsonObject.put("remark", remark);
+        }
+
+        return jsonObject.toJSONString();
     }
 
     /**
