@@ -128,7 +128,7 @@ public class ThirdOrderService {
         //只有安卓电话机端 有易订公众号
         ResvOrderThird resvOrderThird1 = iResvOrderThirdService.selectOne(new EntityWrapper<ResvOrderThird>()
                 .eq("third_order_no", addOrderDTO.getThirdOrderNo()));
-        if (resvOrderThird1.getStatus() != 10){
+        if (!resvOrderThird1.getStatus().equals(10) && !resvOrderThird1.getStatus().equals(45)) {
             ErrorTip errorTip = new ErrorTip();
             errorTip.setMsg("客户已经取消");
             return errorTip;
@@ -189,7 +189,7 @@ public class ThirdOrderService {
             //微信推送
             log.info("商家接单成功,推送接单成功给微信客户.");
 
-            wechatPushMes(resvOrderAndroid, resvOrderThird1 , OrderTemplate.ORDER_RESV_SUCCESS,business);
+            wechatPushMes(resvOrderAndroid, resvOrderThird1, OrderTemplate.ORDER_RESV_SUCCESS, business);
 
         }
 
@@ -376,6 +376,7 @@ public class ThirdOrderService {
 
     /**
      * 拒绝yd 公众号订单
+     *
      * @param orderno 第三方订单号
      * @return 操作结果
      */
@@ -384,7 +385,7 @@ public class ThirdOrderService {
         //只有安卓电话机端 有易订公众号
         ResvOrderThird resvOrderThird1 = iResvOrderThirdService.selectOne(new EntityWrapper<ResvOrderThird>()
                 .eq("third_order_no", orderno));
-        if (resvOrderThird1.getStatus() != 10){
+        if (resvOrderThird1.getStatus() != 10) {
             ErrorTip errorTip = new ErrorTip();
             errorTip.setMsg("客户已经取消");
             return errorTip;
@@ -410,7 +411,7 @@ public class ThirdOrderService {
 
 
         log.info("商家接单成功,推送商家拒单给微信客户.");
-        wechatPushMes(resvOrderAndroid, resvOrderThird1 , OrderTemplate.ORDER_RESV_HOTEL_CANCEL,business);
+        wechatPushMes(resvOrderAndroid, resvOrderThird1, OrderTemplate.ORDER_RESV_HOTEL_CANCEL, business);
 
 
         return SuccessTip.SUCCESS_TIP;
