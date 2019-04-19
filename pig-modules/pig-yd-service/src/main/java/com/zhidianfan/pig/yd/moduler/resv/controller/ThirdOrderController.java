@@ -123,4 +123,21 @@ public class ThirdOrderController {
         return ResponseEntity.ok(tip);
     }
 
+
+    /**
+     * 公众号订单状态修改为45
+     * @param orderno 第三方订单号
+     * @return
+     */
+    @GetMapping(value = "/pastatusfortyfive")
+    public ResponseEntity paStatusTo45(@RequestParam String orderno) {
+
+        Boolean b = thirdOrderService.paStatusTo45(orderno);
+        Tip tip = (b ? SuccessTip.SUCCESS_TIP : ErrorTip.ERROR_TIP);
+
+
+        return ResponseEntity.ok(tip);
+    }
+
+
 }

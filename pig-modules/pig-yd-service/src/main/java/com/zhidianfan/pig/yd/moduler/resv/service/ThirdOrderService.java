@@ -112,8 +112,8 @@ public class ThirdOrderService {
     /**
      * 插入订单以及回改第三方表中的信息
      *
-     * @param addOrderDTO
-     * @return
+     * @param addOrderDTO 订单信息
+     * @return 操作结果
      */
     public Tip updateOrderNo(AddOrderDTO addOrderDTO) {
 
@@ -182,14 +182,8 @@ public class ThirdOrderService {
             iResvOrderService.update(resvOrder, new EntityWrapper<ResvOrderAndroid>()
                     .eq("third_order_no", addOrderDTO.getThirdOrderNo()));
 
-            Business business = iBusinessService.selectOne(new EntityWrapper<Business>().eq("id", resvOrderThird1.getBusinessId()));
-            ResvOrderAndroid resvOrderAndroid = iResvOrderService.selectOne(new EntityWrapper<ResvOrderAndroid>().
-                    eq("third_order_no", addOrderDTO.getThirdOrderNo()));
+            log.info("商家接单成功");
 
-            //微信推送
-            log.info("商家接单成功,推送接单成功给微信客户.");
-
-            wechatPushMes(resvOrderAndroid, resvOrderThird1, OrderTemplate.ORDER_RESV_SUCCESS, business);
 
         }
 
@@ -202,7 +196,7 @@ public class ThirdOrderService {
      * Pc 端 插入订单以及回改第三方表中的信息
      *
      * @param addOrderDTO
-     * @return
+     * @return 操作结果
      */
     public Tip pcUpdateOrderNo(AddOrderDTO addOrderDTO) {
 
@@ -262,7 +256,7 @@ public class ThirdOrderService {
     /**
      * 查询一个酒店未读的最新第三方订单
      *
-     * @param businessId
+     * @param businessId 酒店id
      * @return 订单信息
      */
     public ResvOrderThirdBO getNewestOrder(Integer businessId) {
@@ -272,6 +266,11 @@ public class ThirdOrderService {
         return newestOrder;
     }
 
+    /**
+     *
+     * @param thridNo 退订订单id
+     * @return  操作结果
+     */
     public boolean readUnsubscribeOrder(String thridNo) {
 
         ResvOrderThird resvOrderThird = new ResvOrderThird();
@@ -284,8 +283,8 @@ public class ThirdOrderService {
     }
 
     /**
-     * @param thirdno
-     * @return
+     * @param thirdno 第三方订单号
+     * @return 第三方订单
      */
     public ResvOrderThird selecltOneBythirdNo(String thirdno) {
 
@@ -298,10 +297,10 @@ public class ThirdOrderService {
     /**
      * 美团订单接单
      *
-     * @param addOrderDTO
-     * @param type
-     * @param resvOrderThird
-     * @return
+     * @param addOrderDTO 新增订单的信息
+     * @param type 安卓电话机类型或者标准版类型订单
+     * @param resvOrderThird 第三方订单信息
+     * @return 接单结果
      */
     public Tip meiTuanGetOrder(AddOrderDTO addOrderDTO, Integer type, ResvOrderThird resvOrderThird) {
         //pc端 去美团更新桌位信息
@@ -415,5 +414,34 @@ public class ThirdOrderService {
 
 
         return SuccessTip.SUCCESS_TIP;
+    }
+
+    /**
+     * 将微信公众号订单状态修改为45
+     *
+     * @param orderno 订单状态号
+     * @return 返回操作成功结果
+     */
+    public Boolean paStatusTo45(String orderno) {
+
+
+        ResvOrderThird resvOrderThird = iResvOrderThirdService.selectOne(new EntityWrapper<ResvOrderThird>().
+                eq("third_order_no", orderno));
+
+        resvOrderThird.setStatus(45);
+        iResvOrderThirdService.updateById(resvOrderThird);
+
+        Business business = iBusinessService.selectOne(new EntityWrapper<Business>().eq("id", resvOrderThird.getBusinessId()));
+
+        //微信推送
+        log.info("商家接单成功,推送接单成功给微信客户.");
+
+        ResvOrderAndroid resvOrderAndroid = new ResvOrderAndroid();
+        resvOrderAndroid.setTableName("");
+        resvOrderAndroid.setTableAreaName("");
+
+        wechatPushMes(resvOrderAndroid, resvOrderThird, OrderTemplate.ORDER_RESV_SUCCESS, business);
+
+        return true;
     }
 }
