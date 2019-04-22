@@ -538,7 +538,12 @@ public class MeituanService {
         Business business = businessService.selectById(businessId);
         if (business != null) {
             BasicDTO basicDTO = new BasicDTO();
-            basicDTO.setUrl(MeituanMethod.UN_APP_AUTH_TOKEN + "?" + "signKey=" + MeituanMethod.SIGNKEY + "&businessId=7" + "&appAuthToken=" + business.getAppToken());
+            Map<String, Object> params = new HashMap<>();
+            params.put("appAuthToken", business.getAppToken());
+            params.put("businessId", 7);
+            params.put("timestamp", String.valueOf(Instant.now().toEpochMilli()));
+            String sign = createMeituanSgin(params);
+            basicDTO.setUrl(MeituanMethod.UN_APP_AUTH_TOKEN + "?" + "sign=" + sign + "&businessId=7" + "&appAuthToken=" + business.getAppToken() + "&timestamp=" + params.get("timestamp"));
             log.warn(basicDTO.getUrl());
             return basicDTO.getUrl();
         } else {
