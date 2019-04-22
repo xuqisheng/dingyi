@@ -141,6 +141,7 @@ public class MealTypeService {
         Map<String,MealType > commonMealTypeMap = Maps.newLinkedHashMap();
         
         Date date = new Date();
+        //pig -- sys_dict表 的config 以及type code
         MealType mealType1 = new MealType(id, "早餐", businessName, "0", "001", date, "00:00", "00:00", 10, 1);
         MealType mealType2 = new MealType(id, "上午茶", businessName, "0", "005", date, "00:00", "00:00", 14, 1);
         MealType mealType3 = new MealType(id, "中餐", businessName, "0", "002", date, "00:00", "00:00", 11, 1);
