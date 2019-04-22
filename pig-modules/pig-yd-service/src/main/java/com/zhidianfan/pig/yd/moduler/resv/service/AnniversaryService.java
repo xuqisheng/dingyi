@@ -311,14 +311,19 @@ public class AnniversaryService {
 
         //农历公历判断
         //1.公历
+        int dayOfMonth = anniversaryDateLocalDate.getDayOfMonth();
+
         if (calendarType == 0) {
             // 隐藏年份
             if (anniversaryYearFlag == 1) {
 
                 String monthValue = String.valueOf(anniversaryDateLocalDate.getMonthValue());
                 String month = monthValue.length() == 1 ? 0+monthValue : monthValue ;
+                String dayOfMonthString = String.valueOf(dayOfMonth);
+                String day = dayOfMonthString.length() == 1 ? 0+dayOfMonthString : dayOfMonthString ;
 
-                return month + "-" + anniversaryDateLocalDate.getDayOfMonth();
+                return month + "-" + day;
+
             } else {
 
                 return anniversaryDateLocalDate.toString();
@@ -329,7 +334,7 @@ public class AnniversaryService {
             //localdate 转为solar
             Solar solar = new Solar(anniversaryDateLocalDate.getYear(),
                     anniversaryDateLocalDate.getMonthValue(),
-                    anniversaryDateLocalDate.getDayOfMonth());
+                    dayOfMonth);
 
             Lunar lunar = SolarToLunar(solar);
 
