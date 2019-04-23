@@ -7,7 +7,7 @@
 
     <groupId>com.zhidianfan.pig</groupId>
     <artifactId>pig-zipkin-db</artifactId>
-    <version>0.0.2</version>
+    <version>0.0.4</version>
     <packaging>jar</packaging>
 
     <name>pig-zipkin-db</name>

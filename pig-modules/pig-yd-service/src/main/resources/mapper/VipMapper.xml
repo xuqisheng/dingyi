@@ -442,4 +442,24 @@
         and  business_id = #{bid}
     </select>
 
+    <select id="getAppUserVipMarking" resultMap="BaseResultMap">
+        select *
+        from vip
+        where id in
+        <foreach collection="vipIds" open="(" close=")" item="item" separator=",">
+            #{item}
+        </foreach>
+        and app_user_id = #{appUserId}
+    </select>
+
+    <select id="getNoAppUserVipMarking" resultMap="BaseResultMap">
+        select *
+        from vip
+        where id in
+        <foreach collection="vipIds" open="(" close=")" item="item" separator=",">
+            #{item}
+        </foreach>
+        and (app_user_id is null or app_user_id = 0)
+    </select>
+
 </mapper>

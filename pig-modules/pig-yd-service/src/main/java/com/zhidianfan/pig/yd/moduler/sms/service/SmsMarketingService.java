@@ -232,13 +232,9 @@ public class SmsMarketingService {
             });
             Integer appUserId = smsMarkingDTO.getAppUserId();
             if(!CollectionUtils.isEmpty(vipIds) && appUserId !=null && appUserId !=0){
-                for(Integer vipId : vipIds){
-                    Vip vip = vipService.selectOne(new EntityWrapper<Vip>().eq("id",vipId)
-                            .eq("app_user_id",appUserId));
-                    if(vip != null){
-                        vips.add(vip);
-                    }
-                }
+                vips = vipService.getAppUserVipMarking(vipIds,appUserId);
+            }else if(!CollectionUtils.isEmpty(vipIds) && appUserId !=null && appUserId == 0){
+                vips = vipService.getNoAppUserVipMarking(vipIds);
             }else if (!CollectionUtils.isEmpty(vipIds)) {
                 vips = vipService.selectBatchIds(vipIds);
             }

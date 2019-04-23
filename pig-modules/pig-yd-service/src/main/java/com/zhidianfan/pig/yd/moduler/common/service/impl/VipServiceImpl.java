@@ -1,6 +1,5 @@
 package com.zhidianfan.pig.yd.moduler.common.service.impl;
 
-import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.baomidou.mybatisplus.plugins.Page;
 import com.baomidou.mybatisplus.service.impl.ServiceImpl;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.Vip;
@@ -14,6 +13,7 @@ import com.zhidianfan.pig.yd.moduler.resv.dto.VipTableDTO;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * <p>
@@ -123,6 +123,16 @@ public class VipServiceImpl extends ServiceImpl<VipMapper, Vip> implements IVipS
     @Override
     public List<Vip> selectBirthByBusinessId(Integer bid) {
         return baseMapper.selectBirthByBusinessId(bid);
+    }
+
+    @Override
+    public List<Vip> getAppUserVipMarking(Set<Integer> vipIds,Integer appUserId) {
+        return baseMapper.getAppUserVipMarking(vipIds,appUserId);
+    }
+
+    @Override
+    public List<Vip> getNoAppUserVipMarking(Set<Integer> vipIds) {
+        return baseMapper.getNoAppUserVipMarking(vipIds);
     }
 
 
