@@ -1,7 +1,6 @@
 package com.zhidianfan.pig.yd.moduler.common.dao.mapper;
 
 import com.baomidou.mybatisplus.mapper.BaseMapper;
-import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.baomidou.mybatisplus.plugins.Page;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.Vip;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.VipClass;
@@ -12,6 +11,7 @@ import com.zhidianfan.pig.yd.moduler.resv.dto.VipTableDTO;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * <p>
@@ -88,4 +88,8 @@ public interface VipMapper extends BaseMapper<Vip> {
     List<Vip> selectBirthLunarType3();
 
     List<Vip> selectBirthByBusinessId(@Param("bid") Integer bid);
+
+    List<Vip> getAppUserVipMarking(@Param("vipIds") Set<Integer> vipIds, @Param("appUserId") Integer appUserId);
+
+    List<Vip> getNoAppUserVipMarking(@Param("vipIds") Set<Integer> vipIds);
 }

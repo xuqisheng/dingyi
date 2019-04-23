@@ -1,6 +1,5 @@
 package com.zhidianfan.pig.yd.moduler.common.service;
 
-import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.baomidou.mybatisplus.plugins.Page;
 import com.baomidou.mybatisplus.service.IService;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.Vip;
@@ -11,6 +10,7 @@ import com.zhidianfan.pig.yd.moduler.resv.dto.VipInfoDTO;
 import com.zhidianfan.pig.yd.moduler.resv.dto.VipTableDTO;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * <p>
@@ -85,4 +85,8 @@ public interface IVipService extends IService<Vip> {
     List<Vip> selectBirthLunarType3();
 
     List<Vip> selectBirthByBusinessId(Integer bid);
+
+    List<Vip> getAppUserVipMarking(Set<Integer> vipIds,Integer appUserId);
+
+    List<Vip> getNoAppUserVipMarking(Set<Integer> vipIds);
 }
