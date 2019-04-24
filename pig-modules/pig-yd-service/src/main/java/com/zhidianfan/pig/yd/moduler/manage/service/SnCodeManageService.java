@@ -318,7 +318,7 @@ public class SnCodeManageService {
         }
 
         //读取
-        List<Map<String, Object>> list = ExcelUtil.ReadExcel(file, "sncode",0);
+        List<Map<String, Object>> list = ExcelUtil.ReadExcel(file, "sncode");
 
 
         List<SnCode> snCodeList = new ArrayList<>();

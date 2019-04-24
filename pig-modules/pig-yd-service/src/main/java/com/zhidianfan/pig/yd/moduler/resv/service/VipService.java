@@ -317,7 +317,7 @@ public class VipService {
         }
 
         //读取
-        List<Map<String, Object>> list = ExcelUtil.ReadExcel(file, "vip", 2);
+        List<Map<String, Object>> list = ExcelUtil.ReadExcel(file, "vip");
 
         //查询出酒店信息
         Business businessInfo = businessService.selectOne(new EntityWrapper<Business>()

@@ -428,6 +428,11 @@ public class ThirdOrderService {
         ResvOrderThird resvOrderThird = iResvOrderThirdService.selectOne(new EntityWrapper<ResvOrderThird>().
                 eq("third_order_no", orderno));
 
+        if(resvOrderThird.getStatus().equals(45) ){
+            log.info("订单已经是已经接单为入座状态了!");
+            return true;
+        }
+
         resvOrderThird.setStatus(45);
         iResvOrderThirdService.updateById(resvOrderThird);
 
