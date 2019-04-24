@@ -341,7 +341,7 @@ public class VipService {
                     && isMobileNO(map.get("vipPhone").toString())) {
 
                 //剔除生日格式不正确的
-                if (StringUtils.isNotEmpty(map.get("vipBirthday").toString())
+                if (map.get("vipBirthday") != null  && StringUtils.isNotEmpty(map.get("vipBirthday").toString())
                         && !valiDateTimeWithLongFormat(map.get("vipBirthday").toString())) {
                     //加入录入失败的客户信息
                     failVips.add(vip);
