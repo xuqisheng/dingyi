@@ -52,11 +52,11 @@
         FROM
             `table` t
         WHERE
-            NOT EXISTS ( SELECT table_id FROM resv_order_android r WHERE business_id = #{businessId}
+            NOT EXISTS ( SELECT table_id FROM resv_order_android r  WHERE business_id = #{businessId}
               AND (
                 r.`status` = 1
                 or r.`status` = 2 )
-              AND resv_date = DATE_FORMAT(#{resvDate},'%Y-%m-%d')  AND t.id = r.table_id )
+              AND resv_date = DATE_FORMAT(#{resvDate},'%Y-%m-%d') and r.meal_type_id = #{mealTypeId}  AND t.id = r.table_id )
             AND `status` = 1
             AND business_id = #{businessId}
          ORDER BY id
