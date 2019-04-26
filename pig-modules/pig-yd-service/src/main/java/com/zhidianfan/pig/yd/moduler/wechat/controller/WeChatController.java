@@ -75,8 +75,8 @@ public class WeChatController {
         return "token已失效";
     }
 
-    //    @GetMapping("testsync")
-    @Scheduled(cron = "0 0/30 * * * ?")
+    @GetMapping("testsync")
+//    @Scheduled(cron = "0 0/30 * * * ?")
     public void getThirdOrder() {
         LocalDateTime now = LocalDateTime.now().withNano(0);
         //防止延迟
@@ -96,7 +96,7 @@ public class WeChatController {
             WeChatUtils.pushMessage(
                     MapUtils.getString(order, "openid"),
                     OrderTemplate.ORDER_RESV_REMIND.getCode(),
-                    "http://eding.zhidianfan.com/#/OrderDetail?id=" + MapUtils.getString(order, "third_order_no"),
+                    "http://192.168.3.134:8686/#/OrderDetail?id=" + MapUtils.getString(order, "third_order_no"),
                     WeChatUtils.getMessageContent(pushMessageVO));
         }
     }

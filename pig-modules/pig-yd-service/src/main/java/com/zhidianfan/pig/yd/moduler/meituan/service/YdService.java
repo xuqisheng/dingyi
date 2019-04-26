@@ -1182,7 +1182,7 @@ public class YdService {
 
 
     /**
-     * 微信退搜经
+     * 微信推送
      *
      * @param resvOrderAndroid 安卓电话机订单
      * @param resvOrderThird   第三方订单信息
@@ -1207,7 +1207,7 @@ public class YdService {
         WeChatUtils.pushMessage(
                 pushMessageVO.getOpenId(),
                 pushMessageVO.getOrderTemplate().getCode(),
-                "http://eding.zhidianfan.com/#/OrderDetail?id=" + resvOrderThird.getThirdOrderNo(),
+                "http://192.168.3.134:8686/#/OrderDetail?id=" + resvOrderThird.getThirdOrderNo(),
                 WeChatUtils.getMessageContent(pushMessageVO));
     }
 
