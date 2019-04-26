@@ -1,6 +1,7 @@
 package com.zhidianfan.pig.yd.moduler.wechat.controller;
 
-import com.alibaba.fastjson.JSONObject;
+import com.zhidianfan.pig.yd.moduler.common.dto.SuccessTip;
+import com.zhidianfan.pig.yd.moduler.common.dto.Tip;
 import com.zhidianfan.pig.yd.moduler.common.service.IResvOrderAndroidService;
 import com.zhidianfan.pig.yd.moduler.wechat.util.AccessToken;
 import com.zhidianfan.pig.yd.moduler.wechat.util.OrderTemplate;
@@ -19,7 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -50,15 +51,6 @@ public class WeChatController {
      */
     private static final Logger logger = LoggerFactory.getLogger(WeChatController.class);
 
-    @PostMapping("pushMessage")
-    public String pushMessage(PushMessageVO pushMessageVO) {
-        return WeChatUtils.pushMessage(
-                pushMessageVO.getOpenId(),
-                pushMessageVO.getOrderTemplate().getCode(),
-                "",
-                WeChatUtils.getMessageContent(pushMessageVO));
-    }
-
     @GetMapping("getUserInfo")
     public String getUserInfo(String code, String openid) {
         AccessToken accessToken = null;
@@ -85,9 +77,8 @@ public class WeChatController {
         return "token已失效";
     }
 
-    @GetMapping("pushThirdOrder")
-    @Scheduled(cron = "0 0/30 * * * ?")
-    public void getThirdOrder() {
+    @PostMapping("pushMessageForThirdOrder")
+    public ResponseEntity<Tip> pushMessageForThirdOrder() {
         LocalDateTime now = LocalDateTime.now().withNano(0);
         //防止延迟
         if (now.getMinute() < 10)
@@ -96,8 +87,6 @@ public class WeChatController {
             now = now.withMinute(30).withSecond(0);
 
         List<Map<String, Object>> list = resvOrderAndroidService.getAllWeChatThirdOrder(now.plusHours(1));
-        logger.info("执行定时推送:" + list.size() + "行数据");
-        logger.info("内容:" + JSONObject.toJSONString(list));
         for (Map<String, Object> order : list) {
             PushMessageVO pushMessageVO = new PushMessageVO();
             pushMessageVO.setBusinessName(MapUtils.getString(order, "business_name"));
@@ -108,9 +97,10 @@ public class WeChatController {
             WeChatUtils.pushMessage(
                     MapUtils.getString(order, "openid"),
                     OrderTemplate.ORDER_RESV_REMIND.getCode(),
-                    "",
+                    "http://eding.zhidianfan.com/#/OrderDetail?id=" + MapUtils.getString(order, "third_order_no"),
                     WeChatUtils.getMessageContent(pushMessageVO));
         }
+        return ResponseEntity.ok(SuccessTip.SUCCESS_TIP);
     }
 
     @Bean("accessTokenTemplate")

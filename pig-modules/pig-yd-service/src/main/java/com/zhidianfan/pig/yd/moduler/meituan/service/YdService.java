@@ -28,6 +28,7 @@ import com.zhidianfan.pig.yd.moduler.wechat.vo.PushMessageVO;
 import com.zhidianfan.pig.yd.utils.IdUtils;
 import com.zhidianfan.pig.yd.utils.SignUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateFormatUtils;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -1181,7 +1182,7 @@ public class YdService {
 
 
     /**
-     * 微信退搜经
+     * 微信推送
      *
      * @param resvOrderAndroid 安卓电话机订单
      * @param resvOrderThird   第三方订单信息
@@ -1212,7 +1213,7 @@ public class YdService {
         WeChatUtils.pushMessage(
                 pushMessageVO.getOpenId(),
                 pushMessageVO.getOrderTemplate().getCode(),
-                "",
+                "http://eding.zhidianfan.com/#/OrderDetail?id=" + resvOrderThird.getThirdOrderNo(),
                 WeChatUtils.getMessageContent(pushMessageVO));
     }
 
