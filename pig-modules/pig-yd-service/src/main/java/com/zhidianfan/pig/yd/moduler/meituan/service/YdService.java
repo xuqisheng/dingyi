@@ -1207,7 +1207,7 @@ public class YdService {
         WeChatUtils.pushMessage(
                 pushMessageVO.getOpenId(),
                 pushMessageVO.getOrderTemplate().getCode(),
-                "http://192.168.3.134:8686/#/OrderDetail?id=" + resvOrderThird.getThirdOrderNo(),
+                "http://eding.zhidianfan.com/#/OrderDetail?id=" + resvOrderThird.getThirdOrderNo(),
                 WeChatUtils.getMessageContent(pushMessageVO));
     }
 

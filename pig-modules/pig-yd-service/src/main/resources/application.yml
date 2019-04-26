@@ -3,7 +3,6 @@ server:
   undertow:
     io-threads: 4
     worker-threads: 32
-  context-path: /ydservice/
 
 spring:
   application:
@@ -159,7 +158,7 @@ spring:
     driver-class-name: com.mysql.jdbc.Driver
     username: root
     password: 123456
-    url: jdbc:mysql://192.168.3.202:3306/resv_sys?useSSL=false&autoReconnect=true&useUnicode=true&characterEncoding=utf8
+    url: jdbc:mysql://localhost:3306/resv_sys?useSSL=false&autoReconnect=true&useUnicode=true&characterEncoding=utf8
     hikari:
       minimum-idle: 1
       maximum-pool-size: 5
@@ -177,8 +176,8 @@ spring:
   rabbitmq:
     host: 127.0.0.1
     port: 5672
-    username: guest
-    password: guest
+    username: pig
+    password: pig
 
 yd:
   task: false  #定时任务

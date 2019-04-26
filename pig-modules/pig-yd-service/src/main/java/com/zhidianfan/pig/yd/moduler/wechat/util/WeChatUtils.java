@@ -36,25 +36,25 @@ public class WeChatUtils {
      */
     private static final Logger logger = LoggerFactory.getLogger(WeChatUtils.class);
 
+    /**
+     * 微信appId
+     */
+    private static final String APP_ID = "wx5042f1d476e0bd6e";
+
+    /**
+     * 微信appSecret
+     */
+    private static final String APP_SECRET = "1feff45482416be546a80e0094d08981";
+
 //    /**
-//     * 微信appId
+//     * 测试微信appId
 //     */
-//    private static final String APP_ID = "wx5042f1d476e0bd6e";
+//    private static final String APP_ID = "wxb3cbb793920508de";
 //
 //    /**
-//     * 微信appSecret
+//     * 测试微信appSecret
 //     */
-//    private static final String APP_SECRET = "1feff45482416be546a80e0094d08981";
-
-    /**
-     * 测试微信appId
-     */
-    private static final String APP_ID = "wxb3cbb793920508de";
-
-    /**
-     * 测试微信appSecret
-     */
-    private static final String APP_SECRET = "6a3af28d5c23a79af96dd5247171ecb1";
+//    private static final String APP_SECRET = "6a3af28d5c23a79af96dd5247171ecb1";
 
     /**
      * 微信请求地址

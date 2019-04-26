@@ -18,9 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -96,7 +94,7 @@ public class WeChatController {
             WeChatUtils.pushMessage(
                     MapUtils.getString(order, "openid"),
                     OrderTemplate.ORDER_RESV_REMIND.getCode(),
-                    "http://192.168.3.134:8686/#/OrderDetail?id=" + MapUtils.getString(order, "third_order_no"),
+                    "http://eding.zhidianfan.com/#/OrderDetail?id=" + MapUtils.getString(order, "third_order_no"),
                     WeChatUtils.getMessageContent(pushMessageVO));
         }
     }
