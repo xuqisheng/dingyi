@@ -49,15 +49,6 @@ public class WeChatController {
      */
     private static final Logger logger = LoggerFactory.getLogger(WeChatController.class);
 
-    @PostMapping("pushMessage")
-    public String pushMessage(PushMessageVO pushMessageVO) {
-        return WeChatUtils.pushMessage(
-                pushMessageVO.getOpenId(),
-                pushMessageVO.getOrderTemplate().getCode(),
-                "",
-                WeChatUtils.getMessageContent(pushMessageVO));
-    }
-
     @GetMapping("getUserInfo")
     public String getUserInfo(String code, String openid) {
         AccessToken accessToken = null;
@@ -105,7 +96,7 @@ public class WeChatController {
             WeChatUtils.pushMessage(
                     MapUtils.getString(order, "openid"),
                     OrderTemplate.ORDER_RESV_REMIND.getCode(),
-                    "",
+                    "http://eding.zhidianfan.com/#/OrderDetail?id=" + MapUtils.getString(order, "third_order_no"),
                     WeChatUtils.getMessageContent(pushMessageVO));
         }
     }

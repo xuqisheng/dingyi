@@ -735,7 +735,7 @@
     </select>
 
     <select id="getAllWeChatThirdOrder" parameterType="java.util.Map" resultType="java.util.Map">
-        select r.open_id as openid,o.vip_name as vip_name,o.business_name as business_name,r.resv_date as resv_date,o.table_name,o.table_area_name,b.business_address as business_addr
+        select r.open_id as openid,o.vip_name as vip_name,o.business_name as business_name,r.third_order_no as third_order_no,DATE_FORMAT(r.resv_date,'%Y-%m-%d %H:%i') as resv_date,o.table_name,o.table_area_name,b.business_address as business_addr
         from resv_order_third r,resv_order_android o,business b
         where r.open_id is not null  and o.batch_no = r.batch_no and b.id = o.business_id
         and r.resv_date = #{resvDate}
