@@ -22,6 +22,7 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -76,7 +77,7 @@ public class WeChatController {
         return "token已失效";
     }
 
-    @GetMapping("pushMessageForThirdOrder")
+    @PostMapping("pushMessageForThirdOrder")
     public ResponseEntity<Tip> pushMessageForThirdOrder() {
         LocalDateTime now = LocalDateTime.now().withNano(0);
         //防止延迟
