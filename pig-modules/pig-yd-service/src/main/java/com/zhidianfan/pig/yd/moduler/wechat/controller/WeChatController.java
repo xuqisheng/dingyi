@@ -1,5 +1,7 @@
 package com.zhidianfan.pig.yd.moduler.wechat.controller;
 
+import com.zhidianfan.pig.yd.moduler.common.dto.SuccessTip;
+import com.zhidianfan.pig.yd.moduler.common.dto.Tip;
 import com.zhidianfan.pig.yd.moduler.common.service.IResvOrderAndroidService;
 import com.zhidianfan.pig.yd.moduler.wechat.util.AccessToken;
 import com.zhidianfan.pig.yd.moduler.wechat.util.OrderTemplate;
@@ -18,7 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -74,9 +76,8 @@ public class WeChatController {
         return "token已失效";
     }
 
-    //    @GetMapping("testsync")
-    @Scheduled(cron = "0 0/30 * * * ?")
-    public void getThirdOrder() {
+    @GetMapping("pushMessageForThirdOrder")
+    public ResponseEntity<Tip> pushMessageForThirdOrder() {
         LocalDateTime now = LocalDateTime.now().withNano(0);
         //防止延迟
         if (now.getMinute() < 10)
@@ -98,6 +99,7 @@ public class WeChatController {
                     "http://eding.zhidianfan.com/#/OrderDetail?id=" + MapUtils.getString(order, "third_order_no"),
                     WeChatUtils.getMessageContent(pushMessageVO));
         }
+        return ResponseEntity.ok(SuccessTip.SUCCESS_TIP);
     }
 
     @Bean("accessTokenTemplate")
