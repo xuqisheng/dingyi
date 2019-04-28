@@ -336,9 +336,11 @@ public class VipService {
             org.apache.commons.beanutils.BeanUtils.populate(vip, map);
 
             //剔除名字和手机号码字段为空的
+            //性别为空的过滤
             if ((map.get("vipName") != null && !"".equals(map.get("vipName")))
                     && StringUtils.isNotEmpty(map.get("vipPhone").toString())
-                    && isMobileNO(map.get("vipPhone").toString())) {
+                    && isMobileNO(map.get("vipPhone").toString())
+                    && map.get("vipSex") != null && !"".equals(map.get("vipSex"))) {
 
                 //剔除生日格式不正确的
                 if (map.get("vipBirthday") != null  && StringUtils.isNotEmpty(map.get("vipBirthday").toString())
