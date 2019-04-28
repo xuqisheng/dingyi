@@ -393,7 +393,7 @@ public class AnniversaryService {
 
         String yearDesc;
         if (null == beginDateTime || customerCareBO.getHideFlag() == 1) {
-            yearDesc = "";
+            yearDesc = "/";
         } else {
             int yearDif = getyearDif(beginDateTime, nexttime);
             if (customerCareBO.getType() == 0) {
@@ -403,7 +403,7 @@ public class AnniversaryService {
             }
         }
 
-        return surplusDay + yearDesc;
+        return surplusDay +"\n"+ yearDesc;
     }
 
     /**
@@ -415,7 +415,7 @@ public class AnniversaryService {
      */
     private int getyearDif(LocalDate beginDateTime, LocalDate nexttime) {
 
-        int yearDif = 0;
+        int yearDif ;
 
         if (nexttime.getMonthValue() > beginDateTime.getMonthValue()) {
             yearDif = nexttime.getYear() - beginDateTime.getYear() + 1;
@@ -499,20 +499,21 @@ public class AnniversaryService {
         String date = customerCareBO.getType() == 1 ? customerCareBO.getVipBirthday() : customerCareBO.getAnniversaryDate();
         //如果是公历
         String anniversaryDate1;
-        //如果忽略年份
-        if (customerCareBO.getHideFlag() != null && customerCareBO.getHideFlag() == 1) {
-            anniversaryDate1 = date.substring(5);
-        } else {
-            anniversaryDate1 = date;
-        }
+//        //如果忽略年份
+//        if (customerCareBO.getHideFlag() != null && customerCareBO.getHideFlag() == 1) {
+//            anniversaryDate1 = date.substring(5);
+//        } else {
+//            anniversaryDate1 = date;
+//        }
+        anniversaryDate1 = date.substring(5);
         return anniversaryDate1;
     }
 
     /**
      * 获取周年时间
      *
-     * @param customerCareBO
-     * @return
+     * @param customerCareBO 组成信息
+     * @return 返回周年时间
      */
     private LocalDate getBeginDateTime(CustomerCareBO customerCareBO) {
 
@@ -550,9 +551,7 @@ public class AnniversaryService {
         }
 
         //字符串转为localdate
-        LocalDate beginDateTime = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-
-        return beginDateTime;
+        return LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
     }
 
 
