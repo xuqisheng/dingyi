@@ -15,6 +15,7 @@ import com.zhidianfan.pig.yd.utils.Lunar;
 import com.zhidianfan.pig.yd.utils.LunarSolarConverter;
 import com.zhidianfan.pig.yd.utils.Solar;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -184,8 +185,19 @@ public class AnniversaryService {
         for (CustomerCareBO customerCareBO : customerCareBOS) {
             CustomerCareDTO customerCareData = new CustomerCareDTO();
             customerCareData.setVipId(customerCareBO.getId());
-            String name = customerCareBO.getVipName() + (customerCareBO.getVipSex().equals("女") ? "小姐" : "先生");
-            customerCareData.setName(name);
+            log.info(customerCareBO.toString());
+            log.info(customerCareBO.getVipName() + " " +customerCareBO.getVipSex());
+
+            String name = "" , sex = "";
+            if(StringUtils.isNotBlank(customerCareBO.getVipName()) ){
+                name = customerCareBO.getVipName();
+
+            }
+            if (StringUtils.isNotBlank(customerCareBO.getVipSex())){
+                sex = (customerCareBO.getVipSex().equals("女") ? "小姐" : "先生");
+            }
+
+            customerCareData.setName(name +sex);
             customerCareData.setPhone(customerCareBO.getVipPhone());
             customerCareData.setTitle(customerCareBO.getTitle());
             customerCareData.setCustomerValue(customerCareBO.getVipValueName());

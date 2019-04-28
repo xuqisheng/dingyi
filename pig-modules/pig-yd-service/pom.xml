@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <groupId>com.zhidianfan.pig</groupId>
     <artifactId>pig-yd-service</artifactId>
-    <version>0.0.34</version>
+    <version>0.0.34-test</version>
     <packaging>jar</packaging>
 
 
