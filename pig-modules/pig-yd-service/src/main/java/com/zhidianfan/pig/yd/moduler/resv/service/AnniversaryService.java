@@ -393,17 +393,17 @@ public class AnniversaryService {
 
         String yearDesc;
         if (null == beginDateTime || customerCareBO.getHideFlag() == 1) {
-            yearDesc = "/";
+            yearDesc = "——";
         } else {
             int yearDif = getyearDif(beginDateTime, nexttime);
             if (customerCareBO.getType() == 0) {
-                yearDesc = "(" + yearDif + "周年)";
+                yearDesc = "" + yearDif + "周年";
             } else {
-                yearDesc = "(" + yearDif + "岁)";
+                yearDesc = "" + yearDif + "岁";
             }
         }
 
-        return surplusDay +"\n"+ yearDesc;
+        return surplusDay +"<br/>"+ yearDesc;
     }
 
     /**
