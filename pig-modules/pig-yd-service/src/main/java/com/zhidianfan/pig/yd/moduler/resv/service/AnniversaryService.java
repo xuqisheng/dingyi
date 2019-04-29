@@ -185,8 +185,6 @@ public class AnniversaryService {
         for (CustomerCareBO customerCareBO : customerCareBOS) {
             CustomerCareDTO customerCareData = new CustomerCareDTO();
             customerCareData.setVipId(customerCareBO.getId());
-            log.info(customerCareBO.toString());
-            log.info(customerCareBO.getVipName() + " " +customerCareBO.getVipSex());
 
             String name = "" , sex = "";
             if(StringUtils.isNotBlank(customerCareBO.getVipName()) ){

@@ -196,7 +196,6 @@ public class VipNextBirthDayAnniversaryService {
      * @return
      */
     public static Lunar parseLunarText2Lunar(String time) {
-        log.info(time);
         String[] split = time.split("-");
 //        LocalDate parse = LocalDate.parse(time);
         Lunar lunar = new Lunar(Integer.valueOf(split[0]), Integer.valueOf(split[1]), Integer.valueOf(split[2]));
