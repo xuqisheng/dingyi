@@ -90,6 +90,13 @@
         <if test="null!=createtime and ''!=createtime">
             AND  SUBSTR(A.created_at,1,10) = #{createtime}
         </if>
+        <if test="null!=startDate and ''!=startDate">
+            AND  SUBSTR(A.created_at,1,10) >= #{startDate}
+        </if>
+        <if test="null!=endDate and ''!=endDate">
+            AND  SUBSTR(A.created_at,1,10) &lt;= #{endDate}
+        </if>
+
         ORDER BY A.created_at DESC
 
     </select>

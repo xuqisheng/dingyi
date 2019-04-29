@@ -21,6 +21,8 @@ import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.List;
 
+import static com.zhidianfan.pig.yd.utils.LunarSolarConverter.SolarToLunar;
+
 /**
  * @author huzp
  * @date 2019/1/21 0021 15:13
@@ -79,8 +81,16 @@ public class VipNextBirthDayAnniversaryService {
         //根据他过得是农历纪念日还是公历纪念日计算他的下一次纪念日的公历日期
         List<Anniversary> pastAnniversaryVip = iAnniversaryService.getPastAnniversaryVip();
         for (Anniversary anniversary : pastAnniversaryVip) {
+            try {
             if (anniversary.getCalendarType() == 1) {
-                Solar solar = LunarStr2NextSolar(date2LocalDate(anniversary.getAnniversaryDate()).toString());
+                // 1. 获取公历日期
+                LocalDate solarDate = date2LocalDate(anniversary.getAnniversaryDate());
+                //时间转为solar类
+                Solar anniversaryDate = new Solar(solarDate.getYear(), solarDate.getMonth().getValue(), solarDate.getDayOfMonth());
+                // 获取公历转为农历
+                Lunar lunar = SolarToLunar(anniversaryDate);
+
+                Solar solar = LunarStr2NextSolar(lunar.toString());
                 LocalDate parse = LocalDate.parse(solar.toString());
                 anniversary.setNextAnniversaryTime(localDate2Date(parse));
             } else {
@@ -90,7 +100,13 @@ public class VipNextBirthDayAnniversaryService {
                 anniversary.setNextAnniversaryTime(localDate2Date(parse));
             }
             iAnniversaryService.update(anniversary, new EntityWrapper<Anniversary>().eq("id", anniversary.getId()));
+            }catch (Exception e){
+                log.error("更新下次纪念日数据错误:" +anniversary);
+            }finally {
+                continue;
+            }
         }
+
     }
 
 
@@ -108,11 +124,11 @@ public class VipNextBirthDayAnniversaryService {
     public static Lunar nextLunarTime(String solarStr) {
         LocalDate now = LocalDate.now();
         Solar solar = parseText2Solar(solarStr);
-        Lunar lunar = LunarSolarConverter.SolarToLunar(solar);
+        Lunar lunar = SolarToLunar(solar);
 
         //2.计算今天的农历
         Solar todaySolar = parseText2Solar(now.toString());
-        Lunar todayLunar = LunarSolarConverter.SolarToLunar(todaySolar);
+        Lunar todayLunar = SolarToLunar(todaySolar);
 
         Lunar lastLunarBirth;
         //3.判断今天农历的月日与转换出的农历的月日
@@ -157,7 +173,7 @@ public class VipNextBirthDayAnniversaryService {
     //阳历字符串转为农历生日字符串
     public static Lunar getLunarBirthDay(String time) {
         Solar solar = parseText2Solar(time);
-        Lunar lunar = LunarSolarConverter.SolarToLunar(solar);
+        Lunar lunar = SolarToLunar(solar);
         return lunar;
     }
 
@@ -169,10 +185,7 @@ public class VipNextBirthDayAnniversaryService {
      */
     public static Solar parseText2Solar(String time) {
         LocalDate parse = LocalDate.parse(time);
-        int year = parse.getYear();
-        int month = parse.getMonth().getValue();
-        int day = parse.getDayOfMonth();
-        Solar solar = new Solar(year, month, day);
+        Solar solar = new Solar(parse.getYear(), parse.getMonth().getValue(), parse.getDayOfMonth());
         return solar;
     }
 
@@ -183,11 +196,9 @@ public class VipNextBirthDayAnniversaryService {
      * @return
      */
     public static Lunar parseLunarText2Lunar(String time) {
-        LocalDate parse = LocalDate.parse(time);
-        int year = parse.getYear();
-        int month = parse.getMonth().getValue();
-        int day = parse.getDayOfMonth();
-        Lunar lunar = new Lunar(year, month, day);
+        String[] split = time.split("-");
+//        LocalDate parse = LocalDate.parse(time);
+        Lunar lunar = new Lunar(Integer.valueOf(split[0]), Integer.valueOf(split[1]), Integer.valueOf(split[2]));
         return lunar;
     }
 

@@ -1,6 +1,11 @@
 package com.zhidianfan.pig.yd.moduler.resv.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
+import org.springframework.format.annotation.DateTimeFormat;
+
+import javax.validation.constraints.NotNull;
+import java.util.Date;
 
 /**
  * @Author: huzp
@@ -29,4 +34,16 @@ public class ThirdQueryDTO {
      * 微信openid
      */
     private String openid;
+
+
+    /**
+     *开始时间
+     */
+    private String startDate;
+
+
+    /**
+     * 结束时间
+     */
+    private String endDate;
 }
