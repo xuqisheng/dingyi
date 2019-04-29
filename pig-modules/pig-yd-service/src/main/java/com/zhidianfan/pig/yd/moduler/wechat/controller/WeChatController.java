@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 微信
@@ -58,11 +59,12 @@ public class WeChatController {
             accessToken = redisTemplate.opsForValue().get(openid);
 
         if (accessToken == null || WeChatUtils.isExpiredToken(accessToken)) {
+            logger.info("缓存token已经失效,或者token超时,尝试使用code:" + code + " 获取最新token");
             accessToken = WeChatUtils.getAccessToken(0, code);
             if (accessToken == null || StringUtils.isEmpty(accessToken.getAccessToken()))
                 return "code已失效";
             else
-                redisTemplate.opsForValue().set(accessToken.getOpenid(), accessToken);
+                redisTemplate.opsForValue().set(accessToken.getOpenid(), accessToken, 30, TimeUnit.DAYS);
         }
 
         HttpGet httpGet = new HttpGet(WeChatUtils.getUserInfoUrl(accessToken.getOpenid(), accessToken.getAccessToken()));
