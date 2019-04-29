@@ -339,7 +339,7 @@ public class VipService {
             //性别为空的过滤
             //性别为男或者女
             if ((map.get("vipName") != null && !"".equals(map.get("vipName")))
-                    && StringUtils.isNotEmpty(map.get("vipPhone").toString())
+                    && (map.get("vipPhone") != null && !"".equals(map.get("vipPhone")))
                     && isMobileNO(map.get("vipPhone").toString())
                     && map.get("vipSex") != null && !"".equals(map.get("vipSex"))
                     && ("男".equals(map.get("vipSex")) ||  "女".equals(map.get("vipSex")))

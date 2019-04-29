@@ -73,8 +73,11 @@
                     <if test="customerValueId != null and customerValueId != ''">
                         AND vip_value_id = #{customerValueId}
                     </if>
+
                     <if test="name != null and name != ''">
-                        AND vip_name like concat('%',#{name},'%')
+                        AND (vip_name like concat('%',#{name},'%')
+                              OR
+                             vip_phone like concat('%',#{name},'%'))
                     </if>
             UNION ALL
                 SELECT
@@ -106,8 +109,11 @@
                         AND vip_value_id = #{customerValueId}
                     </if>
                     <if test="name != null and name != ''">
-                        AND vip_name like concat('%',#{name},'%')
-                    </if>) b
+                        AND (vip_name like concat('%',#{name},'%')
+                              OR
+                             vip_phone like concat('%',#{name},'%'))
+                    </if>
+                    ) b
                     ON a.vip_id = b.id
             ) c
             where
