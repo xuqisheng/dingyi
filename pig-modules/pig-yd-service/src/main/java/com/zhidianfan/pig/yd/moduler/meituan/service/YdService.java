@@ -659,7 +659,7 @@ public class YdService {
         vip.setVipPhone(phone);
         vip.setBusinessId(thisResvOrderThird.getBusinessId());
         vip.setVipName(thisResvOrderThird.getVipName());
-        vip.setVipSex(thisResvOrderThird.getVipSex());
+        vip.setVipSex(thisResvOrderThird.getVipSex().equals("先生") ? "男" : "女");
         vipService.updateOrInsertVip(vip);
         Vip basicVipInfo = vipService.getBasicVipInfo(thisResvOrderThird.getBusinessId(), phone);
         ResvOrderAndroid resvOrder = new ResvOrderAndroid();
@@ -839,7 +839,7 @@ public class YdService {
             String orderNo = IdUtils.makeOrderNo();
             resvOrderAndroid.setResvOrder(orderNo);
             resvOrderAndroid.setBatchNo("pc" + orderNo);
-            resvOrderAndroid.setVipSex(vip1.getVipSex());
+            resvOrderAndroid.setVipSex(resvOrderThird.getVipSex().equals("先生") ? "男" : "女");
             resvOrderAndroid.setVipId(vip1.getId());
             boolean insert = iResvOrderAndroidService.insert(resvOrderAndroid);
             //插入订单自动接单日志
