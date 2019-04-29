@@ -393,7 +393,7 @@ public class AnniversaryService {
 
         String yearDesc;
         if (null == beginDateTime || customerCareBO.getHideFlag() == 1) {
-            yearDesc = "——";
+            yearDesc = "--";
         } else {
             int yearDif = getyearDif(beginDateTime, nexttime);
             if (customerCareBO.getType() == 0) {
@@ -403,7 +403,7 @@ public class AnniversaryService {
             }
         }
 
-        return surplusDay +"<br/>"+ yearDesc;
+        return surplusDay +"/"+ yearDesc;
     }
 
     /**
