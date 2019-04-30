@@ -79,4 +79,10 @@ public interface IResvOrderAndroidService extends IService<ResvOrderAndroid> {
     List<Map<String, Integer>> getOrderDistribution(Integer businessId, String calDate);
 
     List<Map<String, Object>> getAllWeChatThirdOrder( LocalDateTime localDateTime);
+
+    void updateAndroidOrderStatus1TO2(Integer intervalNum);
+
+    void updateAndroidOrderStatus1TO4(Integer intervalNum);
+
+    void updateAndroidOrderStatus2TO3(Integer intervalNum);
 }

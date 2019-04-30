@@ -219,4 +219,14 @@
         resv_order = #{resvOrder}
     </select>
 
+    <update id="updateMeetingOrderStatus2TO3">
+
+        UPDATE resv_meeting_order SET `status` = 3,updated_at=now() WHERE `status`=2 AND resv_date &lt;= DATE_SUB(CURDATE(),INTERVAL ${intervalNum} DAY);
+    </update>
+
+    <update id="updateMeetingOrderStatus1TO6">
+
+        UPDATE resv_meeting_order SET `status` = 6,updated_at=now() WHERE `status`=1 AND resv_date &lt;= DATE_SUB(CURDATE(),INTERVAL ${intervalNum} DAY);
+    </update>
+
 </mapper>

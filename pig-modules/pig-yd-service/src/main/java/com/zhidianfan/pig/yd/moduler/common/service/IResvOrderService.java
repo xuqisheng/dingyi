@@ -72,4 +72,11 @@ public interface IResvOrderService extends IService<ResvOrder> {
 
 
     void updateThirdOrderNo(Integer businessId);
+
+    void updateOrderStatus1TO2(Integer intervalNum);
+
+    void updateOrderStatus1TO4(Integer intervalNum);
+
+    void updateOrderStatus2TO3(Integer intervalNum);
+
 }

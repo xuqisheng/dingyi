@@ -73,4 +73,10 @@ public interface ResvOrderAndroidMapper extends BaseMapper<ResvOrderAndroid> {
     List<Map<String, Integer>> getOrderDistribution(@Param("businessId")Integer businessId, @Param("calDate")String calDate);
 
     List<Map<String, Object>> getAllWeChatThirdOrder(@Param("resvDate") LocalDateTime localDateTime);
+
+    void updateAndroidOrderStatus1TO2(@Param("intervalNum")Integer intervalNum);
+
+    void updateAndroidOrderStatus1TO4(@Param("intervalNum")Integer intervalNum);
+
+    void updateAndroidOrderStatus2TO3(@Param("intervalNum")Integer intervalNum);
 }

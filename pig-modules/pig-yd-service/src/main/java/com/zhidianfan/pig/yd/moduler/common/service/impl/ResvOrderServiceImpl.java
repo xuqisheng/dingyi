@@ -27,11 +27,6 @@ public class ResvOrderServiceImpl extends ServiceImpl<ResvOrderMapper, ResvOrder
 
 
     @Override
-    public void updateThirdOrderNo(Integer businessId) {
-		baseMapper.updateThirdOrderNo(businessId);
-    }
-
-    @Override
     public List<CustomValueStatistics> statisticsOrderAboutConsume(CustomValueConfig customValueConfig, String startDate, String endDate) {
         return baseMapper.statisticsOrderAboutConsume(customValueConfig,startDate,endDate);
     }
@@ -54,6 +49,27 @@ public class ResvOrderServiceImpl extends ServiceImpl<ResvOrderMapper, ResvOrder
     @Override
     public List<HotelMarketingStatistics> statisticsHotel(String startDate, String endDate,Integer businessId) {
         return baseMapper.statisticsHotel(startDate,endDate,businessId);
+    }
+
+
+    @Override
+    public void updateThirdOrderNo(Integer businessId) {
+        baseMapper.updateThirdOrderNo(businessId);
+    }
+
+    @Override
+    public void updateOrderStatus1TO2(Integer intervalNum) {
+        baseMapper.updateOrderStatus1TO2(intervalNum);
+    }
+
+    @Override
+    public void updateOrderStatus1TO4(Integer intervalNum) {
+        baseMapper.updateOrderStatus1TO4(intervalNum);
+    }
+
+    @Override
+    public void updateOrderStatus2TO3(Integer intervalNum) {
+        baseMapper.updateOrderStatus2TO3(intervalNum);
     }
 
 }

@@ -142,4 +142,21 @@ public class ResvOrderAndroidServiceImpl extends ServiceImpl<ResvOrderAndroidMap
     public  List<Map<String, Object>> getAllWeChatThirdOrder(LocalDateTime localDateTime){
         return baseMapper.getAllWeChatThirdOrder(localDateTime);
     }
+
+    @Override
+    public void updateAndroidOrderStatus1TO2(Integer intervalNum) {
+        baseMapper.updateAndroidOrderStatus1TO2(intervalNum);
+    }
+
+    @Override
+    public void updateAndroidOrderStatus1TO4(Integer intervalNum) {
+        baseMapper.updateAndroidOrderStatus1TO4(intervalNum);
+    }
+
+    @Override
+    public void updateAndroidOrderStatus2TO3(Integer intervalNum) {
+        baseMapper.updateAndroidOrderStatus2TO3(intervalNum);
+    }
+
+
 }
