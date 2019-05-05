@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhidianfan.pig.yd.moduler.common.dao.mapper.BusinessAppuserStatisticsMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zhidianfan.pig.yd.moduler.common.dao.entity.BusinessAppuserStatistics">
+        <id column="id" property="id" />
+        <result column="year_month" property="yearMonth" />
+        <result column="business_id" property="businessId" />
+        <result column="business_name" property="businessName" />
+        <result column="app_user_id" property="appUserId" />
+        <result column="app_user_name" property="appUserName" />
+        <result column="payamount" property="payamount" />
+        <result column="resv_batch_count" property="resvBatchCount" />
+        <result column="resv_table_count" property="resvTableCount" />
+        <result column="pay_batch_count" property="payBatchCount" />
+        <result column="pay_table_count" property="payTableCount" />
+        <result column="pay_3tables_batch_count" property="pay3tablesBatchCount" />
+        <result column="avg_batch_payamount" property="avgBatchPayamount" />
+        <result column="avg_table_payamount" property="avgTablePayamount" />
+        <result column="avg_custom_payamount" property="avgCustomPayamount" />
+        <result column="cancel_ratio" property="cancelRatio" />
+        <result column="seat_custom_num_ratio" property="seatCustomNumRatio" />
+        <result column="valid_vip_count" property="validVipCount" />
+        <result column="new_vip_count" property="newVipCount" />
+        <result column="awaken_vip_count" property="awakenVipCount" />
+        <result column="cancel_table_count" property="cancelTableCount" />
+        <result column="seat_custom_num" property="seatCustomNum" />
+        <result column="max_custom_num" property="maxCustomNum" />
+        <result column="created_at" property="createdAt" />
+    </resultMap>
+
+</mapper>
