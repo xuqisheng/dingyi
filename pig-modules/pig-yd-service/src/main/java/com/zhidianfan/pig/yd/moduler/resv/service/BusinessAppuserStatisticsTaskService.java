@@ -2,6 +2,7 @@ package com.zhidianfan.pig.yd.moduler.resv.service;
 
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.Business;
+import com.zhidianfan.pig.yd.moduler.common.service.IBusinessAppuserStatisticsService;
 import com.zhidianfan.pig.yd.moduler.common.service.IBusinessService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
@@ -24,6 +25,9 @@ public class BusinessAppuserStatisticsTaskService {
     @Autowired
     private IBusinessService businessService;
 
+    @Autowired
+    private IBusinessAppuserStatisticsService iBusinessAppuserStatisticsService;
+
     /**
      * 统计上个月营销经理数据
      */
@@ -34,18 +38,27 @@ public class BusinessAppuserStatisticsTaskService {
         List<Business> businessList = businessService.selectList(
                 new EntityWrapper<Business>().eq("status", 1));
 
-        Map param = new HashMap();
-        param.put("lastYearMonth", lastYearMonth);
-        param.put("yearMonth", yearMonth);
         // 清空上个月的统计
         for (Business business : businessList){
             int businessId =  business.getId();
-            param.put("businessId", businessId);
+
+            //删除临时表
+            iBusinessAppuserStatisticsService.dropTemporaryTable();
 
 
-//            batchDao.clearTodayStatistics(param);
-//            // 插入上月营销经理 统计
-//            batchDao.insertBusinessAppuserStatistics(param);
+            //删除这个酒店lastYearMonth 这个月份的营销经理数据
+            iBusinessAppuserStatisticsService.clearTodayStatistics(businessId,lastYearMonth);
+
+            //统计
+            //1. 创建 临时表t_business_appuser_statistics_temporary
+            iBusinessAppuserStatisticsService.createTemporaryTable(businessId,lastYearMonth ,yearMonth );
+
+            //2.  插入营销经理数据
+            iBusinessAppuserStatisticsService.insertAppuserStatistics(businessId,lastYearMonth ,yearMonth);
+
+            //3. 插入预订台数据
+            iBusinessAppuserStatisticsService.insertPadStatistics(businessId,lastYearMonth ,yearMonth);
+
         }
     }
 }

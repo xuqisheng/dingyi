@@ -17,4 +17,34 @@ import org.springframework.stereotype.Service;
 @Service
 public class BusinessAppuserStatisticsServiceImpl extends ServiceImpl<BusinessAppuserStatisticsMapper, BusinessAppuserStatistics> implements IBusinessAppuserStatisticsService {
 
+    @Override
+    public void clearTodayStatistics(int businessId, String lastYearMonth) {
+
+        baseMapper.clearTodayStatistics(businessId,lastYearMonth);
+    }
+
+    @Override
+    public void createTemporaryTable(int businessId, String lastYearMonth, String yearMonth) {
+
+        baseMapper.createTemporaryTable(businessId,lastYearMonth,yearMonth);
+
+    }
+
+    @Override
+    public void dropTemporaryTable() {
+
+        baseMapper.dropTemporaryTable();
+    }
+
+    @Override
+    public void insertAppuserStatistics(int businessId, String lastYearMonth, String yearMonth) {
+
+        baseMapper.insertAppuserStatistics(businessId,lastYearMonth,yearMonth);
+    }
+
+    @Override
+    public void insertPadStatistics(int businessId, String lastYearMonth, String yearMonth) {
+
+        baseMapper.insertPadStatistics(businessId,lastYearMonth,yearMonth);
+    }
 }

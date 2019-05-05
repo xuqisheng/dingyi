@@ -13,4 +13,13 @@ import com.baomidou.mybatisplus.service.IService;
  */
 public interface IBusinessAppuserStatisticsService extends IService<BusinessAppuserStatistics> {
 
+    void clearTodayStatistics(int businessId, String lastYearMonth);
+
+    void createTemporaryTable(int businessId, String lastYearMonth, String yearMonth);
+
+    void dropTemporaryTable();
+
+    void insertAppuserStatistics(int businessId, String lastYearMonth, String yearMonth);
+
+    void insertPadStatistics(int businessId, String lastYearMonth, String yearMonth);
 }
