@@ -1,6 +1,5 @@
 package com.zhidianfan.pig.yd.moduler.resv.service;
 
-import com.zhidianfan.pig.yd.moduler.common.dao.entity.ResvOrderLogs;
 import com.zhidianfan.pig.yd.moduler.common.service.IResvMeetingOrderService;
 import com.zhidianfan.pig.yd.moduler.common.service.IResvOrderAndroidService;
 import com.zhidianfan.pig.yd.moduler.common.service.IResvOrderLogsService;

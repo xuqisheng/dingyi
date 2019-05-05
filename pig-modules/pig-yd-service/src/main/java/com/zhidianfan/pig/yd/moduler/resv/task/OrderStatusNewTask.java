@@ -27,7 +27,6 @@ public class OrderStatusNewTask {
         //更新宴会订单
         orderStatusNewTaskService.updateMeetingOrder(intervalNum);
 
-
         //更新标准版订单
         orderStatusNewTaskService.updateOrder(intervalNum);
 
