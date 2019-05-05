@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * @Author: hzp
  * @Date: 2019-05-05 13:16
- * @Description: 月度营销经理统计 insertBusinessAppuserStatistics 转化为java
+ * @Description: 月度营销经理统计,去除存储过程
  *
  */
 @RestController

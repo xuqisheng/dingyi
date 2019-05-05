@@ -42,12 +42,12 @@ public class BusinessAppuserStatisticsTaskService {
         for (Business business : businessList){
             int businessId =  business.getId();
 
-            //删除临时表
-            iBusinessAppuserStatisticsService.dropTemporaryTable();
-
-
             //删除这个酒店lastYearMonth 这个月份的营销经理数据
             iBusinessAppuserStatisticsService.clearTodayStatistics(businessId,lastYearMonth);
+
+
+            //删除临时表
+            iBusinessAppuserStatisticsService.dropTemporaryTable();
 
             //统计
             //1. 创建 临时表t_business_appuser_statistics_temporary

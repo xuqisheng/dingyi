@@ -71,8 +71,8 @@
         where business_id= #{businessId}  and (vip_id!=0 and vip_id is not null)
         and ((app_user_id!=0 and app_user_id is not null) or (device_user_id!=0 and device_user_id is not null))
         and resv_date >=CONCAT(#{lastYearMonth},'-01') and resv_date &lt; CONCAT(#{yearMonth},'-01') and status not in (5,6)
-        group by batch_no) t
-        group by t.app_user_id;
+        group by batch_no,business_name,app_user_id,app_user_name) t
+        group by t.app_user_id,t.business_name,t.app_user_name;
 
     </update>
 

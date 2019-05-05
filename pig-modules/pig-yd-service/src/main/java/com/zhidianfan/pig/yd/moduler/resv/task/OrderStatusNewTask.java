@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * @Author: hzp
  * @Date: 2019-04-30 14:24
- * @Description: update_order_status_new 存储过程 修改为 对应的java 逻辑
+ * @Description: 更新订单状态 update_order_status_new 去除存储过程
  */
 @RestController
 @RequestMapping("/orderstatus")
