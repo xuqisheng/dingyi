@@ -742,17 +742,17 @@
     </select>
 
     <update id="updateAndroidOrderStatus1TO2">
-        UPDATE resv_order_android SET `status` = 2,updated_at=now() WHERE `status`=1 AND resv_date &lt;= DATE_SUB(CURDATE(),INTERVAL ${intervalNum} DAY) AND table_id != 0 AND table_area_id != 0 AND isRank != 1;
+        UPDATE resv_order_android SET `status` = 2,updated_at=now() WHERE `status`=1 AND resv_date &lt;= DATE_SUB(CURDATE(),INTERVAL ${intervalNum} DAY) AND table_id != 0 AND table_area_id != 0 AND isRank != 1
     </update>
 
     <update id="updateAndroidOrderStatus1TO4">
-        UPDATE resv_order_android SET `status` = 4,updated_at=now(), unorder_reason = '系统取消' WHERE `status`=1 AND resv_date &lt;= DATE_SUB(CURDATE(),INTERVAL ${intervalNum} DAY) AND table_id = 0 AND table_area_id = 0 AND isRank = 1;
+        UPDATE resv_order_android SET `status` = 4,updated_at=now(), unorder_reason = '系统取消' WHERE `status`=1 AND resv_date &lt;= DATE_SUB(CURDATE(),INTERVAL ${intervalNum} DAY) AND table_id = 0 AND table_area_id = 0 AND isRank = 1
 
     </update>
 
     <update id="updateAndroidOrderStatus2TO3">
 
-        UPDATE resv_order_android SET `status` = 3,updated_at=now() WHERE `status`=2 AND resv_date &lt;= DATE_SUB(CURDATE(),INTERVAL ${intervalNum} DAY) AND payamount IS NOT NULL AND payamount !='';
+        UPDATE resv_order_android SET `status` = 3,updated_at=now() WHERE `status`=2 AND resv_date &lt;= DATE_SUB(CURDATE(),INTERVAL ${intervalNum} DAY) AND payamount IS NOT NULL AND payamount !=''
 
     </update>
 
