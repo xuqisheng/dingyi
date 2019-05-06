@@ -57,6 +57,9 @@ public class HessianRedisSerializer<T> implements RedisSerializer<T> {
      */
     @Override
     public T deserialize(byte[] bytes) throws SerializationException {
+        if (bytes == null)
+            return null;
+
         Hessian2Input hessian2Input = new Hessian2Input(new ByteArrayInputStream(bytes));
         hessian2Input.setSerializerFactory(serializerFactory);
         try {
