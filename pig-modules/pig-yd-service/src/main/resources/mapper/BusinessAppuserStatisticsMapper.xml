@@ -52,17 +52,17 @@
         if(sum(new_pay_batch_count)!= 0 ,format(sum(payamount)/sum(new_pay_batch_count),0),0) avg_batch_payamount,
         if(sum(CASE WHEN payamount > 0 THEN  pay_table_count ELSE 0 END ) ,format(sum(payamount)/sum(CASE WHEN payamount > 0 THEN  pay_table_count ELSE 0 END ), 0 ), 0) avg_table_payamount,
         if(sum(case when payamount > 0 then cctv_seat_custom_num else 0 end) != 0 ,format(sum(payamount)/sum(case when payamount > 0 then cctv_seat_custom_num else 0 end),0) , 0) avg_custom_payamount
-        from (select o.business_id,o.business_name,
+        from (select o.business_id,(select business_name from business where id = o.business_id) business_name,
         case when length(o.app_user_id)>0 then o.app_user_id else 0 end as app_user_id,
-        case when length(o.app_user_id)>0 and app_user_id!=0 then o.app_user_name else '预订台' end app_user_name,
+        case when length(o.app_user_id)>0 and app_user_id!=0 then (select app_user_name from app_user where id = app_user_id) else '预订台' end app_user_name,
         sum(ifnull(o.payamount,0)) payamount,
         count(distinct o.batch_no) resv_batch_count,
         count(o.resv_order) resv_table_count,
         count(distinct (case when o.status in (2,3) then o.batch_no else null end)) pay_batch_count,
         sum(o.status in (2,3)) pay_table_count,
         sum(o.status=4) cancel_table_count,
-        ifnull(sum(ifnull(o.resv_num,0) * (o.status in (2,3))),0) seat_custom_num,
-        ifnull(sum(ifnull(o.resv_num,0) * (o.status in (2,3)) * (o.max_people_num != 0)),0) seat_custom_num_no_max,
+        ifnull(sum(if(ifnull(o.resv_num,0) > 100 ,100 , o.resv_num) * (o.status in (2,3))),0) seat_custom_num,
+        ifnull(sum(if(ifnull(o.resv_num,0) > 100 ,100 , o.resv_num) * (o.status in (2,3)) * (o.max_people_num != 0)),0) seat_custom_num_no_max,
         ifnull(sum(ifnull(o.max_people_num,0) * (o.status in (2,3))),0) max_custom_num,
         count(distinct (case when o.status in (2,3) then o.vip_id else null end)) valid_vip_count,
         count( DISTINCT ( CASE WHEN o.payamount > 0 THEN CASE WHEN o.STATUS IN ( 2, 3 ) THEN o.batch_no ELSE NULL END ELSE NULL END )  ) new_pay_batch_count,
@@ -78,12 +78,10 @@
 
 
     <insert id="insertAppuserStatistics">
-
         insert into business_appuser_statistics
         (`year_month`,business_id,business_name,app_user_id,app_user_name,payamount,resv_batch_count,resv_table_count,pay_batch_count,pay_table_count,pay_3tables_batch_count,
         avg_batch_payamount,avg_table_payamount,avg_custom_payamount,cancel_ratio,seat_custom_num_ratio,valid_vip_count,new_vip_count,awaken_vip_count,seat_custom_num,max_custom_num,created_at,
         cancel_table_count)
-
         select #{lastYearMonth},#{businessId},b.business_name,m.app_user_id,a.app_user_name,
         ifnull(v.payamount,0),ifnull(v.resv_batch_count,0),ifnull(v.resv_table_count,0),ifnull(v.pay_batch_count,0),ifnull(v.pay_table_count,0),ifnull(v.pay_3tables_batch_count,0),
         ifnull(v.avg_batch_payamount,0),ifnull(v.avg_table_payamount,0),ifnull(v.avg_custom_payamount,0),ifnull(v.cancel_ratio,0),ifnull(v.seat_custom_num_ratio,0),

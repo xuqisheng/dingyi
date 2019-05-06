@@ -24,7 +24,7 @@ public class BusinessAppuserStatisticsTask {
     @Autowired
     private BusinessAppuserStatisticsTaskService businessAppuserStatisticsTaskService;
 
-    @PostMapping("/update")
+    @PostMapping("/record")
     public ResponseEntity updateOrderStatusNew(String lastYearMonth, String yearMonth) {
 
 

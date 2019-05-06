@@ -41,42 +41,42 @@
     <insert id="insertMeetingOrderStatus2TO3">
         INSERT INTO resv_meeting_order_logs(resv_order,`status`,status_name,`logs`,created_at)
         SELECT r.resv_order,rm.status_id,rm.status_name,'变更预定状态-resv',NOW()
-        FROM resv_meeting_order r,resv_meeting_status_mapping rm WHERE r.`status`=2 AND resv_date &lt;= DATE_SUB(CURDATE(),INTERVAL ${intervalNum} DAY) AND rm.status_id=3;
+        FROM resv_meeting_order r,resv_meeting_status_mapping rm WHERE r.`status`=2 AND resv_date &lt;= DATE_SUB(CURDATE(),INTERVAL ${intervalNum} DAY) AND rm.status_id=3
 
     </insert>
 
     <insert id="insertMeetingOrderStatus1TO6">
         INSERT INTO resv_meeting_order_logs(resv_order,`status`,status_name,`logs`,created_at)
         SELECT r.resv_order,rm.status_id,rm.status_name,'变更预定状态-resv',NOW()
-        FROM resv_meeting_order r,resv_meeting_status_mapping rm WHERE r.`status`=1 AND resv_date &lt;= DATE_SUB(CURDATE(),INTERVAL ${intervalNum} DAY) AND rm.status_id=6;
+        FROM resv_meeting_order r,resv_meeting_status_mapping rm WHERE r.`status`=1 AND resv_date &lt;= DATE_SUB(CURDATE(),INTERVAL ${intervalNum} DAY) AND rm.status_id=6
 
     </insert>
 
     <insert id="insertOrderStatus1TO2">
         INSERT INTO resv_order_logs(resv_order,`status`,status_name,`logs`,created_at)
         SELECT r.resv_order,rm.status_id,rm.status_name,'变更预定状态-resv',NOW()
-        FROM resv_order r,resv_status_mapping rm WHERE r.`status`=1 AND rm.status_id=2 AND resv_date &lt;= DATE_SUB(CURDATE(),INTERVAL ${intervalNum} DAY);
+        FROM resv_order r,resv_status_mapping rm WHERE r.`status`=1 AND rm.status_id=2 AND resv_date &lt;= DATE_SUB(CURDATE(),INTERVAL ${intervalNum} DAY)
 
     </insert>
 
     <insert id="insertOrderStatus2TO3">
         INSERT INTO resv_order_logs(resv_order,`status`,status_name,`logs`,created_at)
         SELECT r.resv_order,rm.status_id,rm.status_name,'变更预定状态-resv',NOW()
-        FROM resv_order r,resv_status_mapping rm WHERE r.`status`=2 AND rm.status_id=3 AND resv_date &lt;= DATE_SUB(CURDATE(),INTERVAL ${intervalNum} DAY) AND r.payamount IS NOT NULL AND r.payamount !='';
+        FROM resv_order r,resv_status_mapping rm WHERE r.`status`=2 AND rm.status_id=3 AND resv_date &lt;= DATE_SUB(CURDATE(),INTERVAL ${intervalNum} DAY) AND r.payamount IS NOT NULL AND r.payamount !=''
 
     </insert>
 
     <insert id="insertAndroidOrderStatus1TO2">
         INSERT INTO resv_order_logs(resv_order,`status`,status_name,`logs`,created_at)
         SELECT r.resv_order,rm.status_id,rm.status_name,'变更预定状态-andorid',NOW()
-        FROM resv_order_android r,resv_status_mapping rm WHERE r.`status`=1 AND rm.status_id=2 AND resv_date &lt;= DATE_SUB(CURDATE(),INTERVAL ${intervalNum} DAY);
+        FROM resv_order_android r,resv_status_mapping rm WHERE r.`status`=1 AND rm.status_id=2 AND resv_date &lt;= DATE_SUB(CURDATE(),INTERVAL ${intervalNum} DAY)
 
     </insert>
 
     <insert id="insertAndroidOrderStatus2TO3">
         INSERT INTO resv_order_logs(resv_order,`status`,status_name,`logs`,created_at)
         SELECT r.resv_order,rm.status_id,rm.status_name,'变更预定状态-andorid',NOW()
-        FROM resv_order_android r,resv_status_mapping rm WHERE r.`status`=2 AND rm.status_id=3 AND resv_date &lt;= DATE_SUB(CURDATE(),INTERVAL ${intervalNum} DAY) AND r.payamount IS NOT NULL AND r.payamount !='';
+        FROM resv_order_android r,resv_status_mapping rm WHERE r.`status`=2 AND rm.status_id=3 AND resv_date &lt;= DATE_SUB(CURDATE(),INTERVAL ${intervalNum} DAY) AND r.payamount IS NOT NULL AND r.payamount !=''
     </insert>
 
 

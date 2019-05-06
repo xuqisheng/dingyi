@@ -54,9 +54,12 @@ public class BusinessAppuserStatisticsTaskService {
             iBusinessAppuserStatisticsService.dropTemporaryTable();
 
             System.out.println("酒店id ======" + businessId);
+
+
             //统计
             //1. 创建 临时表t_business_appuser_statistics_temporary
             iBusinessAppuserStatisticsService.createTemporaryTable(businessId,lastYearMonth ,yearMonth );
+
 
             //2.  插入营销经理数据
             iBusinessAppuserStatisticsService.insertAppuserStatistics(businessId,lastYearMonth ,yearMonth);
