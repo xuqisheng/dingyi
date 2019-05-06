@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.Business;
 import com.zhidianfan.pig.yd.moduler.common.service.IBusinessAppuserStatisticsService;
 import com.zhidianfan.pig.yd.moduler.common.service.IBusinessService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ import java.util.Map;
  * @Description:
  */
 @Service
+@Slf4j
 public class BusinessAppuserStatisticsTaskService {
 
 
@@ -34,6 +36,8 @@ public class BusinessAppuserStatisticsTaskService {
     @Async
     public void BusinessAppuserStatistics(String lastYearMonth, String yearMonth) {
 
+        long l = System.currentTimeMillis();
+        log.info("任务开始 ---" + l);
 
         List<Business> businessList = businessService.selectList(
                 new EntityWrapper<Business>().eq("status", 1));
@@ -49,6 +53,7 @@ public class BusinessAppuserStatisticsTaskService {
             //删除临时表
             iBusinessAppuserStatisticsService.dropTemporaryTable();
 
+            System.out.println("酒店id ======" + businessId);
             //统计
             //1. 创建 临时表t_business_appuser_statistics_temporary
             iBusinessAppuserStatisticsService.createTemporaryTable(businessId,lastYearMonth ,yearMonth );
@@ -60,5 +65,9 @@ public class BusinessAppuserStatisticsTaskService {
             iBusinessAppuserStatisticsService.insertPadStatistics(businessId,lastYearMonth ,yearMonth);
 
         }
+
+        long currentTimeMillis = System.currentTimeMillis();
+        log.info("----任务结束,总耗时-----" + (currentTimeMillis - l) + "" );
+
     }
 }

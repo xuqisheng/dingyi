@@ -51,7 +51,7 @@ public class OrderStatusNewTaskService {
     @Async
     public void updateOrder(Integer intervalNum) {
 
-        long l = System.currentTimeMillis();
+
         //插入Order日志 1-->2
         iResvOrderLogsService.insertOrderStatus1TO2(intervalNum);
         //更新订单 1-->2
@@ -65,10 +65,7 @@ public class OrderStatusNewTaskService {
         //更新订单 2-->3
         iResvOrderService.updateOrderStatus2TO3(intervalNum);
 
-        long currentTimeMillis = System.currentTimeMillis();
 
-
-        log.info("---------" + (currentTimeMillis - l) + "" );
     }
 
     @Async
