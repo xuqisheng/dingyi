@@ -60,21 +60,23 @@ public class WeChatController {
         if (StringUtils.isNotEmpty(openid))
             accessToken = redisTemplate.opsForValue().get(openid);
 
-        if (accessToken == null && StringUtils.isNotBlank(code)) {
-            logger.info("缓存token已经失效,尝试使用code:" + code + " 获取最新token");
-            accessToken = WeChatUtils.getAccessToken(0, code);
-            if (accessToken == null || StringUtils.isEmpty(accessToken.getAccessToken()))
-                return "code已失效";
-
-        } else if (accessToken != null && WeChatUtils.isExpiredToken(accessToken)) {
+        //token存在但是已经过期 重新刷新token
+        if (accessToken != null && WeChatUtils.isExpiredToken(accessToken)) {
             logger.info("缓存token已经失效,尝试使用refreshToken:" + code + " 获取最新token");
             accessToken = WeChatUtils.getAccessToken(2, accessToken.getRefreshToken());
         }
-        if (accessToken == null) {
-            return "获取accessToken失败";
+
+        //token不存在 并且code不为空
+        if (accessToken == null && StringUtils.isNotBlank(code)) {
+            logger.info("缓存token已经失效,尝试使用code:" + code + " 获取最新token");
+            accessToken = WeChatUtils.getAccessToken(0, code);
+            if (accessToken != null && StringUtils.isNotBlank(accessToken.getAccessToken()))
+                //缓存数据  refreshToken的有效期为30天
+                redisTemplate.opsForValue().set(accessToken.getOpenid(), accessToken, 30, TimeUnit.DAYS);
         }
-        //缓存数据  refreshToken的有效期为30天
-        redisTemplate.opsForValue().set(accessToken.getOpenid(), accessToken, 30, TimeUnit.DAYS);
+
+        if (accessToken == null)
+            return "获取accessToken失败";
 
         HttpGet httpGet = new HttpGet(WeChatUtils.getUserInfoUrl(accessToken.getOpenid(), accessToken.getAccessToken()));
         CloseableHttpClient httpClient = HttpClients.createDefault();
