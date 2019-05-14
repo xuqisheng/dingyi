@@ -91,13 +91,13 @@ public class CrmService {
                 data.put("userConsumeAmount",basicBO.getRes().getJSONObject(0).get("user_consume_amount"));
                 data.put("LastConsumeShopName",basicBO.getRes().getJSONObject(0).get("last_consume_shop_name"));
                 JSONArray couponsList = (JSONArray) basicBO.getRes().getJSONObject(0).get("coupons");
-                StringBuffer couponsName = new StringBuffer();
+                JSONArray jsonArray = new JSONArray();
                 for(Object coupons : couponsList){
                     JSONObject jsonObject1 = JSONObject.parseObject(coupons.toString(),JSONObject.class);
-                    couponsName.append(jsonObject1.get("title")).append(",");
+                    jsonArray.add(jsonObject1.get("title"));
                 }
-                if(couponsName.length() > 0){
-                    data.put("couponsName",couponsName.substring(0,couponsName.length()-1));
+                if(jsonArray.size() > 0){
+                    data.put("couponsName",jsonArray);
                 }else {
                     data.put("couponsName",new JSONArray());
                 }
