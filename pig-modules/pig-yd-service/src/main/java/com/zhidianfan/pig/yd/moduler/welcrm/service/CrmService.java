@@ -1,11 +1,16 @@
 package com.zhidianfan.pig.yd.moduler.welcrm.service;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
+import com.zhidianfan.pig.yd.moduler.common.dao.entity.Business;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.BusinessSyncAccount;
+import com.zhidianfan.pig.yd.moduler.common.dao.entity.Vip;
 import com.zhidianfan.pig.yd.moduler.common.dto.Tip;
+import com.zhidianfan.pig.yd.moduler.common.service.IBusinessService;
 import com.zhidianfan.pig.yd.moduler.common.service.IBusinessSyncAccountService;
+import com.zhidianfan.pig.yd.moduler.common.service.IVipService;
 import com.zhidianfan.pig.yd.moduler.welcrm.bo.BasicBO;
 import com.zhidianfan.pig.yd.moduler.welcrm.constant.CrmMethod;
 import com.zhidianfan.pig.yd.moduler.welcrm.dto.BasicDTO;
@@ -43,6 +48,12 @@ public class CrmService {
 
     private Logger log = LoggerFactory.getLogger(getClass());
 
+    @Autowired
+    private IVipService vipService;
+
+    @Autowired
+    private IBusinessService businessService;
+
 
     /**
      * 会员信息接口
@@ -76,6 +87,20 @@ public class CrmService {
                 data.put("userBalance",basicBO.getRes().getJSONObject(0).get("balance"));
                 data.put("userBirthday",basicBO.getRes().getJSONObject(0).get("birthday"));
                 data.put("userSex",basicBO.getRes().getJSONObject(0).get("gender"));
+                data.put("userConsumeNum",basicBO.getRes().getJSONObject(0).get("user_consume_num"));
+                data.put("userConsumeAmount",basicBO.getRes().getJSONObject(0).get("user_consume_amount"));
+                data.put("LastConsumeShopName",basicBO.getRes().getJSONObject(0).get("last_consume_shop_name"));
+                JSONArray couponsList = (JSONArray) basicBO.getRes().getJSONObject(0).get("coupons");
+                StringBuffer couponsName = new StringBuffer();
+                for(Object coupons : couponsList){
+                    JSONObject jsonObject1 = JSONObject.parseObject(coupons.toString(),JSONObject.class);
+                    couponsName.append(jsonObject1.get("title")).append(",");
+                }
+                if(couponsName.length() > 0){
+                    data.put("couponsName",couponsName.substring(0,couponsName.length()-1));
+                }else {
+                    data.put("couponsName",new JSONArray());
+                }
                 basicBO.setData(data);
             }else {
                 basicBO.setData(null);
@@ -106,6 +131,21 @@ public class CrmService {
             }
         }
         basicBO.setRes(null);
+        if(basicBO.getData() != null){
+            Vip vip = vipService.selectOne(new EntityWrapper<Vip>().eq("business_id",businessId).eq("vip_phone",basicBO.getData().get("userPhone")));
+            if(vip == null){
+                Business business = businessService.selectById(businessId);
+                Vip vip1 = new Vip();
+                vip1.setBusinessId(businessId);
+                vip1.setCreatedAt(new Date());
+                vip1.setBusinessName(business.getBusinessName());
+                vip1.setVipBirthday(String.valueOf(basicBO.getData().get("userBirthday")));
+                vip1.setVipPhone(String.valueOf(basicBO.getData().get("userPhone")));
+                vip1.setVipSex("1".equals(String.valueOf(basicBO.getData().get("userSex"))) ? "男" : "女");
+                vip1.setVipName(String.valueOf(basicBO.getData().get("userName")));
+                vipService.insert(vip1);
+            }
+        }
         return basicBO;
     }
 
