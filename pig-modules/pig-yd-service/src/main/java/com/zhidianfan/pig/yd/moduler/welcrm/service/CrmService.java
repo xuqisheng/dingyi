@@ -96,11 +96,7 @@ public class CrmService {
                     JSONObject jsonObject1 = JSONObject.parseObject(coupons.toString(),JSONObject.class);
                     jsonArray.add(jsonObject1.get("title"));
                 }
-                if(jsonArray.size() > 0){
-                    data.put("couponsName",jsonArray);
-                }else {
-                    data.put("couponsName",new JSONArray());
-                }
+                data.put("couponsName",jsonArray);
                 basicBO.setData(data);
             }else {
                 basicBO.setData(null);
