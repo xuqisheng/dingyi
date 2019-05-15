@@ -259,8 +259,8 @@ spring:
     type: com.zaxxer.hikari.HikariDataSource
     driver-class-name: com.mysql.jdbc.Driver
     username: pig
-    password: s33ycHywIqa7
-    url: jdbc:mysql://10.81.63.30:3306/yiding_sms?useSSL=false&autoReconnect=true&useUnicode=true&characterEncoding=utf8
+    password: sUTh4HRcy5i3
+    url: jdbc:mysql://yiding-default.rwlb.rds.aliyuncs.com:3306/yiding_sms?useSSL=false&autoReconnect=true&useUnicode=true&characterEncoding=utf8
     hikari:
       minimum-idle: 15
       maximum-pool-size: 250
@@ -273,20 +273,20 @@ spring:
       connection-init-sql: set names utf8mb4
   redis:
     remote: false        #cachecloud 获取
-    host: yd-cloud.redis.rds.aliyuncs.com
+    host: 172.16.100.64
     port: 6379
-    password: FCfpyZBb6421
+    password: 8oSKhxdw6T35
   rabbitmq:
-    host: 47.97.41.16 #${host.ydserver1}
+    host: 172.16.100.64 #${host.ydserver1}
     port: 5672
-    username: pig
-    password: 7tm5Uo7Pi0mk
+    username: yiding
+    password: fa80UAn1G4Q9
 yd:
   task: true  #定时任务
   xms:
     times: 90
   sms:
-    url: http://mw.zhidianfan.com:9095/message/callback
+    url: http://172.16.23.160:10001/message/callback
 
 eureka:
   environment: ${spring.profiles}
