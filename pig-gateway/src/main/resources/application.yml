@@ -275,19 +275,19 @@ spring:
   profiles: prod
   redis:
     remote: false        #cachecloud 获取
-    host: 172.16.100.64
+    host: yd-cloud.redis.rds.aliyuncs.com
     port: 6379
-    password: 8oSKhxdw6T35
+    password: FCfpyZBb6421
     pool:
       max-active: 100
       max-idle: 20
   rabbitmq:
-    host: 172.16.100.64 #${host.ydserver1}
+    host: 47.97.41.16 #${host.ydserver1}
     port: 5672
     #    username: guest
     #    password: lA8jT8N4Cq64
-    username: yiding
-    password: fa80UAn1G4Q9
+    username: pig
+    password: 7tm5Uo7Pi0mk
 eureka:
   environment: ${spring.profiles}
   client:
@@ -297,7 +297,7 @@ eureka:
 #认证服务器地址
 security:
   auth:
-    server: http://auth:3000
+    server: http://47.97.41.16:3000
   validate:
     code: false # 验证码开关 测试环境先关闭
     preview: false
