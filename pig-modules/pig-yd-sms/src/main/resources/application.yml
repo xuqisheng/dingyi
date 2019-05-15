@@ -286,7 +286,7 @@ yd:
   xms:
     times: 90
   sms:
-    url: http://mw.zhidianfan.com:9095/message/callback
+    url: http://sms.zhidianfan.com/message/callback
 
 eureka:
   environment: ${spring.profiles}
