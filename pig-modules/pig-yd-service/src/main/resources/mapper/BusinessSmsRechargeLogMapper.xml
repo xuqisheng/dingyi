@@ -56,7 +56,7 @@
         select
         IF(bsrl.order_no = '00000000000000' ,'易订赠送','充值') as access,
         bsrl.order_no,
-        bsrl.sms+ if(bsrl.gift_num is null,0,bsrl.gift_num)  as smscount,
+        bsrl.sms  as smscount,
         bsrl.payamount,
         bsrl.updated_at,
         bsrl.invoice_status,
