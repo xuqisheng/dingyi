@@ -80,9 +80,8 @@ public class ChuangLSmsServiceImpl implements ChuangLSmsService {
     private SmsSendResDTO getSmsSendResDTO(ClMsgContent clMsgContent, long smsId) {
 
         //如果环境是测试环境或者本地环境则直接打印日志 不实际发送短信
-        //开发环境和测试环境下不发送短信
-        if ("dev".equals(ydPropertites.getActive())
-                || "test".equals(ydPropertites.getActive())) {
+        //测试环境下不发送短信
+        if ("dev".equals(ydPropertites.getActive())) {
 
             //时间戳作为测试短信id
             String msgid = String.valueOf(System.currentTimeMillis());
@@ -108,7 +107,32 @@ public class ChuangLSmsServiceImpl implements ChuangLSmsService {
             baseSmsLog.setSendRes("这是条测试短信发送成功");
 
             baseSmsLogService.updateById(baseSmsLog);
-            log.debug("发送短信成功");
+            log.debug("发送短信成功");//        if ("dev".equals(ydPropertites.getActive())
+//                || "test".equals(ydPropertites.getActive())) {
+//
+//            //时间戳作为测试短信id
+//            String msgid = String.valueOf(System.currentTimeMillis());
+//
+//            SmsSendResDTO smsSendResDTO = new SmsSendResDTO();
+//            smsSendResDTO.setCode("0");
+//            smsSendResDTO.setMsgId(Long.parseLong(msgid));
+//            smsSendResDTO.setStatus("SUCCESS");
+//            smsSendResDTO.setTime(new Date().toString());
+//            smsSendResDTO.setErrorMsg("errorMsg");
+//            smsSendResDTO.setText(clMsgContent.getMsg());
+//
+//            BaseSmsLog baseSmsLog = new BaseSmsLog();
+//            baseSmsLog.setId(smsId);
+//            baseSmsLog.setOperator(1);
+//            //更新msgid 本地和
+//            baseSmsLog.setMsgid(msgid);
+//            //设置提交成功
+//            baseSmsLog.setStatus(1);
+//
+//            //更新短信
+//            baseSmsLog.setResTime(new Date());
+//            baseSmsLog.setSendRes("这是条测试短信发送成功");
+//
 
 
             //更新结果表发送的短信
@@ -138,6 +162,7 @@ public class ChuangLSmsServiceImpl implements ChuangLSmsService {
         ResponseEntity<Map> responseEntity;
         String res;
         try {
+
             responseEntity = restTemplate.exchange(url, HttpMethod.POST, httpEntity, Map.class);
             Map<String, Object> resMap = responseEntity.getBody();
 
