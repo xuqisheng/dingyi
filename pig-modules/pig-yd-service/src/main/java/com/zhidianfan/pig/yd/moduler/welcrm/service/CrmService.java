@@ -7,14 +7,19 @@ import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.Business;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.BusinessSyncAccount;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.Vip;
+import com.zhidianfan.pig.yd.moduler.common.dao.entity.VipAppraise;
+import com.zhidianfan.pig.yd.moduler.common.dto.SuccessTip;
 import com.zhidianfan.pig.yd.moduler.common.dto.Tip;
 import com.zhidianfan.pig.yd.moduler.common.service.IBusinessService;
 import com.zhidianfan.pig.yd.moduler.common.service.IBusinessSyncAccountService;
+import com.zhidianfan.pig.yd.moduler.common.service.IVipAppraiseService;
 import com.zhidianfan.pig.yd.moduler.common.service.IVipService;
 import com.zhidianfan.pig.yd.moduler.welcrm.bo.BasicBO;
 import com.zhidianfan.pig.yd.moduler.welcrm.constant.CrmMethod;
+import com.zhidianfan.pig.yd.moduler.welcrm.dto.AppraiseDTO;
 import com.zhidianfan.pig.yd.moduler.welcrm.dto.BasicDTO;
 import com.zhidianfan.pig.yd.moduler.welcrm.dto.FiveiUserDTO;
+import com.zhidianfan.pig.yd.moduler.welcrm.dto.PushDataDTO;
 import com.zhidianfan.pig.yd.utils.SignUtil;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.slf4j.Logger;
@@ -28,6 +33,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.*;
 
@@ -53,6 +61,9 @@ public class CrmService {
 
     @Autowired
     private IBusinessService businessService;
+
+    @Autowired
+    private IVipAppraiseService vipAppraiseService;
 
 
     /**
@@ -164,6 +175,44 @@ public class CrmService {
             basicBO.setErrmsg(fiveiUserDTO.getResult().getMsg());
         }
         return basicBO;
+    }
+
+    /**
+     * 接收微生活评价
+     * @param appraiseDTO
+     * @return
+     */
+    public Tip saveAppraiseInfo(AppraiseDTO appraiseDTO) throws ParseException {
+
+        JSONArray pushDataDTOList = JSONObject.parseArray(appraiseDTO.getPushData());
+
+        for(Object object : pushDataDTOList){
+            PushDataDTO pushDataDTO = JSONObject.parseObject(object.toString(),PushDataDTO.class);
+            BusinessSyncAccount businessSyncAccount = businessSyncAccountService.selectOne(new EntityWrapper<BusinessSyncAccount>().eq("shop_id",pushDataDTO.getSid()));
+            if(businessSyncAccount != null){
+                VipAppraise vipAppraise = new VipAppraise();
+                vipAppraise.setBusinessId(businessSyncAccount.getBusinessId());
+                vipAppraise.setCreateTime(new Date());
+                vipAppraise.setVipPhone(pushDataDTO.getUser_phone());
+                vipAppraise.setDishId(pushDataDTO.getDish_id());
+                vipAppraise.setDishOptions(pushDataDTO.getDish_options());
+                vipAppraise.setServerId(pushDataDTO.getServer_id());
+                vipAppraise.setServerScore(pushDataDTO.getServer_score());
+                vipAppraise.setServerOptions(pushDataDTO.getServer_options());
+                vipAppraise.setTableId(pushDataDTO.getTable_id());
+                vipAppraise.setTctotalFee(pushDataDTO.getTctotal_fee());
+                vipAppraise.setTcFee(pushDataDTO.getTcFee());
+                vipAppraise.setTcId(pushDataDTO.getTc_id());
+                vipAppraise.setDishScore(pushDataDTO.getDish_score());
+                DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                vipAppraise.setTcTime(format.parse(pushDataDTO.getTc_time()));
+                vipAppraise.setCmTime(format.parse(pushDataDTO.getCm_time()));
+
+                vipAppraiseService.insert(vipAppraise);
+            }
+        }
+
+        return new SuccessTip(200,"接收成功");
     }
 
     /**

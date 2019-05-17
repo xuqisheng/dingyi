@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhidianfan.pig.yd.moduler.common.dao.mapper.ResvMeetingKeyMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zhidianfan.pig.yd.moduler.common.dao.entity.ResvMeetingKey">
+        <id column="id" property="id" />
+        <result column="key_no" property="keyNo" />
+        <result column="key_no_business" property="keyNoBusiness" />
+        <result column="batch_no" property="batchNo" />
+        <result column="business_id" property="businessId" />
+        <result column="business_name" property="businessName" />
+        <result column="app_user_id" property="appUserId" />
+        <result column="app_user_code" property="appUserCode" />
+        <result column="app_user_name" property="appUserName" />
+        <result column="app_user_phone" property="appUserPhone" />
+        <result column="device_user_id" property="deviceUserId" />
+        <result column="device_user_name" property="deviceUserName" />
+        <result column="device_user_phone" property="deviceUserPhone" />
+        <result column="vip_id" property="vipId" />
+        <result column="vip_phone" property="vipPhone" />
+        <result column="vip_name" property="vipName" />
+        <result column="vip_sex" property="vipSex" />
+        <result column="vip_status" property="vipStatus" />
+        <result column="resv_date" property="resvDate" />
+        <result column="meal_type_id" property="mealTypeId" />
+        <result column="meal_type_name" property="mealTypeName" />
+        <result column="resv_meeting_order_type" property="resvMeetingOrderType" />
+        <result column="resv_table_num" property="resvTableNum" />
+        <result column="backup_table_num" property="backupTableNum" />
+        <result column="resv_amount" property="resvAmount" />
+        <result column="resv_source_id" property="resvSourceId" />
+        <result column="resv_source_name" property="resvSourceName" />
+        <result column="resv_source_detail_id" property="resvSourceDetailId" />
+        <result column="resv_source_detail_name" property="resvSourceDetailName" />
+        <result column="remark" property="remark" />
+        <result column="source" property="source" />
+        <result column="status" property="status" />
+        <result column="status_name" property="statusName" />
+        <result column="is_back" property="isBack" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+    </resultMap>
+
+</mapper>
