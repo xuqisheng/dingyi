@@ -3,19 +3,14 @@ package com.zhidianfan.pig.yd.moduler.sms.service;
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.baomidou.mybatisplus.mapper.Wrapper;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.zhidianfan.pig.common.util.JsonUtils;
-import com.zhidianfan.pig.yd.moduler.common.dao.entity.Business;
-import com.zhidianfan.pig.yd.moduler.common.dao.entity.SmsMarketing;
-import com.zhidianfan.pig.yd.moduler.common.dao.entity.Vip;
-import com.zhidianfan.pig.yd.moduler.common.dao.entity.VipStatistics;
+import com.zhidianfan.pig.yd.moduler.common.dao.entity.*;
 import com.zhidianfan.pig.yd.moduler.common.dto.ErrorTip;
 import com.zhidianfan.pig.yd.moduler.common.dto.SuccessTip;
 import com.zhidianfan.pig.yd.moduler.common.dto.Tip;
-import com.zhidianfan.pig.yd.moduler.common.service.IBusinessService;
-import com.zhidianfan.pig.yd.moduler.common.service.ISmsMarketingService;
-import com.zhidianfan.pig.yd.moduler.common.service.IVipService;
-import com.zhidianfan.pig.yd.moduler.common.service.IVipStatisticsService;
+import com.zhidianfan.pig.yd.moduler.common.service.*;
 import com.zhidianfan.pig.yd.moduler.resv.dto.SmsMarkingDTO;
 import com.zhidianfan.pig.yd.moduler.sms.dto.sms.SmsMarketingCustom;
 import com.zhidianfan.pig.yd.moduler.sms.service.rmi.SmsFeign;
@@ -23,11 +18,16 @@ import com.zhidianfan.pig.yd.moduler.sms.service.rmi.dto.ClMsgParam;
 import com.zhidianfan.pig.yd.moduler.sms.service.rmi.dto.SmsSendResDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.ListUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateFormatUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @Author zhoubeibei
@@ -46,25 +46,31 @@ public class SmsMarketingService {
     private ISmsMarketingService smsMarketingService;
     @Autowired
     private IBusinessService businessService;
+
+    @Autowired
+    private ISmsMarketingBatchService smsMarketingBatchService;
+
     @Autowired
     private SmsFeign smsFeign;
 
+    private static final Integer MAX_NUMBER = 800;
+
     public int calcTargetPhone(SmsMarketing smsMarketing) {
-        log.info("计算目标手机号码:{}",smsMarketing);
+        log.info("计算目标手机号码:{}", smsMarketing);
 //        if(StringUtils.isEmpty(smsMarketing.getVipClassId()) && (StringUtils.isEmpty(smsMarketing.getCustom()) || StringUtils.equalsIgnoreCase(smsMarketing.getCustom(),"{}"))){//没有传递客户价值和自定义客户类型返回0
 //            return 0;
 //        }
         String custom = smsMarketing.getCustom();
         String vipValueId = smsMarketing.getVipValueId();
         List<Vip> vips = Lists.newArrayList();
-        log.info("vipValueId:{}",vipValueId);
+        log.info("vipValueId:{}", vipValueId);
         if (StringUtils.isNotBlank(vipValueId)) {
-            if(StringUtils.equals("0",vipValueId)){
-                vips = vipService.selectList(new EntityWrapper<Vip>().eq("business_id",smsMarketing.getBusinessId()));
-            }else{
-                vips = vipService.selectList(new EntityWrapper<Vip>().eq("business_id",smsMarketing.getBusinessId()).in("vip_value_id",Arrays.asList(vipValueId.split(","))));
+            if (StringUtils.equals("0", vipValueId)) {
+                vips = vipService.selectList(new EntityWrapper<Vip>().eq("business_id", smsMarketing.getBusinessId()));
+            } else {
+                vips = vipService.selectList(new EntityWrapper<Vip>().eq("business_id", smsMarketing.getBusinessId()).in("vip_value_id", Arrays.asList(vipValueId.split(","))));
             }
-            log.info("vips:{}",vips);
+            log.info("vips:{}", vips);
         } else if (StringUtils.isNotBlank(custom)) {
             EntityWrapper<VipStatistics> entityWrapper = (EntityWrapper<VipStatistics>) new EntityWrapper<VipStatistics>()
                     .eq("business_id", smsMarketing.getBusinessId());
@@ -125,11 +131,11 @@ public class SmsMarketingService {
         });
         smsMarketing.setTargetPhones(StringUtils.join(phones, ","));
         String content = StringUtils.replace(smsMarketing.getContent(), "{#var}", "");
-        log.info("发送手机号码:{}",phones);
+        log.info("发送手机号码:{}", phones);
         int size;
-        if(StringUtils.isEmpty(content)){
+        if (StringUtils.isEmpty(content)) {
             size = phones.size();
-        }else{
+        } else {
             int contentSize = content.length();
             if (StringUtils.isNotEmpty(smsMarketing.getVariable())) {
                 String[] vars = smsMarketing.getVariable().split(",");
@@ -148,13 +154,13 @@ public class SmsMarketingService {
             }
             //70 67
             int smsSize = 1;
-            if(contentSize<=70){
+            if (contentSize <= 70) {
                 smsSize = 1;
-            }else{
+            } else {
                 smsSize = 1;
-                smsSize = smsSize + (contentSize-70)/67;
-                if((contentSize-70)%67 != 0){
-                    smsSize = smsSize +1;
+                smsSize = smsSize + (contentSize - 70) / 67;
+                if ((contentSize - 70) % 67 != 0) {
+                    smsSize = smsSize + 1;
                 }
             }
 
@@ -167,21 +173,21 @@ public class SmsMarketingService {
     }
 
     public Map calcTargetPhoneByAppUser(SmsMarkingDTO smsMarkingDTO) {
-        log.info("计算目标手机号码:{}",smsMarkingDTO);
+        log.info("计算目标手机号码:{}", smsMarkingDTO);
 //        if(StringUtils.isEmpty(smsMarketing.getVipClassId()) && (StringUtils.isEmpty(smsMarketing.getCustom()) || StringUtils.equalsIgnoreCase(smsMarketing.getCustom(),"{}"))){//没有传递客户价值和自定义客户类型返回0
 //            return 0;
 //        }
         String custom = smsMarkingDTO.getCustom();
         String vipValueId = smsMarkingDTO.getVipValueId();
         List<Vip> vips = Lists.newArrayList();
-        log.info("vipValueId:{}",vipValueId);
+        log.info("vipValueId:{}", vipValueId);
         if (StringUtils.isNotBlank(vipValueId)) {
-            if(StringUtils.equals("0",vipValueId)){
-                vips = vipService.selectList(new EntityWrapper<Vip>().eq("business_id",smsMarkingDTO.getBusinessId()));
-            }else{
-                vips = vipService.selectList(new EntityWrapper<Vip>().eq("business_id",smsMarkingDTO.getBusinessId()).in("vip_value_id",Arrays.asList(vipValueId.split(","))));
+            if (StringUtils.equals("0", vipValueId)) {
+                vips = vipService.selectList(new EntityWrapper<Vip>().eq("business_id", smsMarkingDTO.getBusinessId()));
+            } else {
+                vips = vipService.selectList(new EntityWrapper<Vip>().eq("business_id", smsMarkingDTO.getBusinessId()).in("vip_value_id", Arrays.asList(vipValueId.split(","))));
             }
-            log.info("vips:{}",vips);
+            log.info("vips:{}", vips);
         } else if (StringUtils.isNotBlank(custom)) {
             EntityWrapper<VipStatistics> entityWrapper = (EntityWrapper<VipStatistics>) new EntityWrapper<VipStatistics>()
                     .eq("business_id", smsMarkingDTO.getBusinessId());
@@ -231,11 +237,15 @@ public class SmsMarketingService {
                 vipIds.add(statistics.getVipId());
             });
             Integer appUserId = smsMarkingDTO.getAppUserId();
-            if(!CollectionUtils.isEmpty(vipIds) && appUserId !=null && appUserId !=0){
-                vips = vipService.getAppUserVipMarking(vipIds,appUserId);
-            }else if(!CollectionUtils.isEmpty(vipIds) && appUserId !=null && appUserId == 0){
-                vips = vipService.getNoAppUserVipMarking(vipIds);
-            }else if (!CollectionUtils.isEmpty(vipIds)) {
+            if (!CollectionUtils.isEmpty(vipIds) && appUserId != null && appUserId != 0) {
+                for (Integer vipId : vipIds) {
+                    Vip vip = vipService.selectOne(new EntityWrapper<Vip>().eq("id", vipId)
+                            .eq("app_user_id", appUserId));
+                    if (vip != null) {
+                        vips.add(vip);
+                    }
+                }
+            } else if (!CollectionUtils.isEmpty(vipIds)) {
                 vips = vipService.selectBatchIds(vipIds);
             }
         }
@@ -247,11 +257,11 @@ public class SmsMarketingService {
         });
         smsMarkingDTO.setTargetPhones(StringUtils.join(phones, ","));
         String content = StringUtils.replace(smsMarkingDTO.getContent(), "{#var}", "");
-        log.info("发送手机号码:{}",phones);
+        log.info("发送手机号码:{}", phones);
         int size;
-        if(StringUtils.isEmpty(content)){
+        if (StringUtils.isEmpty(content)) {
             size = phones.size();
-        }else{
+        } else {
             int contentSize = content.length();
             if (StringUtils.isNotEmpty(smsMarkingDTO.getVariable())) {
                 String[] vars = smsMarkingDTO.getVariable().split(",");
@@ -270,13 +280,13 @@ public class SmsMarketingService {
             }
             //70 67
             int smsSize = 1;
-            if(contentSize<=70){
+            if (contentSize <= 70) {
                 smsSize = 1;
-            }else{
+            } else {
                 smsSize = 1;
-                smsSize = smsSize + (contentSize-70)/67;
-                if((contentSize-70)%67 != 0){
-                    smsSize = smsSize +1;
+                smsSize = smsSize + (contentSize - 70) / 67;
+                if ((contentSize - 70) % 67 != 0) {
+                    smsSize = smsSize + 1;
                 }
             }
 
@@ -284,9 +294,9 @@ public class SmsMarketingService {
             smsMarkingDTO.setSmsNum(size);
             smsMarkingDTO.setNum(size);
         }
-        Map<String,Object> map = new HashMap<>();
-        map.put("targetPhones",smsMarkingDTO.getTargetPhones());
-        map.put("count",size);
+        Map<String, Object> map = new HashMap<>();
+        map.put("targetPhones", smsMarkingDTO.getTargetPhones());
+        map.put("count", size);
         return map;
     }
 
@@ -327,7 +337,10 @@ public class SmsMarketingService {
             }
             ClMsgParam clMsgParam = new ClMsgParam();
             String[] phones = targetPhones.split(",");
-            clMsgParam.setPhone(Arrays.asList(phones));
+            List<String> sendPhones = Arrays.asList(phones).stream()
+                    .filter(phone -> StringUtils.isNotEmpty(phone) && phone.length() == 11)
+                    .collect(Collectors.toList());
+            clMsgParam.setPhone(sendPhones);
             clMsgParam.setMsg(smsMarketing.getContent());
 
             smsSendResDTO = smsFeign.sendBatchmarkMsg(clMsgParam);
@@ -345,14 +358,130 @@ public class SmsMarketingService {
                             .eq("version", 1)
             );
         }
-        if(smsSendResDTO == null){
-            return new ErrorTip(400,"发送失败");
+        if (smsSendResDTO == null) {
+            return new ErrorTip(400, "发送失败");
         }
-        if(StringUtils.equals(smsSendResDTO.getCode(),"0")){
+        if (StringUtils.equals(smsSendResDTO.getCode(), "0")) {
             smsMarketing.setStatus("4");
             smsMarketing.setSendType(1);
             smsMarketingService.updateById(smsMarketing);
         }
-        return StringUtils.equals(smsSendResDTO.getCode(),"0")?new SuccessTip(200,"发送成功"):new ErrorTip(400,"发送失败");
+        return StringUtils.equals(smsSendResDTO.getCode(), "0") ? new SuccessTip(200, "发送成功") : new ErrorTip(400, "发送失败");
+    }
+
+    /**
+     * 发送营销短信
+     * @param smsMarketing
+     * @return
+     */
+    public SuccessTip sendMarketingSmsV2(SmsMarketing smsMarketing) {
+        String targetPhones = smsMarketing.getTargetPhones();
+        if (StringUtils.isBlank(targetPhones)) {
+            return new SuccessTip(500, "目标手机号码为空");
+        }
+        String[] phones = targetPhones.split(",");
+        List<String> list = Arrays.asList(phones);
+        int limit = countStep(phones.length);
+
+        List<SmsMarketingBatch> smsMarketingBatches = smsMarketingBatchService.selectList(
+                new EntityWrapper<SmsMarketingBatch>()
+                        .eq("sms_marketing_id", smsMarketing.getId()));
+
+        if (CollectionUtils.isEmpty(smsMarketingBatches)) {
+            Stream.iterate(0, n -> n + 1)
+                    .limit(limit)
+                    .parallel()
+                    .map(n -> {
+                                List<String> sendPhones = list.stream()
+                                        .skip(n * MAX_NUMBER)
+                                        .limit(MAX_NUMBER)
+                                        .parallel()
+                                        .collect(Collectors.toList());
+                                SmsMarketingBatch marketingBatch = new SmsMarketingBatch();
+                                marketingBatch.setStatus(0);
+                                marketingBatch.setTargetPhones(StringUtils.join(sendPhones, ","));
+                                marketingBatch.setSmsMarketingId(smsMarketing.getId());
+                                return sendPhones;
+                            }
+                    );
+            smsMarketingBatches = smsMarketingBatchService.selectList(
+                    new EntityWrapper<SmsMarketingBatch>()
+                            .eq("sms_marketing_id", smsMarketing.getId()));
+        }
+
+        Map<Object, Object> map = Maps.newHashMap();
+        List<String> errors = Lists.newArrayList();
+        List<Object> errorPhoneList = Lists.newArrayList();
+        String pattern = "^[1][34578][0-9]{9}$";
+        Pattern regex = Pattern.compile(pattern);
+        smsMarketingBatches.stream()
+                .filter(smsMarketingBatch -> !StringUtils.equals(smsMarketing.getStatus(), "1"))
+                .forEach(smsMarketingBatch -> {
+                    ClMsgParam clMsgParam = new ClMsgParam();
+                    List<String> errorPhones = Arrays.stream(targetPhones.split(","))
+                            .filter(phone -> !regex.matcher(phone).find())
+                            .collect(Collectors.toList());
+                    if(CollectionUtils.isNotEmpty(errorPhones)){
+                        errorPhoneList.addAll(errorPhones);
+                    }
+                    List<String> sendPhones = Arrays.stream(targetPhones.split(","))
+                            .filter(phone -> regex.matcher(phone).find())
+                            .collect(Collectors.toList());
+                    clMsgParam.setPhone(sendPhones);
+                    clMsgParam.setMsg(smsMarketing.getContent());
+                    clMsgParam.setSendtime(DateFormatUtils.format(smsMarketing.getTimer(), "yyyyMMddHHmm"));
+
+                    SmsSendResDTO smsSendResDTO = null;
+
+                    try {
+                        smsSendResDTO = smsFeign.sendBatchmarkMsg(clMsgParam);
+                    } catch (Exception e) {
+                        log.error("短信发送失败：{}", e.getMessage(), e);
+                    }
+                    if (smsSendResDTO == null) {
+                        map.put("flag", false);
+                        if (!errors.contains("短信模块异常")) {
+                            errors.add("短信模块异常");
+                        }
+                        return;
+                    }
+                    if (StringUtils.equals(smsSendResDTO.getCode(), "0")) {
+                        smsMarketingBatch.setStatus(1);
+                        smsMarketingBatch.setMsgId(smsSendResDTO.getMsgId().toString());
+                    } else {
+                        map.put("flag", false);
+                        if (!errors.contains(smsSendResDTO.getErrorMsg())) {
+                            errors.add(smsSendResDTO.getErrorMsg());
+                        }
+                        map.put("errorMsg", smsSendResDTO.getErrorMsg());
+                        smsMarketingBatch.setStatus(2);
+                        if (smsSendResDTO.getMsgId() != null) {
+                            smsMarketingBatch.setMsgId(smsSendResDTO.getMsgId().toString());
+                        }
+                    }
+                    smsMarketingBatchService.updateById(smsMarketingBatch);
+                });
+
+        if(CollectionUtils.isNotEmpty(errorPhoneList)){
+            errors.add("错误的手机号码有："+StringUtils.join(errorPhoneList,","));
+        }
+
+        if (!(boolean) map.get("flag")) {
+            smsMarketing.setStatus("5");
+        } else {
+            smsMarketing.setStatus("4");
+            smsMarketing.setSendType(1);
+        }
+
+        boolean result = smsMarketingService.updateById(smsMarketing);
+
+        log.debug("短信发送处理结果：{}", result);
+
+
+        return new SuccessTip(result ? 200 : 500, StringUtils.join(errors, ","));
+    }
+
+    private static Integer countStep(Integer size) {
+        return (size + MAX_NUMBER - 1) / MAX_NUMBER;
     }
 }
