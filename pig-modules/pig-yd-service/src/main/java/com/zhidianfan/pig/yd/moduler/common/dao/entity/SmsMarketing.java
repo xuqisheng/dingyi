@@ -61,6 +61,8 @@ public class SmsMarketing extends Model<SmsMarketing> {
     private Integer sex;
     private Integer version;
     private Integer client;
+    @TableField("error_msg")
+    private String errorMsg;
 
     public Integer getId() {
         return id;
@@ -246,6 +248,14 @@ public class SmsMarketing extends Model<SmsMarketing> {
         this.client = client;
     }
 
+    public String getErrorMsg() {
+        return errorMsg;
+    }
+
+    public void setErrorMsg(String errorMsg) {
+        this.errorMsg = errorMsg;
+    }
+
     @Override
     protected Serializable pkVal() {
         return this.id;
@@ -275,6 +285,7 @@ public class SmsMarketing extends Model<SmsMarketing> {
         ", campaignId=" + campaignId +
         ", sex=" + sex +
         ", version=" + version +
+        ", errorMsg=" + errorMsg +
         "}";
     }
 }

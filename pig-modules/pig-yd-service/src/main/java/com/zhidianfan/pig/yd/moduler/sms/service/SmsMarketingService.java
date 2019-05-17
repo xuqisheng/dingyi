@@ -371,6 +371,7 @@ public class SmsMarketingService {
 
     /**
      * 发送营销短信
+     *
      * @param smsMarketing
      * @return
      */
@@ -382,12 +383,13 @@ public class SmsMarketingService {
         String[] phones = targetPhones.split(",");
         List<String> list = Arrays.asList(phones);
         int limit = countStep(phones.length);
-
+        //查询短信分批信息
         List<SmsMarketingBatch> smsMarketingBatches = smsMarketingBatchService.selectList(
                 new EntityWrapper<SmsMarketingBatch>()
                         .eq("sms_marketing_id", smsMarketing.getId()));
-
+        //没有进行过分批
         if (CollectionUtils.isEmpty(smsMarketingBatches)) {
+            ///分组生成分批数据
             Stream.iterate(0, n -> n + 1)
                     .limit(limit)
                     .parallel()
@@ -401,6 +403,8 @@ public class SmsMarketingService {
                                 marketingBatch.setStatus(0);
                                 marketingBatch.setTargetPhones(StringUtils.join(sendPhones, ","));
                                 marketingBatch.setSmsMarketingId(smsMarketing.getId());
+                                //添加分批数据
+                                smsMarketingBatchService.insert(marketingBatch);
                                 return sendPhones;
                             }
                     );
@@ -414,14 +418,16 @@ public class SmsMarketingService {
         List<Object> errorPhoneList = Lists.newArrayList();
         String pattern = "^[1][34578][0-9]{9}$";
         Pattern regex = Pattern.compile(pattern);
+        //遍历分批数据
         smsMarketingBatches.stream()
+                //过滤已经完成的
                 .filter(smsMarketingBatch -> !StringUtils.equals(smsMarketing.getStatus(), "1"))
                 .forEach(smsMarketingBatch -> {
                     ClMsgParam clMsgParam = new ClMsgParam();
                     List<String> errorPhones = Arrays.stream(targetPhones.split(","))
                             .filter(phone -> !regex.matcher(phone).find())
                             .collect(Collectors.toList());
-                    if(CollectionUtils.isNotEmpty(errorPhones)){
+                    if (CollectionUtils.isNotEmpty(errorPhones)) {
                         errorPhoneList.addAll(errorPhones);
                     }
                     List<String> sendPhones = Arrays.stream(targetPhones.split(","))
@@ -462,8 +468,8 @@ public class SmsMarketingService {
                     smsMarketingBatchService.updateById(smsMarketingBatch);
                 });
 
-        if(CollectionUtils.isNotEmpty(errorPhoneList)){
-            errors.add("错误的手机号码有："+StringUtils.join(errorPhoneList,","));
+        if (CollectionUtils.isNotEmpty(errorPhoneList)) {
+            errors.add("错误的手机号码有：" + StringUtils.join(errorPhoneList, ","));
         }
 
         if (!(boolean) map.get("flag")) {
@@ -473,12 +479,18 @@ public class SmsMarketingService {
             smsMarketing.setSendType(1);
         }
 
+        smsMarketing.setErrorMsg(StringUtils.join(errors, ","));
+
         boolean result = smsMarketingService.updateById(smsMarketing);
 
         log.debug("短信发送处理结果：{}", result);
 
 
-        return new SuccessTip(result ? 200 : 500, StringUtils.join(errors, ","));
+        if (result) {
+            return new SuccessTip(200, "发送成功");
+        } else {
+            return new SuccessTip(500, smsMarketing.getErrorMsg());
+        }
     }
 
     private static Integer countStep(Integer size) {
