@@ -81,62 +81,63 @@ public class ChuangLSmsServiceImpl implements ChuangLSmsService {
 
         //如果环境是测试环境或者本地环境则直接打印日志 不实际发送短信
         //测试环境下不发送短信
-        if ("dev".equals(ydPropertites.getActive())) {
+        if ("dev".equals(ydPropertites.getActive())
+                || "test".equals(ydPropertites.getActive())) {
 
-            //时间戳作为测试短信id
             String msgid = String.valueOf(System.currentTimeMillis());
 
             SmsSendResDTO smsSendResDTO = new SmsSendResDTO();
-            smsSendResDTO.setCode("0");
-            smsSendResDTO.setMsgId(Long.parseLong(msgid));
-            smsSendResDTO.setStatus("SUCCESS");
-            smsSendResDTO.setTime(new Date().toString());
-            smsSendResDTO.setErrorMsg("errorMsg");
-            smsSendResDTO.setText(clMsgContent.getMsg());
-
             BaseSmsLog baseSmsLog = new BaseSmsLog();
-            baseSmsLog.setId(smsId);
-            baseSmsLog.setOperator(1);
-            //更新msgid 本地和
-            baseSmsLog.setMsgid(msgid);
-            //设置提交成功
-            baseSmsLog.setStatus(1);
 
-            //更新短信
-            baseSmsLog.setResTime(new Date());
-            baseSmsLog.setSendRes("这是条测试短信发送成功");
+            log.debug("ydPropertites.getFlag()" + ydPropertites.getFlag());
+            if("success".equals(ydPropertites.getFlag())){
+                //时间戳作为测试短信id
+                smsSendResDTO.setCode("0");
+                smsSendResDTO.setMsgId(Long.parseLong(msgid));
+                smsSendResDTO.setStatus("SUCCESS");
+                smsSendResDTO.setErrorMsg("errorMsg");
+                smsSendResDTO.setTime(new Date().toString());
+                smsSendResDTO.setText(clMsgContent.getMsg());
 
-            baseSmsLogService.updateById(baseSmsLog);
-            log.debug("发送短信成功");//        if ("dev".equals(ydPropertites.getActive())
-//                || "test".equals(ydPropertites.getActive())) {
-//
-//            //时间戳作为测试短信id
-//            String msgid = String.valueOf(System.currentTimeMillis());
-//
-//            SmsSendResDTO smsSendResDTO = new SmsSendResDTO();
-//            smsSendResDTO.setCode("0");
-//            smsSendResDTO.setMsgId(Long.parseLong(msgid));
-//            smsSendResDTO.setStatus("SUCCESS");
-//            smsSendResDTO.setTime(new Date().toString());
-//            smsSendResDTO.setErrorMsg("errorMsg");
-//            smsSendResDTO.setText(clMsgContent.getMsg());
-//
-//            BaseSmsLog baseSmsLog = new BaseSmsLog();
-//            baseSmsLog.setId(smsId);
-//            baseSmsLog.setOperator(1);
-//            //更新msgid 本地和
-//            baseSmsLog.setMsgid(msgid);
-//            //设置提交成功
-//            baseSmsLog.setStatus(1);
-//
-//            //更新短信
-//            baseSmsLog.setResTime(new Date());
-//            baseSmsLog.setSendRes("这是条测试短信发送成功");
-//
+                baseSmsLog.setId(smsId);
+                baseSmsLog.setOperator(1);
+                //更新msgid 本地和
+                baseSmsLog.setStatus(1);
+                baseSmsLog.setMsgid(msgid);
+                //设置提交成功
+                //更新短信
+                baseSmsLog.setSendRes("这是条测试短信发送成功");
+                baseSmsLog.setResTime(new Date());
 
+                baseSmsLogService.updateById(baseSmsLog);
+                log.debug("发送短信成功");
 
-            //更新结果表发送的短信
-            baseSmsLogService.updateCallBackSucStatus(baseSmsLog);
+                //更新结果表发送的短信
+                baseSmsLogService.updateCallBackSucStatus(baseSmsLog);
+            }else {
+                smsSendResDTO.setCode("500");
+                smsSendResDTO.setMsgId(null);
+                smsSendResDTO.setStatus("FAIL");
+                smsSendResDTO.setErrorMsg("手机号码个数错误");
+                smsSendResDTO.setTime(new Date().toString());
+                smsSendResDTO.setText(null);
+
+                baseSmsLog.setId(smsId);
+                baseSmsLog.setOperator(1);
+                //更新msgid 本地和
+                baseSmsLog.setStatus(3);
+                baseSmsLog.setMsgid(msgid);
+                //设置提交成功
+                //更新短信
+                baseSmsLog.setSendRes("这是条测试短信发送失败");
+                baseSmsLog.setResTime(new Date());
+
+                baseSmsLogService.updateById(baseSmsLog);
+                log.debug("测试环境发送短信失败");
+
+                //更新结果表发送的短信
+                baseSmsLogService.updateCallBackSucStatus(baseSmsLog);
+            }
 
 
             return smsSendResDTO;
@@ -226,6 +227,7 @@ public class ChuangLSmsServiceImpl implements ChuangLSmsService {
             int smsNum = clMsgContent.getMsg().length() <= 70 ? 1 : (2 + (clMsgContent.getMsg().length() - 70) / 67);
             smsNum = smsNum * clMsgContent.getPhone().split(",").length;
             baseSmsLog.setFailnum(smsNum);
+
         }
 
         //更新短信
