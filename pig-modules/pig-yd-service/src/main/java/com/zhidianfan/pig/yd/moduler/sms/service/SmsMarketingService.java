@@ -343,7 +343,7 @@ public class SmsMarketingService {
             clMsgParam.setPhone(sendPhones);
             clMsgParam.setMsg(smsMarketing.getContent());
 
-            smsSendResDTO = smsFeign.sendmarkMsg(clMsgParam);
+            smsSendResDTO = smsFeign.sendBatchmarkMsg(clMsgParam);
             log.info("发送短信返回信息:{}", smsSendResDTO);
         } catch (Exception e) {
             log.error("发送短信失败:{}", e.getMessage());
