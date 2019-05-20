@@ -31,7 +31,7 @@ public class VipAppraise extends Model<VipAppraise> {
      * 菜品ID	
      */
     @TableField("dish_id")
-    private Integer dishId;
+    private String dishId;
     /**
      * 菜品评价选项	
      */
@@ -116,11 +116,11 @@ public class VipAppraise extends Model<VipAppraise> {
         this.vipPhone = vipPhone;
     }
 
-    public Integer getDishId() {
+    public String getDishId() {
         return dishId;
     }
 
-    public void setDishId(Integer dishId) {
+    public void setDishId(String dishId) {
         this.dishId = dishId;
     }
 
