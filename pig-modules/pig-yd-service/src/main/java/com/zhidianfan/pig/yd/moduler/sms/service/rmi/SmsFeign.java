@@ -43,7 +43,16 @@ public interface SmsFeign {
      * @return
      */
     @PostMapping(value = "/send/v1", params = {"phone", "msg"})
-    SmsSendResDTO sendmarkMsg(@RequestBody ClMsgParam clMsgParam);
+    SmsSendResDTO sendmarkMsg(@RequestParam(name = "phone") String phone, @RequestParam(name = "msg") String msg);
+
+    /**
+     * 批量营销短信发送
+     *
+     * @param clMsgParam
+     * @return
+     */
+    @PostMapping(value = "/sms/sendLot/v2")
+    SmsSendResDTO sendBatchmarkMsg(@RequestBody ClMsgParam clMsgParam);
 
     /**
      * 批量营销短信发送
