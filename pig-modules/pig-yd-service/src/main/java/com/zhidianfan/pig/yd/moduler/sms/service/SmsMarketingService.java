@@ -343,7 +343,7 @@ public class SmsMarketingService {
             clMsgParam.setPhone(sendPhones);
             clMsgParam.setMsg(smsMarketing.getContent());
 
-            smsSendResDTO = smsFeign.sendBatchmarkMsg(clMsgParam);
+            smsSendResDTO = smsFeign.sendmarkMsg(clMsgParam);
             log.info("发送短信返回信息:{}", smsSendResDTO);
         } catch (Exception e) {
             log.error("发送短信失败:{}", e.getMessage());
@@ -440,7 +440,7 @@ public class SmsMarketingService {
                     SmsSendResDTO smsSendResDTO = null;
 
                     try {
-                        smsSendResDTO = smsFeign.sendBatchmarkMsg(clMsgParam);
+                        smsSendResDTO = smsFeign.sendBatchmarkMsgV2(clMsgParam);
                     } catch (Exception e) {
                         log.error("短信发送失败：{}", e.getMessage(), e);
                     }
