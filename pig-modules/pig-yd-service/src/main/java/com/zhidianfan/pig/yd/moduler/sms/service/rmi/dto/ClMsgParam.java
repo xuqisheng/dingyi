@@ -7,6 +7,8 @@ public class ClMsgParam {
 
     private String msg;
 
+    private String sendtime;
+
     public List<String> getPhone() {
         return phone;
     }
@@ -21,5 +23,22 @@ public class ClMsgParam {
 
     public void setMsg(String msg) {
         this.msg = msg;
+    }
+
+    public String getSendtime() {
+        return sendtime;
+    }
+
+    public void setSendtime(String sendtime) {
+        this.sendtime = sendtime;
+    }
+
+    @Override
+    public String toString() {
+        return "ClMsgParam{" +
+                "phone=" + phone +
+                ", msg='" + msg + '\'' +
+                ", sendtime='" + sendtime + '\'' +
+                '}';
     }
 }

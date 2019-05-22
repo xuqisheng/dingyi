@@ -39,8 +39,7 @@ public interface SmsFeign {
     /**
      * 单笔营销短信发送
      *
-     * @param phone
-     * @param msg
+     * @param clMsgParam
      * @return
      */
     @PostMapping(value = "/send/v1", params = {"phone", "msg"})
@@ -52,6 +51,15 @@ public interface SmsFeign {
      * @param clMsgParam
      * @return
      */
-    @PostMapping(value = "/sms/sendLot/v1")
+    @PostMapping(value = "/sms/sendLot/v2")
     SmsSendResDTO sendBatchmarkMsg(@RequestBody ClMsgParam clMsgParam);
+
+    /**
+     * 批量营销短信发送
+     *
+     * @param clMsgParam
+     * @return
+     */
+    @PostMapping(value = "/sms/sendLot/v2")
+    SmsSendResDTO sendBatchmarkMsgV2(@RequestBody ClMsgParam clMsgParam);
 }

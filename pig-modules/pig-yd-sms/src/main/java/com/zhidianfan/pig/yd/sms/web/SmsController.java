@@ -150,6 +150,31 @@ public class SmsController {
         return ResponseEntity.ok(smsSendResDTO);
     }
 
+    /**
+     * 批量定时营销短信发送
+     *
+     * @param clMsgParam  批量发送参数
+     * @return 发送短信具体成功失败信息
+     */
+    @PostMapping(value = "/sendLot/v2")
+    public ResponseEntity sendBatchmarkMsgWithSendTime(@RequestBody ClMsgParam clMsgParam) {
+        List<String> phones = clMsgParam.getPhone();
+        String phone = Joiner.on(",").join(phones);
+        String msg = clMsgParam.getMsg();
+        log.info("向 {} 发送短信 {} ", phone, msg);
+
+        TaskSmsResult taskSmsResult = iTaskSmsResultService.selectOne(new EntityWrapper<TaskSmsResult>()
+                .eq("operator_status", 1));
+        SmsService smsService = smsServiceMap.get(taskSmsResult.getBeanName());
+
+        long smsId = insertSmsLog(phone, msg).getId();
+
+        SmsSendResDTO smsSendResDTO = smsService.sendMsgV2(phone, msg, "YX", smsId,clMsgParam.getSendtime());
+        return ResponseEntity.ok(smsSendResDTO);
+    }
+
+
+
 
     /**
      * 人工干预 运行商启用状态
