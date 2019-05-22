@@ -29,7 +29,7 @@ public class EntityGenerator {
 
         // 全局配置
         GlobalConfig gc = new GlobalConfig();
-        gc.setOutputDir("/Users/mac/IdeaProjects/pig/pig-modules/pig-yd-service/src/main/java");//这里写你自己的java目录
+        gc.setOutputDir("/Users/qiuqixiao/git/pig/pig-modules/pig-yd-service/src/main/java");//这里写你自己的java目录
         gc.setFileOverride(true);//是否覆盖  防止执行后把写的代码都干掉。还是自己手动删除后再执行吧
         gc.setActiveRecord(true);
         gc.setEnableCache(false);// XML 二级缓存
@@ -62,7 +62,7 @@ public class EntityGenerator {
         StrategyConfig strategy = new StrategyConfig();
         //strategy.setTablePrefix(new String[]{"_"});// 此处可以修改为您的表前缀
         strategy.setNaming(NamingStrategy.underline_to_camel);// 表名生成策略
-        strategy.setInclude(new String[]{"business_appuser_statistics"});
+        strategy.setInclude(new String[]{"vip_appraise"});
         mpg.setStrategy(strategy);
 
         // 包配置
