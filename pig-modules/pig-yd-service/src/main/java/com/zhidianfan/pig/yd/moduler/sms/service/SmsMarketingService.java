@@ -471,8 +471,8 @@ public class SmsMarketingService {
         if (CollectionUtils.isNotEmpty(errorPhoneList)) {
             errors.add("错误的手机号码有：" + StringUtils.join(errorPhoneList, ","));
         }
-
-        if (!(boolean) map.get("flag")) {
+        boolean flag = (boolean) map.getOrDefault("flag", true);
+        if (!flag) {
             smsMarketing.setStatus("5");
         } else {
             smsMarketing.setStatus("4");
