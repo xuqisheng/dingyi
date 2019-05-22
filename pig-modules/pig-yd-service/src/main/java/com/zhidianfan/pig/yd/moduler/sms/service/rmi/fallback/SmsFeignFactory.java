@@ -48,6 +48,12 @@ public class SmsFeignFactory implements FallbackFactory<SmsFeign> {
                 log.error("调用异常 {}.{} ", "SmsFeign", "sendBatchmarkMsg");
                 return null;
             }
+
+            @Override
+            public SmsSendResDTO sendBatchmarkMsgV2(ClMsgParam clMsgParam) {
+                log.error("调用异常 {}.{} ", "SmsFeign", "sendBatchmarkMsgV2");
+                return null;
+            }
         };
     }
 }
