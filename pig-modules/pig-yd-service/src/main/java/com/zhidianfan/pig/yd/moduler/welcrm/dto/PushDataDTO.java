@@ -29,7 +29,7 @@ public class PushDataDTO {
      */
 
     private String user_phone;
-    private int dish_id;
+    private String dish_id;
     private int dish_score;
     private String dish_options;
     private String server_id;
@@ -52,11 +52,11 @@ public class PushDataDTO {
         this.user_phone = user_phone;
     }
 
-    public int getDish_id() {
+    public String getDish_id() {
         return dish_id;
     }
 
-    public void setDish_id(int dish_id) {
+    public void setDish_id(String dish_id) {
         this.dish_id = dish_id;
     }
 
