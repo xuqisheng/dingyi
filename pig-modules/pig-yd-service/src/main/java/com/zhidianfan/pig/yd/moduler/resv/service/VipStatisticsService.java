@@ -261,6 +261,7 @@ public class VipStatisticsService {
             //当前页面+1
             vipCurrentPage++;
         }
+
     }
 
     /**

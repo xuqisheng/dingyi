@@ -187,5 +187,15 @@
 
     </update>
 
+    <select id="selectOverTimeOrder" resultMap="BaseResultMap">
+        select *
+        from resv_order
+        where business_id = #{id}
+        and resv_date = #{time}
+        and `status` = 1
+        and CONCAT(resv_date," ",dest_time) &lt; SYSDATE()
+        and dest_time != ""
+    </select>
+
 
 </mapper>
