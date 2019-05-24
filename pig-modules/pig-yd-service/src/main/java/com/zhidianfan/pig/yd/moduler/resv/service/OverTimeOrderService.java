@@ -50,15 +50,19 @@ public class OverTimeOrderService {
     @Autowired
     private RedisTemplate redisTemplate;
 
-    @Async
+//    @Async
     public void statisticsOverTimeOrder() {
+
+        log.info("任务开始");
+
         ExecutorService executorService = Executors.newFixedThreadPool(10);
 
         try {
             int businessCurrentPage = 1;
             int businessPageSize = 100;
 
-            while (true) {
+
+            while(true) {
                 //翻页查询酒店
                 Page<Business> businessPage = iBusinessService.selectPage(
                         new Page<>(businessCurrentPage, businessPageSize),
@@ -66,7 +70,7 @@ public class OverTimeOrderService {
                 );
 
                 // 线程池更新订单状态,并且推送
-                executorService.execute(() -> new OverTimeOrderThread(this, businessPage.getRecords()));
+                executorService.execute(() -> new OverTimeOrderThread(this, businessPage.getRecords()).run());
 
                 //business查询最后页退出循环
                 if (!businessPage.hasNext()) {
@@ -75,7 +79,6 @@ public class OverTimeOrderService {
                 //当前页数+1
                 businessCurrentPage++;
             }
-
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -94,6 +97,8 @@ public class OverTimeOrderService {
      * @param businessList 酒店id list
      */
     public void updateOverTimeOrderAndPushMessage(List<Business> businessList) {
+
+        log.info("updateOverTimeOrderAndPushMessage-----------task start");
 
         for (Business business : businessList) {
             try {
@@ -161,6 +166,7 @@ public class OverTimeOrderService {
         jsonObject.put("type", "9");
         jgPush.setMsg(jsonObject.toString());
 
+        log.info("推送酒店" + id);
         pushFeign.pushMsg(jgPush.getType(), jgPush.getUsername(), jgPush.getMsgSeq(), jgPush.getBusinessId(), jgPush.getMsg());
 
     }

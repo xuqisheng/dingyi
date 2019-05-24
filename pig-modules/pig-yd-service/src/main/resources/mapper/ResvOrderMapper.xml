@@ -187,13 +187,13 @@
 
     </update>
 
-    <select id="selectOverTimeOrder" resultMap="BaseResultMap">
+    <select id="selectOverTimeOrder" resultType="com.zhidianfan.pig.yd.moduler.common.dao.entity.ResvOrder">
         select *
         from resv_order
         where business_id = #{id}
         and resv_date = #{time}
-        and `status` = 1
-        and CONCAT(resv_date," ",dest_time) &lt; SYSDATE()
+        and `status` = #{status}
+        and CONCAT(resv_date," ",dest_time) &lt; NOW()
         and dest_time != ""
     </select>
 
