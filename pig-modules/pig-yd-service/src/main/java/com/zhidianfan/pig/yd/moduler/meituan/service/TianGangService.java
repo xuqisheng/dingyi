@@ -9,6 +9,11 @@ import com.zhidianfan.pig.yd.moduler.common.dto.SuccessTip;
 import com.zhidianfan.pig.yd.moduler.common.dto.Tip;
 import com.zhidianfan.pig.yd.moduler.common.service.*;
 import com.zhidianfan.pig.yd.moduler.meituan.bo.TianGangOrderBO;
+import com.zhidianfan.pig.yd.moduler.meituan.constant.TianGangMethod;
+import com.zhidianfan.pig.yd.moduler.meituan.dto.TGOrderCanCelDTO;
+import com.zhidianfan.pig.yd.moduler.meituan.dto.TGOrderCreateDTO;
+import com.zhidianfan.pig.yd.moduler.meituan.dto.TGOrderSubmitDTO;
+import com.zhidianfan.pig.yd.moduler.meituan.dto.TGOrderUpdateDTO;
 import com.zhidianfan.pig.yd.moduler.meituan.service.rmi.PushFeign;
 import com.zhidianfan.pig.yd.moduler.meituan.service.rmi.dto.JgPush;
 import com.zhidianfan.pig.yd.utils.IdUtils;
@@ -19,13 +24,21 @@ import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Map;
 
 /**
  * @Author qqx
@@ -57,6 +70,11 @@ public class TianGangService {
 
     @Autowired
     private IVipService vipService;
+
+    @Autowired
+    private RestTemplate restTemplate;
+
+    private String accessToken = "";
 
     /**
      * 创建天港订单
@@ -222,4 +240,200 @@ public class TianGangService {
         String s1 = StringUtils.leftPad("" + l2, 7, "0");
         return Long.parseLong(todayStr + s1);
     }
+
+    /**
+     * 获取天港token
+     */
+    public boolean getToken(){
+
+        boolean getToken = false;
+
+        accessToken = "";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        headers.add("Authorization", "Basic YWxsLW1hbi1zYWxlOnNlY3JldA==");
+        MultiValueMap<String, String> param = new LinkedMultiValueMap<>();
+        param.add("username", TianGangMethod.TIANGANG_USERNAME);
+        param.add("password", TianGangMethod.TIANGANG_PASSWORD);
+        param.add("grant_type", "password");
+        HttpEntity<MultiValueMap<String, String>> httpEntity = new HttpEntity<>(param, headers);
+
+        String url = TianGangMethod.GET_TOKEN_URL;
+
+        try {
+
+            ResponseEntity<String> entity = restTemplate.postForEntity(url, httpEntity, String.class);
+            JSONObject jsonObject = JSONObject.parseObject(entity.getBody(), JSONObject.class);
+
+            if (entity.getStatusCodeValue() == 200) {
+                accessToken =  String.valueOf(jsonObject.get("access_token"));
+                getToken = true;
+            }
+
+        }catch (Exception e){
+
+            getToken = false;
+
+        }
+
+        return getToken;
+    }
+
+    /**
+     * 健康检查
+     */
+    public boolean ApiHealthCheck(){
+
+        boolean isHealth = false;
+
+        String url = TianGangMethod.HEALTH_URL + "?access_token=" + accessToken;
+
+        try {
+
+            ResponseEntity<String> entity = restTemplate.getForEntity(url, String.class);
+
+            if (entity.getStatusCodeValue() != 200) {
+                isHealth = getToken();
+            }else {
+                isHealth = true;
+            }
+
+        }catch (Exception e){
+            isHealth = getToken();
+        }
+
+        return isHealth;
+    }
+
+
+    /**
+     * 新建订单--天港
+     * @param tgOrderCreateDTO
+     */
+    public void createTianGangOrder(TGOrderCreateDTO tgOrderCreateDTO){
+
+        //连接是否健康
+        if(ApiHealthCheck()){
+
+            Map<String, Object> params = JsonUtils.object2Map(tgOrderCreateDTO);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            HttpEntity httpEntity = new HttpEntity(params,headers);
+
+            String url = TianGangMethod.CREATE_ORDER_URL + "?access_token=" + accessToken;
+
+            try {
+
+                ResponseEntity<String> entity = restTemplate.postForEntity(url, httpEntity, String.class);
+
+            }catch (Exception e){
+
+                e.printStackTrace();
+
+            }
+
+        }
+
+    }
+
+    /**
+     * 修改订单--天港
+     * @param tgOrderUpdateDTO
+     */
+    public void updateTianGangOrder(TGOrderUpdateDTO tgOrderUpdateDTO){
+
+        //连接是否健康
+        if(ApiHealthCheck()){
+
+            Map<String, Object> params = JsonUtils.object2Map(tgOrderUpdateDTO);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            HttpEntity httpEntity = new HttpEntity(params,headers);
+
+            String url = TianGangMethod.UPDATE_ORDER_URL + "?access_token=" + accessToken;
+
+            try {
+
+                ResponseEntity<String> entity = restTemplate.postForEntity(url, httpEntity, String.class);
+
+            }catch (Exception e){
+
+                e.printStackTrace();
+
+            }
+
+        }
+
+    }
+
+
+    /**
+     * 取消订单--天港
+     * @param tgOrderCanCelDTO
+     */
+    public void cancelTianGangOrder(TGOrderCanCelDTO tgOrderCanCelDTO){
+
+        //连接是否健康
+        if(ApiHealthCheck()){
+
+            Map<String, Object> params = JsonUtils.object2Map(tgOrderCanCelDTO);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            HttpEntity httpEntity = new HttpEntity(params,headers);
+
+            String url = TianGangMethod.CANCEL_ORDER_URL + "?access_token=" + accessToken;
+
+            try {
+
+                ResponseEntity<String> entity = restTemplate.postForEntity(url, httpEntity, String.class);
+
+            }catch (Exception e){
+
+                e.printStackTrace();
+
+            }
+
+        }
+
+    }
+
+    /**
+     * 结算订单--天港
+     * @param tgOrderSubmitDTO
+     */
+    public void submitTianGangOrder(TGOrderSubmitDTO tgOrderSubmitDTO){
+
+        //连接是否健康
+        if(ApiHealthCheck()){
+
+            Map<String, Object> params = JsonUtils.object2Map(tgOrderSubmitDTO);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            HttpEntity httpEntity = new HttpEntity(params,headers);
+
+            String url = TianGangMethod.SUBMIT_ORDER_URL + "?access_token=" + accessToken;
+
+            try {
+
+                ResponseEntity<String> entity = restTemplate.postForEntity(url, httpEntity, String.class);
+
+            }catch (Exception e){
+
+                e.printStackTrace();
+
+            }
+
+        }
+
+    }
+
 }

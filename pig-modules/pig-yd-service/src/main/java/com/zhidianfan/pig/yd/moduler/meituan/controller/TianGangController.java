@@ -2,6 +2,7 @@ package com.zhidianfan.pig.yd.moduler.meituan.controller;
 
 import com.zhidianfan.pig.yd.moduler.common.dto.Tip;
 import com.zhidianfan.pig.yd.moduler.meituan.bo.TianGangOrderBO;
+import com.zhidianfan.pig.yd.moduler.meituan.dto.TGOrderCreateDTO;
 import com.zhidianfan.pig.yd.moduler.meituan.service.TianGangService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +41,12 @@ public class TianGangController {
         return ResponseEntity.ok(tip);
     }
 
+    @PostMapping(value = "/create/order1")
+    public ResponseEntity createTianGangOrder1(TGOrderCreateDTO tgOrderCreateDTO) throws ParseException {
 
+        tianGangService.createTianGangOrder(tgOrderCreateDTO);
+
+        return ResponseEntity.ok("ok");
+    }
 
 }
