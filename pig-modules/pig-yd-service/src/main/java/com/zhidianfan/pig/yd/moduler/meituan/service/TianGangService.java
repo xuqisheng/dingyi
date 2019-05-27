@@ -338,7 +338,11 @@ public class TianGangService {
 
                 ResponseEntity<String> entity = restTemplate.postForEntity(url, httpEntity, String.class);
 
-                create = true;
+                JSONObject result = JSONObject.parseObject(entity.getBody(), JSONObject.class);
+
+                if(Boolean.parseBoolean(result.get("success").toString())){
+                    create = true;
+                }
 
             }catch (Exception e){
 
@@ -376,7 +380,11 @@ public class TianGangService {
 
                 ResponseEntity<String> entity = restTemplate.postForEntity(url, httpEntity, String.class);
 
-                update = true;
+                JSONObject result = JSONObject.parseObject(entity.getBody(), JSONObject.class);
+
+                if(Boolean.parseBoolean(result.get("success").toString())){
+                    update = true;
+                }
 
             }catch (Exception e){
 
@@ -415,7 +423,11 @@ public class TianGangService {
 
                 ResponseEntity<String> entity = restTemplate.postForEntity(url, httpEntity, String.class);
 
-                cancel = true;
+                JSONObject result = JSONObject.parseObject(entity.getBody(), JSONObject.class);
+
+                if(Boolean.parseBoolean(result.get("success").toString())){
+                    cancel = true;
+                }
 
             }catch (Exception e){
 
@@ -453,7 +465,11 @@ public class TianGangService {
 
                 ResponseEntity<String> entity = restTemplate.postForEntity(url, httpEntity, String.class);
 
-                submit = true;
+                JSONObject result = JSONObject.parseObject(entity.getBody(), JSONObject.class);
+
+                if(Boolean.parseBoolean(result.get("success").toString())){
+                    submit = true;
+                }
 
             }catch (Exception e){
 
