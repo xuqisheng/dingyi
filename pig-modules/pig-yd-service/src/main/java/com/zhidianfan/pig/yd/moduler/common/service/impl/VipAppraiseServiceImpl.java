@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
  * </p>
  *
  * @author huzp
- * @since 2019-05-16
+ * @since 2019-05-27
  */
 @Service
 public class VipAppraiseServiceImpl extends ServiceImpl<VipAppraiseMapper, VipAppraise> implements IVipAppraiseService {

@@ -14,7 +14,7 @@ import java.io.Serializable;
  * </p>
  *
  * @author huzp
- * @since 2019-05-16
+ * @since 2019-05-27
  */
 @TableName("vip_appraise")
 public class VipAppraise extends Model<VipAppraise> {
@@ -23,7 +23,7 @@ public class VipAppraise extends Model<VipAppraise> {
 
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
-    @TableField("businss_id")
+    @TableField("business_id")
     private Integer businessId;
     @TableField("vip_phone")
     private String vipPhone;
@@ -65,6 +65,7 @@ public class VipAppraise extends Model<VipAppraise> {
     /**
      * 消费金额	
      */
+    @TableField("tc_fee")
     private String tcFee;
     /**
      * 消费流水号	
@@ -104,8 +105,8 @@ public class VipAppraise extends Model<VipAppraise> {
         return businessId;
     }
 
-    public void setBusinessId(Integer businssId) {
-        this.businessId = businssId;
+    public void setBusinessId(Integer businessId) {
+        this.businessId = businessId;
     }
 
     public String getVipPhone() {
