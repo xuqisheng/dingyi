@@ -66,5 +66,6 @@
         where s.created_at &gt;= #{startDate} and
         s.created_at &lt; #{endDate}
         and business_id=#{businessId}
+         and s.msgid is not null and s.msgid!=''
     </select>
 </mapper>
