@@ -9,7 +9,7 @@ import com.baomidou.mybatisplus.service.IService;
  * </p>
  *
  * @author huzp
- * @since 2019-05-16
+ * @since 2019-05-27
  */
 public interface IVipAppraiseService extends IService<VipAppraise> {
 

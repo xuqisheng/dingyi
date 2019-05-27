@@ -9,7 +9,7 @@ import com.baomidou.mybatisplus.mapper.BaseMapper;
  * </p>
  *
  * @author huzp
- * @since 2019-05-16
+ * @since 2019-05-27
  */
 public interface VipAppraiseMapper extends BaseMapper<VipAppraise> {
 

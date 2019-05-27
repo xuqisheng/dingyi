@@ -262,10 +262,7 @@ public class ResvOrder extends Model<ResvOrder> {
 
     @TableField("unorder_reason_id")
     private String unorderReasonId;
-    @TableField("tg_order_no")
-    private String tgOrderNo;
-    @TableField("tg_is_sync")
-    private Integer tgIsSync;
+
     /**
      * 安卓电话机用户id
      */
@@ -349,8 +346,6 @@ public class ResvOrder extends Model<ResvOrder> {
                 .append("unorderReasonId",unorderReasonId)
                 .append("androidUserId",androidUserId)
                 .append("androidUserName",androidUserName)
-                .append("tgIsSync",tgIsSync)
-                .append("tgOrderNo",tgOrderNo)
                 .toString();
     }
 
@@ -929,22 +924,6 @@ public class ResvOrder extends Model<ResvOrder> {
 
     public void setAndroidUserName(String androidUserName) {
         this.androidUserName = androidUserName;
-    }
-
-    public String getTgOrderNo() {
-        return tgOrderNo;
-    }
-
-    public void setTgOrderNo(String tgOrderNo) {
-        this.tgOrderNo = tgOrderNo;
-    }
-
-    public Integer getTgIsSync() {
-        return tgIsSync;
-    }
-
-    public void setTgIsSync(Integer tgIsSync) {
-        this.tgIsSync = tgIsSync;
     }
 
     /**
