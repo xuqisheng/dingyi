@@ -85,6 +85,7 @@
         <result column="latitude" property="latitude" />
         <result column="logo_pic" property="logoPic" />
         <result column="table_tag" property="tableTag" />
+        <result column="branch_code" property="branchCode" />
     </resultMap>
 
 </mapper>

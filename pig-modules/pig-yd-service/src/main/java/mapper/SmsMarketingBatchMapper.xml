@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhidianfan.pig.yd.moduler.common.dao.mapper.SmsMarketingBatchMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zhidianfan.pig.yd.moduler.common.dao.entity.SmsMarketingBatch">
+        <id column="id" property="id" />
+        <result column="sms_marketing_id" property="smsMarketingId" />
+        <result column="msg_id" property="msgId" />
+        <result column="target_phones" property="targetPhones" />
+        <result column="status" property="status" />
+    </resultMap>
+
+</mapper>
