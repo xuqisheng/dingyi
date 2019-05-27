@@ -19,6 +19,11 @@ public class LossValueConfigService {
     @Autowired
     private ILossValueConfigService lossValueConfigMapper;
 
+    /**
+     * 根据酒店 id 获取配置项
+     * @param hotelId 酒店 id
+     * @return 配置项
+     */
     public List<LossValueConfig> getLossValueConfig(Integer hotelId) {
         Wrapper<LossValueConfig> wrapper = new EntityWrapper<>();
         wrapper.eq("hotel_id", hotelId)

@@ -2,6 +2,7 @@ package com.zhidianfan.pig.yd.moduler.resv.service;
 
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
+import com.baomidou.mybatisplus.mapper.Wrapper;
 import com.baomidou.mybatisplus.plugins.Page;
 import com.zhidianfan.pig.common.util.PageFactory;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.Business;
@@ -15,6 +16,7 @@ import com.zhidianfan.pig.yd.moduler.common.service.*;
 import com.zhidianfan.pig.yd.moduler.resv.bo.VipMealInfoBo;
 import com.zhidianfan.pig.yd.moduler.resv.bo.VipValueBo;
 import com.zhidianfan.pig.yd.moduler.resv.bo.VipValueCountBo;
+import com.zhidianfan.pig.yd.moduler.resv.constants.CustomerValueConstants;
 import com.zhidianfan.pig.yd.moduler.resv.dto.*;
 import com.zhidianfan.pig.yd.moduler.resv.enums.OrderStatus;
 import com.zhidianfan.pig.yd.utils.ExcelUtil;
@@ -34,6 +36,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.Period;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -528,6 +534,49 @@ public class VipService {
             return true;
         }
         return false;
+    }
+
+    /**
+     * 根据酒店 id 查询 vip 表的用户信息
+     * @param hotelId 酒店 id
+     * @return 酒店所有 vip 列表
+     */
+    public List<Vip> getVipList(long hotelId) {
+        Wrapper<Vip> wrapper = new EntityWrapper<>();
+        wrapper.eq("business_id", hotelId);
+        List<Vip> vips = iVipService.selectList(wrapper);
+        return vips;
+    }
+
+    /**
+     * 获取年龄
+     *
+     * @param vip vip 信息
+     * @return 不显示的年龄为 -1
+     */
+    public int getAge(Vip vip) {
+        Integer hideBirthdayYear = vip.getHideBirthdayYear();
+        if (hideBirthdayYear == null || hideBirthdayYear == 1) {
+            return CustomerValueConstants.DEFAULT_NON_AGE;
+        }
+        String vipBirthday = vip.getVipBirthday();
+        if (StringUtils.isBlank(vipBirthday)) {
+            return CustomerValueConstants.DEFAULT_NON_AGE;
+        }
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyy-MM-dd");
+        LocalDate localDate;
+        try {
+            localDate = LocalDate.parse(vipBirthday, dateTimeFormatter);
+        } catch (DateTimeParseException e) {
+            log.error("格式转换失败", e);
+            return CustomerValueConstants.DEFAULT_NON_AGE;
+        } catch (RuntimeException e) {
+            log.error("其他运行时的异常", e);
+            return CustomerValueConstants.DEFAULT_NON_AGE;
+        }
+        LocalDate now = LocalDate.now();
+        Period between = Period.between(now, localDate);
+        return between.getYears();
     }
 
 }

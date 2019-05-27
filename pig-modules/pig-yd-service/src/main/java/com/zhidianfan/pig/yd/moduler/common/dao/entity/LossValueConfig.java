@@ -30,11 +30,6 @@ public class LossValueConfig extends Model<LossValueConfig> {
     @TableField("hotel_id")
     private Integer hotelId;
     /**
-     * 配置项
-     */
-    @TableField("config_item")
-    private String configItem;
-    /**
      * 细分价值名称
      */
     @TableField("value_name")
@@ -99,14 +94,6 @@ public class LossValueConfig extends Model<LossValueConfig> {
 
     public void setHotelId(Integer hotelId) {
         this.hotelId = hotelId;
-    }
-
-    public String getConfigItem() {
-        return configItem;
-    }
-
-    public void setConfigItem(String configItem) {
-        this.configItem = configItem;
     }
 
     public String getValueName() {
@@ -215,7 +202,6 @@ public class LossValueConfig extends Model<LossValueConfig> {
         return "LossValueConfig{" +
         "id=" + id +
         ", hotelId=" + hotelId +
-        ", configItem=" + configItem +
         ", valueName=" + valueName +
         ", customerPersonAvgStart=" + customerPersonAvgStart +
         ", customerPersonAvgEnd=" + customerPersonAvgEnd +

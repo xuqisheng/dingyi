@@ -1,5 +1,6 @@
 package com.zhidianfan.pig.yd.moduler.resv.constants;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
@@ -10,6 +11,7 @@ public abstract class CustomerValueConstants {
 
     public static final int DEFAULT_NON_AGE = -1;
     public static final LocalDateTime DEFAULT_START_TIME = LocalDateTime.of(2000, 1, 1, 0, 0, 0);
+    public static final LocalDateTime DEFAULT_FIRST_TIME = DEFAULT_START_TIME;
     public static final int DEFAULT_CUSTOMER_AVG = 0;
     public static final int DEFAULT_SPEND_TIME = -1;
     public static final long DEFAULT_USER_ID = 10000;
@@ -50,5 +52,7 @@ public abstract class CustomerValueConstants {
      * 流失客户
      */
     public static final int LOSS_CUSTOMER = 4;
-    
+
+    public static final int DEFAULT_PAYAMOUNT = 0;
+    public static final int DEFAULT_ORDER_COUNT = 1;
 }
