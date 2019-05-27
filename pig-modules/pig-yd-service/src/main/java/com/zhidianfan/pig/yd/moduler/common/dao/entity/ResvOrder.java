@@ -263,7 +263,6 @@ public class ResvOrder extends Model<ResvOrder> {
     @TableField("unorder_reason_id")
     private String unorderReasonId;
 
-
     /**
      * 安卓电话机用户id
      */

@@ -63,6 +63,8 @@ public class ResvMeetingKey extends Model<ResvMeetingKey> {
     private Integer mealTypeId;
     @TableField("meal_type_name")
     private String mealTypeName;
+    @TableField("third_order_no")
+    private String thirdOrderNo;
     /**
      * 宴会类型
      */
@@ -404,6 +406,14 @@ public class ResvMeetingKey extends Model<ResvMeetingKey> {
         this.appUserCode = appUserCode;
     }
 
+    public String getThirdOrderNo() {
+        return thirdOrderNo;
+    }
+
+    public void setThirdOrderNo(String thirdOrderNo) {
+        this.thirdOrderNo = thirdOrderNo;
+    }
+
     @Override
     protected Serializable pkVal() {
         return this.id;
@@ -448,6 +458,7 @@ public class ResvMeetingKey extends Model<ResvMeetingKey> {
         ", createdAt=" + createdAt +
         ", updatedAt=" + updatedAt +
         ", appUserCode=" + appUserCode +
+        ", thirdOrderNo=" + thirdOrderNo +
         "}";
     }
 }
