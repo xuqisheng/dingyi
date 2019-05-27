@@ -43,27 +43,27 @@ public class CustomerValueBaseInfoServiceTest {
     }
 
     @Autowired
-    private CustomerValueBaseInfoService customerValueBaseInfoService;
+    private CustomerValueService customerValueService;
 
     @Test
     public void addCuster() {
-        customerValueBaseInfoService.addCustomerList();
+//        customerValueService.addCustomerList();
     }
 
     @Test
     public void getCustomerValueBaseInfoTest() {
-        customerValueBaseInfoService.getCustomerValueBaseInfo();
+        customerValueService.getCustomerValueBaseInfo();
     }
 
     @Test
     public void getCount() {
-        int customerCount = customerValueBaseInfoService.getCustomerCount(7165);
-        System.out.println(customerCount);
+//        int customerCount = customerValueService.getCustomerCount(7165);
+//        System.out.println(customerCount);
     }
 
     @Test
     public void testgetCustomerValueBaseInfo() {
-        customerValueBaseInfoService.getCustomerValueBaseInfo();
+        customerValueService.getCustomerValueBaseInfo();
         System.err.println("执行完成，去数据库中观察数据");
     }
 }
