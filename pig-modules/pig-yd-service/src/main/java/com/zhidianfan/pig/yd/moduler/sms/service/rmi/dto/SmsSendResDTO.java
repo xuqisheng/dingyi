@@ -1,8 +1,6 @@
 package com.zhidianfan.pig.yd.moduler.sms.service.rmi.dto;
 
 
-import com.zhidianfan.pig.yd.moduler.common.dto.ErrorTip;
-
 /**
  * @Author Conan
  * @Description
@@ -100,5 +98,20 @@ public class SmsSendResDTO {
 
     public void setMsg(String msg) {
         this.msg = msg;
+    }
+
+    @Override
+    public String toString() {
+        return "SmsSendResDTO{" +
+                "time='" + time + '\'' +
+                ", msgId=" + msgId +
+                ", errorMsg='" + errorMsg + '\'' +
+                ", code='" + code + '\'' +
+                ", text='" + text + '\'' +
+                ", status='" + status + '\'' +
+                ", remind=" + remind +
+                ", minSmsNum=" + minSmsNum +
+                ", msg='" + msg + '\'' +
+                '}';
     }
 }
