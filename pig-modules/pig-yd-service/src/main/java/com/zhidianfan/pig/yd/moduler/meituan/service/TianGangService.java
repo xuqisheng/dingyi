@@ -37,8 +37,11 @@ import org.springframework.web.client.RestTemplate;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 /**
  * @Author qqx
@@ -76,6 +79,9 @@ public class TianGangService {
 
     private String accessToken = "";
 
+    @Autowired
+    private IResvOrderService resvOrderService;
+
     /**
      * 创建天港订单
      * @param tianGangOrderBO
@@ -94,7 +100,7 @@ public class TianGangService {
         }
 
         //获取餐别信息
-        MealType mealType = mealTypeService.selectOne(new EntityWrapper<MealType>().eq("config_id",tianGangOrderBO.getMealConfigId()).eq("status","1"));
+        MealType mealType = mealTypeService.selectOne(new EntityWrapper<MealType>().eq("business_id",business.getId()).eq("config_id",tianGangOrderBO.getMealConfigId()).eq("status","1"));
         if(mealType == null){
             tip = new ErrorTip(500,"餐别不存在");
             return tip;
@@ -123,7 +129,7 @@ public class TianGangService {
             resvOrderThird.setMealTypeId(mealType.getId());
             resvOrderThird.setMealTypeName(mealType.getMealTypeName());
             resvOrderThird.setStatus(10);
-            resvOrderThird.setVipSex("男".equals(tianGangOrderBO.getVipSex()) ? "先生" : "女士");
+            resvOrderThird.setVipSex(tianGangOrderBO.getVipSex());
             resvOrderThird.setSource("天港钉钉");
             DateFormat format = new SimpleDateFormat("yyyy-MM-dd");
             resvOrderThird.setResvDate(format.parse(tianGangOrderBO.getResvDate()));
@@ -174,6 +180,7 @@ public class TianGangService {
             resvMeetingKey.setStatus(1);
             resvMeetingKey.setSource(3);
             resvMeetingKey.setVipId(vip1.getId());
+            resvMeetingKey.setVipSex("先生".equals(tianGangOrderBO.getVipSex()) ? "男" : "女");
             DateFormat format = new SimpleDateFormat("yyyy-MM-dd");
             resvMeetingKey.setResvDate(format.parse(tianGangOrderBO.getResvDate()));
             String keyNo = IdUtils.makeOrderNo();
@@ -311,7 +318,9 @@ public class TianGangService {
      * 新建订单--天港
      * @param tgOrderCreateDTO
      */
-    public void createTianGangOrder(TGOrderCreateDTO tgOrderCreateDTO){
+    public boolean createTianGangOrder(TGOrderCreateDTO tgOrderCreateDTO){
+
+        boolean create = false;
 
         //连接是否健康
         if(ApiHealthCheck()){
@@ -329,6 +338,8 @@ public class TianGangService {
 
                 ResponseEntity<String> entity = restTemplate.postForEntity(url, httpEntity, String.class);
 
+                create = true;
+
             }catch (Exception e){
 
                 e.printStackTrace();
@@ -337,13 +348,17 @@ public class TianGangService {
 
         }
 
+        return create;
+
     }
 
     /**
      * 修改订单--天港
      * @param tgOrderUpdateDTO
      */
-    public void updateTianGangOrder(TGOrderUpdateDTO tgOrderUpdateDTO){
+    public boolean updateTianGangOrder(TGOrderUpdateDTO tgOrderUpdateDTO){
+
+        boolean update = false;
 
         //连接是否健康
         if(ApiHealthCheck()){
@@ -361,6 +376,8 @@ public class TianGangService {
 
                 ResponseEntity<String> entity = restTemplate.postForEntity(url, httpEntity, String.class);
 
+                update = true;
+
             }catch (Exception e){
 
                 e.printStackTrace();
@@ -369,6 +386,8 @@ public class TianGangService {
 
         }
 
+        return update;
+
     }
 
 
@@ -376,7 +395,9 @@ public class TianGangService {
      * 取消订单--天港
      * @param tgOrderCanCelDTO
      */
-    public void cancelTianGangOrder(TGOrderCanCelDTO tgOrderCanCelDTO){
+    public boolean cancelTianGangOrder(TGOrderCanCelDTO tgOrderCanCelDTO){
+
+        boolean cancel = false;
 
         //连接是否健康
         if(ApiHealthCheck()){
@@ -394,6 +415,8 @@ public class TianGangService {
 
                 ResponseEntity<String> entity = restTemplate.postForEntity(url, httpEntity, String.class);
 
+                cancel = true;
+
             }catch (Exception e){
 
                 e.printStackTrace();
@@ -402,13 +425,17 @@ public class TianGangService {
 
         }
 
+        return cancel;
+
     }
 
     /**
      * 结算订单--天港
      * @param tgOrderSubmitDTO
      */
-    public void submitTianGangOrder(TGOrderSubmitDTO tgOrderSubmitDTO){
+    public boolean submitTianGangOrder(TGOrderSubmitDTO tgOrderSubmitDTO){
+
+        boolean submit = false;
 
         //连接是否健康
         if(ApiHealthCheck()){
@@ -426,6 +453,8 @@ public class TianGangService {
 
                 ResponseEntity<String> entity = restTemplate.postForEntity(url, httpEntity, String.class);
 
+                submit = true;
+
             }catch (Exception e){
 
                 e.printStackTrace();
@@ -434,6 +463,170 @@ public class TianGangService {
 
         }
 
+        return submit;
+
     }
+
+
+    /**
+     * 遍历天港酒店
+     */
+    public void tianGangTask(){
+
+        //查找天港需要同步的酒店
+        List<Business> businessList = businessService.selectList(new EntityWrapper<Business>().isNotNull("branch_code").eq("status","1"));
+
+        for(Business business : businessList){
+            syncYidingOrderToTiangang(business.getId(),business.getBranchCode());
+        }
+
+    }
+
+    /**
+     * 同步易订普通订单到天港
+     * @param businessId
+     * @param branchCode
+     */
+    public void syncYidingOrderToTiangang(Integer businessId,String branchCode){
+
+        List<ResvOrder> resvOrderList = resvOrderService.selectList(new EntityWrapper<ResvOrder>().eq("business_id",businessId).le("resv_date",new Date()).eq("tg_is_sync",0));
+
+        List<MealType> mediaTypeList = mealTypeService.selectList(new EntityWrapper<MealType>().eq("business_id",businessId).eq("status","1"));
+
+        for (ResvOrder resvOrder : resvOrderList){
+            if("1".equals(resvOrder.getStatus()) || "2".equals(resvOrder.getStatus())){
+
+                if(StringUtils.isNotBlank(resvOrder.getTgOrderNo())){
+                    //天港下单 预订台接单  更新天港订单
+                    TGOrderUpdateDTO tgOrderUpdateDTO = resvOrderToTGOrderUpdateDTO(resvOrder,getMealConfigId(mediaTypeList,resvOrder.getMealTypeId()));
+                    boolean b = updateTianGangOrder(tgOrderUpdateDTO);
+                    if(b){
+                        resvOrder.setTgIsSync(1);
+                        updateOrderSyncStatus(resvOrder);
+                    }
+                }else {
+                    //易订下单 天港新建订单
+                    TGOrderCreateDTO tgOrderCreateDTO = resvOrderToTGOrderCreateDTO(resvOrder,getMealConfigId(mediaTypeList,resvOrder.getMealTypeId()),branchCode);
+                    boolean b = createTianGangOrder(tgOrderCreateDTO);
+                    if(b){
+                        resvOrder.setTgIsSync(1);
+                        updateOrderSyncStatus(resvOrder);
+                    }
+                }
+            } else if("3".equals(resvOrder.getStatus())){
+
+                //易订结账 同步天港结账
+                TGOrderSubmitDTO tgOrderSubmitDTO = new TGOrderSubmitDTO();
+                tgOrderSubmitDTO.setYdOrderNumber(resvOrder.getResvOrder());
+                tgOrderSubmitDTO.setOrderNumber(resvOrder.getTgOrderNo());
+                tgOrderSubmitDTO.setMealCategoryId(2);
+                tgOrderSubmitDTO.setBill(Integer.valueOf(resvOrder.getPayamount()));
+                boolean b = submitTianGangOrder(tgOrderSubmitDTO);
+                if(b){
+                    resvOrder.setTgIsSync(1);
+                    updateOrderSyncStatus(resvOrder);
+                }
+
+            } else if("4".equals(resvOrder.getStatus())){
+
+                //易订退订 同步天港取消订单
+                TGOrderCanCelDTO tgOrderCanCelDTO = new TGOrderCanCelDTO();
+                tgOrderCanCelDTO.setYdOrderNumber(resvOrder.getResvOrder());
+                tgOrderCanCelDTO.setOrderNumber(resvOrder.getTgOrderNo());
+                boolean b = cancelTianGangOrder(tgOrderCanCelDTO);
+                if(b){
+                    resvOrder.setTgIsSync(1);
+                    updateOrderSyncStatus(resvOrder);
+                }
+
+            }
+        }
+    }
+
+    /**
+     * 修改天港订单同步状态
+     * @param resvOrder
+     */
+    public void updateOrderSyncStatus(ResvOrder resvOrder){
+
+        resvOrderService.update(resvOrder,new EntityWrapper<ResvOrder>().eq("resv_order",resvOrder.getResvOrder()));
+
+    }
+
+    /**
+     * 筛选早中晚餐别id
+     * @return
+     */
+    public Integer getMealConfigId(List<MealType> mealTypeList,Integer mealTypeId){
+
+        Integer mealConfigId = 1;
+
+        for (MealType mealType : mealTypeList){
+            if(mealTypeId.equals(mealType.getId())){
+                if("10".equals(String.valueOf(mealType.getConfigId()))){
+                    mealConfigId = 1;
+                }
+                if("11".equals(String.valueOf(mealType.getConfigId()))){
+                    mealConfigId = 2;
+                }
+                if("12".equals(String.valueOf(mealType.getConfigId()))){
+                    mealConfigId = 3;
+                }
+                if("13".equals(String.valueOf(mealType.getConfigId()))){
+                    mealConfigId = 4;
+                }
+                break;
+            }
+        }
+
+        return mealConfigId;
+    }
+
+    /**
+     * 对象转换
+     * @param resvOrder
+     * @return
+     */
+    public TGOrderUpdateDTO resvOrderToTGOrderUpdateDTO(ResvOrder resvOrder,Integer mealConfigId){
+        TGOrderUpdateDTO tgOrderUpdateDTO = new TGOrderUpdateDTO();
+        tgOrderUpdateDTO.setYdOrderNumber(resvOrder.getResvOrder());
+        tgOrderUpdateDTO.setOrderNumber(resvOrder.getTgOrderNo());
+        tgOrderUpdateDTO.setCustomerName(resvOrder.getVipName());
+        tgOrderUpdateDTO.setCustomerPhone(resvOrder.getVipPhone());
+        tgOrderUpdateDTO.setCustomerGender("男".equals(resvOrder.getVipSex()) ? 2 : 1);
+        tgOrderUpdateDTO.setOwnerPhone("19857085775");
+        tgOrderUpdateDTO.setMealCategoryId(2);
+        DateFormat format = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+        tgOrderUpdateDTO.setDate(format.format(resvOrder.getResvDate()));
+        tgOrderUpdateDTO.setMealTimeTypeId(mealConfigId);
+        tgOrderUpdateDTO.setTableNumber(resvOrder.getTableAreaName() + "," + resvOrder.getTableName());
+        tgOrderUpdateDTO.setCustomerAmount(Integer.valueOf(resvOrder.getResvNum()));
+        tgOrderUpdateDTO.setExtraNotes(resvOrder.getRemark());
+        return tgOrderUpdateDTO;
+    }
+
+    /**
+     * 对象转换
+     * @param resvOrder
+     * @return
+     */
+    public TGOrderCreateDTO resvOrderToTGOrderCreateDTO(ResvOrder resvOrder,Integer mealConfigId,String branchCode){
+        TGOrderCreateDTO tgOrderCreateDTO = new TGOrderCreateDTO();
+        tgOrderCreateDTO.setYdOrderNumber(resvOrder.getResvOrder());
+        tgOrderCreateDTO.setBranchCode(branchCode);
+        tgOrderCreateDTO.setCustomerName(resvOrder.getVipName());
+        tgOrderCreateDTO.setCustomerPhone(resvOrder.getVipPhone());
+        tgOrderCreateDTO.setCustomerGender("男".equals(resvOrder.getVipSex()) ? 2 : 1);
+        tgOrderCreateDTO.setOwnerPhone("19857085775");
+        tgOrderCreateDTO.setMealCategoryId(2);
+        DateFormat format = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+        tgOrderCreateDTO.setDate(format.format(resvOrder.getResvDate()));
+        tgOrderCreateDTO.setMealTimeTypeId(mealConfigId);
+        tgOrderCreateDTO.setCustomerAmount(Integer.valueOf(resvOrder.getResvNum()));
+        tgOrderCreateDTO.setExtraNotes(resvOrder.getRemark());
+        return tgOrderCreateDTO;
+    }
+
+
 
 }
