@@ -125,7 +125,7 @@ public class OverTimeOrderService {
                     //记录日志
                     for (ResvOrder resvOrder : resvOrderList) {
                         resvOrderLogs.setResvOrder(resvOrder.getResvOrder()); //订单号
-                        resvOrderLogs.setStatus("7");
+                        resvOrderLogs.setStatus("8");
                         resvOrderLogs.setStatusName("订单超时");
                         resvOrderLogs.setLogs("变更预定状态");
                         resvOrderLogs.setCreatedAt(date);
