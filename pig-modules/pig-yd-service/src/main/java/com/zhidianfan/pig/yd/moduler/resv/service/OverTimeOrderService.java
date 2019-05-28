@@ -114,7 +114,9 @@ public class OverTimeOrderService {
 
 
                     for (ResvOrder resvOrder : resvOrderList) {
-                        resvOrder.setStatus("7");
+                        //超时订单状态码为 8
+                        //todo 数据库订单状态mapping表
+                        resvOrder.setStatus("8");
                     }
                     //1.1. 更新
                     iResvOrderService.updateBatchById(resvOrderList);
