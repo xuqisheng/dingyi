@@ -47,15 +47,16 @@ public class CustomerValueTaskService {
     /**
      * 更新任务的状态
      *
-     * @param b                true-成功,false-失败
+     * @param flag             任务执行标记,0-未开始,1-执行中,2-执行成功,3-执行异常
      * @param exceptionMessage 异常信息
      */
-    public void updateTaskStatus(Long taskId, boolean b, LocalDateTime startTime, LocalDateTime endTime, String exceptionMessage) {
+    public void updateTaskStatus(Long taskId, Integer flag, LocalDateTime startTime, LocalDateTime endTime, String exceptionMessage) {
         // todo 更新任务表状态
         CustomerValueTask task = new CustomerValueTask();
         task.setId(taskId);
         task.setStartTime(startTime);
         task.setEndTime(endTime);
+        task.setFlag(flag);
         Duration duration = Duration.between(startTime, endTime);
         long seconds = duration.getSeconds();
         task.setSpendTime((int) seconds);

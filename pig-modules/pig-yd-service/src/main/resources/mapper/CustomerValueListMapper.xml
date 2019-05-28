@@ -5,6 +5,7 @@
     <!-- 通用查询映射结果 -->
     <resultMap id="BaseResultMap" type="com.zhidianfan.pig.yd.moduler.common.dao.entity.CustomerValueList">
         <id column="id" property="id" />
+        <result column="vip_id" property="vipId" />
         <result column="vip_name" property="vipName" />
         <result column="vip_sex" property="vipSex" />
         <result column="vip_phone" property="vipPhone" />
@@ -14,7 +15,11 @@
         <result column="app_user_name" property="appUserName" />
         <result column="hotel_id" property="hotelId" />
         <result column="customer_count" property="customerCount" />
+        <result column="customer_table" property="customerTable" />
+        <result column="customer_person" property="customerPerson" />
+        <result column="cancel_order" property="cancelOrder" />
         <result column="customer_amount_total" property="customerAmountTotal" />
+        <result column="customer_amount_table" property="customerAmountTable" />
         <result column="customer_amount_avg" property="customerAmountAvg" />
         <result column="last_eat_time" property="lastEatTime" />
         <result column="first_class_value" property="firstClassValue" />

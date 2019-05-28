@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.time.*;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -116,19 +117,25 @@ public class VipConsumeActionTotalService {
     private Integer getConsumerFrequency(List<ResvOrder> resvOrders) {
         // 消费总次数/（当前月-首次消费月份）
         int customerSize = resvOrders.size();
-        Optional<Date> date = resvOrders.stream()
-                .filter(order -> "3".equals(order.getStatus()))
-                .min((o1, o2) -> o1.getUpdatedAt().before(o2.getUpdatedAt()) ? 1 : -1)
-                .map(ResvOrder::getUpdatedAt);
+        Optional<Date> date = getFirstCustomerMonth(resvOrders);
         Optional<Integer> optional = date.map(date1 -> {
             Instant instant = date1.toInstant();
-            LocalDate firstDate = LocalDate.from(instant);
-            Period period = Period.between(LocalDate.now(), firstDate);
+            LocalDateTime localDateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
+            LocalDate firstDate = localDateTime.toLocalDate();
+            Period period = Period.between(firstDate, LocalDate.now());
             return period.getMonths();
         });
         Integer month = optional.orElse(1);
         // todo 这里涉及到精度的问题
-        return customerSize / month;
+        int m = month == 0 ? 1 : month;
+        return customerSize / m;
+    }
+
+    private Optional<Date> getFirstCustomerMonth(List<ResvOrder> resvOrders) {
+        return resvOrders.stream()
+                .filter(order -> "3".equals(order.getStatus()))
+                .min((o1, o2) -> o1.getUpdatedAt().before(o2.getUpdatedAt()) ? 1 : -1)
+                .map(ResvOrder::getUpdatedAt);
     }
 
     /**
@@ -139,13 +146,10 @@ public class VipConsumeActionTotalService {
      */
     private LocalDateTime getFirstConsumerTime(List<ResvOrder> resvOrders) {
         int customerSize = resvOrders.size();
-        Optional<Date> date = resvOrders.stream()
-                .filter(order -> "3".equals(order.getStatus()))
-                .min((o1, o2) -> o1.getUpdatedAt().before(o2.getUpdatedAt()) ? 1 : -1)
-                .map(ResvOrder::getUpdatedAt);
+        Optional<Date> date = getFirstCustomerMonth(resvOrders);
         Optional<LocalDateTime> localDate = date.map(date1 -> {
             Instant instant = date1.toInstant();
-            return LocalDateTime.from(instant);
+            return LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
         });
         return localDate.orElse(CustomerValueConstants.DEFAULT_FIRST_TIME);
     }
@@ -192,34 +196,9 @@ public class VipConsumeActionTotalService {
         }).collect(toList());
         int orderCount = collect.size();
 
-        long count = resvOrderStream
-                .mapToInt(resvOrder -> {
-                    String actualNum = resvOrder.getActualNum();
-                    int actualNo = 1;
-                    return eatPersonNo(resvOrder, actualNo, actualNum);
-                })
-                .count();
         // todo 有潜在 bug
 
         return 0;
-    }
-
-    private int eatPersonNo(ResvOrder order, int actualNo, String actualNum) {
-        if (StringUtils.isNotBlank(actualNum)) {
-            try {
-                actualNo = Integer.parseInt(actualNum);
-            } catch (NumberFormatException e) {
-                String resvNum = order.getResvNum();
-                if (StringUtils.isNotBlank(resvNum)) {
-                    try {
-                        actualNo = Integer.parseInt(resvNum);
-                    } catch (NumberFormatException e1) {
-                        actualNo = 1;
-                    }
-                }
-            }
-        }
-        return actualNo;
     }
 
     /**
@@ -283,6 +262,8 @@ public class VipConsumeActionTotalService {
         Optional<Date> min = resvOrders.stream()
                 .filter(resvOrder -> "2".equals(resvOrder.getStatus()) || "3".equals(resvOrder.getStatus()))
                 .map(ResvOrder::getUpdatedAt)
+                //todo 此处会有 NPE 的问题发生
+                .filter(Objects::nonNull)
                 .min((o1, o2) -> o1.before(o2) ? 1 : -1);
         Optional<LocalDateTime> optional = min.map(date -> LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault()));
         return optional.orElse(CustomerValueConstants.DEFAULT_START_TIME);

@@ -6,13 +6,17 @@ import com.zhidianfan.pig.yd.moduler.common.dao.mapper.ResvOrderMapper;
 import com.zhidianfan.pig.yd.moduler.common.service.ICustomerValueListService;
 import com.zhidianfan.pig.yd.moduler.common.service.IVipConsumeActionLast60Service;
 import com.zhidianfan.pig.yd.moduler.common.service.IVipConsumeActionTotalService;
+import com.zhidianfan.pig.yd.moduler.resv.constants.CustomerValueConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -50,6 +54,9 @@ public class CustomerValueService {
     @Autowired
     private VipConsumeActionLast60Service vipConsumeActionLast60Service;
 
+    @Autowired
+    private CustomerRecordService customerRecordService;
+
     @Transactional(rollbackFor = Exception.class)
     public void getCustomerValueBaseInfo() {
         LocalDateTime startTime = LocalDateTime.now();
@@ -60,39 +67,41 @@ public class CustomerValueService {
 //        List<Vip> vips = vipService.getVipList(hotelId);
         List<Vip> vips = vipService.getVipList(30);
 
-        String exceptionMessage = StringUtils.EMPTY;
-        boolean b = false;
-        for (Vip vip : vips) {
-            try {
-                b = execute(vip);
-            } catch (Exception e) {
-                exceptionMessage = e.toString();
-                // todo 事务手动回滚
-            }
-            if (!b) {
-                log.error("写入数据库失败----", vip);
-            }
-        }
 //        Long taskId = customerValueTask.getId();
         long taskId = 1131751120788840450L;
+        log.info("任务开始，taskId：{}, 开始时间：{}", taskId, DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(startTime));
+        // 任务执行标记,0-未开始,1-执行中,2-执行成功,3-执行异常
+        for (Vip vip : vips) {
+            try {
+                execute(vip);
+            } catch (Exception e) {
+                customerValueTaskService.updateTaskStatus(taskId, CustomerValueConstants.EXECUTE_EXCEPTION, startTime, LocalDateTime.now(), e.getMessage());
+                log.error("任务发生异常，taskId: {}, 异常时间:{}", taskId, DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(LocalDateTime.now()), e);
+                throw e;
+            }
+        }
+
         LocalDateTime endTime = LocalDateTime.now();
-        customerValueTaskService.updateTaskStatus(taskId, b, startTime, endTime, exceptionMessage);
+        customerValueTaskService.updateTaskStatus(taskId, CustomerValueConstants.EXECUTE_SUCCESS, startTime, endTime, StringUtils.EMPTY);
+        log.info("任务结束，taskId: {}, 结束时间:{}", taskId, DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(endTime));
     }
 
-    public boolean execute(Vip vip) {
+    /**
+     * 执行任务的过程
+     * @param vip vip 信息
+     */
+    public void execute(Vip vip) {
         List<ResvOrder> resvOrders = getResvOrders(vip.getId());
         List<ResvOrder> resvOrdersBy60days = getResvOrdersBy60day(vip.getId());
 
         CustomerValueList customerValueList = customerValueListService.getCustomerValueList(vip, resvOrders);
         VipConsumeActionTotal vipConsumeActionTotal = vipConsumeActionTotalService.getVipConsumeActionTotal(vip, resvOrders);
         VipConsumeActionLast60 vipConsumeActionLast60 = vipConsumeActionLast60Service.getVipConsumeActionLast60(vip, resvOrdersBy60days);
+        customerRecordService.saveRecord(vip, resvOrders, customerValueList);
 
-        customerValueListMapper.insert(customerValueList);
-        vipConsumeActionTotalMapper.insert(vipConsumeActionTotal);
-        vipConsumeActionLast60Mapper.insert(vipConsumeActionLast60);
-
-        //todo 这里最后是需要修改的
-        return true;
+        customerValueListMapper.insertOrUpdate(customerValueList);
+        vipConsumeActionTotalMapper.insertOrUpdate(vipConsumeActionTotal);
+        vipConsumeActionLast60Mapper.insertOrUpdate(vipConsumeActionLast60);
     }
 
     /**
@@ -103,10 +112,11 @@ public class CustomerValueService {
     private List<ResvOrder> getResvOrdersBy60day(Integer vipId) {
         EntityWrapper<ResvOrder> wrapper = new EntityWrapper<>();
         wrapper.eq("vip_id", vipId);
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime start = now.minusDays(60);
-        wrapper.ge("created_at", start);
-        wrapper.le("create_at", now);
+        LocalDate now = LocalDate.now();
+        LocalDate start = now.minusDays(60);
+        wrapper.ge("updated_at", start);
+        wrapper.le("updated_at", now);
+        wrapper.in("status", Arrays.asList(2, 3));
         return resvOrderMapper.selectList(wrapper);
     }
 

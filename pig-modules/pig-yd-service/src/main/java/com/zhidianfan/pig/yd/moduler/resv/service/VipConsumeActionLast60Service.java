@@ -162,7 +162,8 @@ public class VipConsumeActionLast60Service {
                         }
                     }
                 }).sum();
-        return sum / personCount;
+        int count = personCount == 0 ? 1 : personCount;
+        return sum / count;
     }
 
 

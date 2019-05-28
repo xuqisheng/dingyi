@@ -55,4 +55,12 @@ public abstract class CustomerValueConstants {
 
     public static final int DEFAULT_PAYAMOUNT = 0;
     public static final int DEFAULT_ORDER_COUNT = 1;
+
+//    记录类型，1-消费订单，2-退订订单|1,2 预订订单，3-主客订单，4-宾客订单|3，4 主/宾客订单，5-价值变更，6-营销经理变更
+    public static final int RECORD_TYPE_CUSTOMER = 1;
+    public static final int RECORD_TYPE_ESC = 2;
+    public static final int RECORD_TYPE_MAN = 3;
+    public static final int RECORD_TYPE_GUEST = 4;
+    public static final int RECORD_TYPE_VALUE_CHANGE = 5;
+    public static final int RECORD_TYPE_APP_USER_CHANGE = 6;
 }
