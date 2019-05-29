@@ -1,10 +1,13 @@
 package com.zhidianfan.pig.yd.moduler.resv.service;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.baomidou.mybatisplus.plugins.Page;
+import com.zhidianfan.pig.common.util.JsonUtils;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.Business;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.ResvOrder;
+import com.zhidianfan.pig.yd.moduler.common.dao.entity.ResvOrderAndroid;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.ResvOrderLogs;
 import com.zhidianfan.pig.yd.moduler.common.service.IBusinessService;
 import com.zhidianfan.pig.yd.moduler.common.service.IResvOrderLogsService;
@@ -163,8 +166,11 @@ public class OverTimeOrderService {
         jgPush.setUsername("13777575146");
 
         JSONObject jsonObject = new JSONObject();
+
+        ResvOrderAndroid  resvOrderAndroid = new ResvOrderAndroid();
+        String orderMsg = JsonUtils.obj2Json(resvOrderAndroid);
         //数据为空
-        jsonObject.put("data", "");
+        jsonObject.put("data", orderMsg);
         //type 为9 作为超时订单推送类型
         jsonObject.put("type", "9");
         jgPush.setMsg(jsonObject.toString());
