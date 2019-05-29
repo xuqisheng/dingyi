@@ -29,12 +29,9 @@ import java.util.stream.Collectors;
 public class CustomerRecordService {
 
     @Autowired
-    private ICustomerRecordService customerRecordMapper;
-
-    @Autowired
     private ICustomerValueListService customerValueListMapper;
 
-    public void saveRecord(Vip vip, List<ResvOrder> resvOrders, CustomerValueList customerValueList) {
+    public List<CustomerRecord> getCustomerRecord(Vip vip, List<ResvOrder> resvOrders, CustomerValueList customerValueList) {
         List<CustomerRecord> insertRecordList = Lists.newArrayList();
         List<CustomerRecord> customerRecords = reserveOrderCustomer(vip, resvOrders);
         List<CustomerRecord> customerRecords1 = reserveOrderESC(vip, resvOrders);
@@ -51,7 +48,7 @@ public class CustomerRecordService {
         insertRecordList.add(valueChangeRecord);
         insertRecordList.add(userChangeRecord);
 
-        customerRecordMapper.insertBatch(insertRecordList);
+        return insertRecordList;
     }
 
     /**

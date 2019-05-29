@@ -3,6 +3,7 @@ package com.zhidianfan.pig.yd.moduler.resv.service;
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.*;
 import com.zhidianfan.pig.yd.moduler.common.dao.mapper.ResvOrderMapper;
+import com.zhidianfan.pig.yd.moduler.common.service.ICustomerRecordService;
 import com.zhidianfan.pig.yd.moduler.common.service.ICustomerValueListService;
 import com.zhidianfan.pig.yd.moduler.common.service.IVipConsumeActionLast60Service;
 import com.zhidianfan.pig.yd.moduler.common.service.IVipConsumeActionTotalService;
@@ -57,6 +58,9 @@ public class CustomerValueService {
     @Autowired
     private CustomerRecordService customerRecordService;
 
+    @Autowired
+    private ICustomerRecordService customerRecordMapper;
+
     @Transactional(rollbackFor = Exception.class)
     public void getCustomerValueBaseInfo() {
         LocalDateTime startTime = LocalDateTime.now();
@@ -97,11 +101,12 @@ public class CustomerValueService {
         CustomerValueList customerValueList = customerValueListService.getCustomerValueList(vip, resvOrders);
         VipConsumeActionTotal vipConsumeActionTotal = vipConsumeActionTotalService.getVipConsumeActionTotal(vip, resvOrders);
         VipConsumeActionLast60 vipConsumeActionLast60 = vipConsumeActionLast60Service.getVipConsumeActionLast60(vip, resvOrdersBy60days);
-        customerRecordService.saveRecord(vip, resvOrders, customerValueList);
+        List<CustomerRecord> customerRecordList = customerRecordService.getCustomerRecord(vip, resvOrders, customerValueList);
 
         customerValueListMapper.insertOrUpdate(customerValueList);
         vipConsumeActionTotalMapper.insertOrUpdate(vipConsumeActionTotal);
         vipConsumeActionLast60Mapper.insertOrUpdate(vipConsumeActionLast60);
+        customerRecordMapper.insertBatch(customerRecordList);
     }
 
     /**

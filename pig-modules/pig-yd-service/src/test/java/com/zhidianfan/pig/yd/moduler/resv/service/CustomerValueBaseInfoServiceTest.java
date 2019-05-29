@@ -120,6 +120,6 @@ public class CustomerValueBaseInfoServiceTest {
         Vip vip = new Vip();
         vip.setId(5698542);
         CustomerValueList valueList = new CustomerValueList();
-        recordService.saveRecord(vip, getOrder(), valueList);
+        recordService.getCustomerRecord(vip, getOrder(), valueList);
     }
 }

@@ -11,4 +11,5 @@ public class QueueName {
 
     public final static String TRVIPINFO_AUTOUPDATE = "trvipinfo_autoupdate";
 
+    public static final String CUSTOMER_VALUE_CHANGE_FIELD = "CUSTOMER_VALUE_CHANGE_FILED";
 }
