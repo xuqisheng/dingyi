@@ -85,6 +85,9 @@ public class TianGangService {
     @Autowired
     private IResvOrderSyncService resvOrderSyncService;
 
+    @Autowired
+    private IResvMeetingOrderService resvMeetingOrderService;
+
     /**
      * 创建天港订单
      * @param tianGangOrderBO
@@ -321,7 +324,7 @@ public class TianGangService {
      * 新建订单--天港
      * @param tgOrderCreateDTO
      */
-    public boolean createTianGangOrder(TGOrderCreateDTO tgOrderCreateDTO){
+    public boolean createTianGangOrder(TGOrderCreateDTO tgOrderCreateDTO,Integer orderType){
 
         boolean create = false;
 
@@ -345,7 +348,11 @@ public class TianGangService {
 
                 if(Boolean.parseBoolean(String.valueOf(result.get("success")))){
                     JSONObject result1 = JSONObject.parseObject(String.valueOf(result.get("result")), JSONObject.class);
-                    updateOrderSyncStatus(tgOrderCreateDTO.getYdOrderNumber(),String.valueOf(result1.get("orderNumber")));
+                    if(orderType == 1){
+                        updateOrderSyncStatus(tgOrderCreateDTO.getYdOrderNumber(),String.valueOf(result1.get("orderNumber")));
+                    }else {
+                        updateMeetingOrderSyncStatus(tgOrderCreateDTO.getYdOrderNumber(),String.valueOf(result1.get("orderNumber")));
+                    }
                     create = true;
                 }
 
@@ -412,6 +419,10 @@ public class TianGangService {
 
         boolean cancel = false;
 
+        if(StringUtils.isBlank(tgOrderCanCelDTO.getOrderNumber())){
+            return cancel;
+        }
+
         //连接是否健康
         if(ApiHealthCheck()){
 
@@ -453,6 +464,10 @@ public class TianGangService {
     public boolean submitTianGangOrder(TGOrderSubmitDTO tgOrderSubmitDTO){
 
         boolean submit = false;
+
+        if(StringUtils.isBlank(tgOrderSubmitDTO.getOrderNumber())){
+            return submit;
+        }
 
         //连接是否健康
         if(ApiHealthCheck()){
@@ -501,6 +516,7 @@ public class TianGangService {
             //同步易订普通订单到天港
             syncYidingOrderToTiangang(business.getId(),business.getBranchCode());
             //同步易订宴会订单到天港
+            syncYidingMeetingOrderToTiangang(business.getId(),business.getBranchCode());
         }
 
     }
@@ -512,7 +528,14 @@ public class TianGangService {
      */
     public void syncYidingOrderToTiangang(Integer businessId,String branchCode){
 
-        List<ResvOrder> resvOrderList = resvOrderService.selectList(new EntityWrapper<ResvOrder>().eq("business_id",businessId).le("resv_date",new Date()));
+        //订单状态
+        List<String> statusList = new ArrayList<>();
+        statusList.add("1");
+        statusList.add("2");
+        statusList.add("3");
+        statusList.add("4");
+
+        List<ResvOrder> resvOrderList = resvOrderService.selectList(new EntityWrapper<ResvOrder>().eq("business_id",businessId).le("resv_date",new Date()).in("status",statusList));
 
         List<MealType> mediaTypeList = mealTypeService.selectList(new EntityWrapper<MealType>().eq("business_id",businessId).eq("status","1"));
 
@@ -536,7 +559,7 @@ public class TianGangService {
                 }else {
                     //易订下单 天港新建订单
                     TGOrderCreateDTO tgOrderCreateDTO = resvOrderToTGOrderCreateDTO(resvOrder,getMealConfigId(mediaTypeList,resvOrder.getMealTypeId()),branchCode);
-                    createTianGangOrder(tgOrderCreateDTO);
+                    createTianGangOrder(tgOrderCreateDTO,1);
                 }
             } else if("3".equals(resvOrder.getStatus())){
 
@@ -567,7 +590,87 @@ public class TianGangService {
     }
 
     /**
-     * 修改天港订单同步状态
+     * 同步易订普通订单到天港
+     * @param businessId
+     * @param branchCode
+     */
+    public void syncYidingMeetingOrderToTiangang(Integer businessId,String branchCode){
+
+        //订单状态
+        List<String> statusList = new ArrayList<>();
+        statusList.add("1");
+        statusList.add("2");
+        statusList.add("3");
+        statusList.add("4");
+
+        List<ResvMeetingOrder> resvMeetingOrderList = resvMeetingOrderService.selectList(new EntityWrapper<ResvMeetingOrder>().eq("business_id",businessId).le("resv_date",new Date()).in("status",statusList).eq("tg_is_sync",0));
+
+        List<MealType> mediaTypeList = mealTypeService.selectList(new EntityWrapper<MealType>().eq("business_id",businessId).eq("status","1"));
+
+        for (ResvMeetingOrder resvMeetingOrder : resvMeetingOrderList){
+
+            if("1".equals(resvMeetingOrder.getStatus()) || "2".equals(resvMeetingOrder.getStatus())){
+
+                if(StringUtils.isNotBlank(resvMeetingOrder.getTgOrderNo())){
+                    //天港下单 预订台接单  更新天港订单
+                    TGOrderUpdateDTO tgOrderUpdateDTO = resvMeetingOrderToTGOrderUpdateDTO(resvMeetingOrder,getMealConfigId(mediaTypeList,resvMeetingOrder.getMealTypeId()));
+                    boolean b = updateTianGangOrder(tgOrderUpdateDTO);
+                    if(b){
+                        updateMeetingOrderSyncStatus(resvMeetingOrder.getResvOrder(),null);
+                    }
+                }else {
+                    //易订下单 天港新建订单
+                    TGOrderCreateDTO tgOrderCreateDTO = resvMeetingOrderToTGOrderCreateDTO(resvMeetingOrder,getMealConfigId(mediaTypeList,resvMeetingOrder.getMealTypeId()),branchCode);
+                    createTianGangOrder(tgOrderCreateDTO,2);
+                }
+            } else if("3".equals(resvMeetingOrder.getStatus())){
+
+                //易订结账 同步天港结账
+                TGOrderSubmitDTO tgOrderSubmitDTO = new TGOrderSubmitDTO();
+                tgOrderSubmitDTO.setYdOrderNumber(resvMeetingOrder.getResvOrder());
+                tgOrderSubmitDTO.setOrderNumber(resvMeetingOrder.getTgOrderNo());
+                tgOrderSubmitDTO.setMealCategoryId(1);
+                tgOrderSubmitDTO.setBill(Integer.valueOf(resvMeetingOrder.getPayAmount()));
+                boolean b = submitTianGangOrder(tgOrderSubmitDTO);
+                if(b){
+                    updateMeetingOrderSyncStatus(resvMeetingOrder.getResvOrder(),null);
+                }
+
+            } else if("4".equals(resvMeetingOrder.getStatus())){
+
+                //易订退订 同步天港取消订单
+                TGOrderCanCelDTO tgOrderCanCelDTO = new TGOrderCanCelDTO();
+                tgOrderCanCelDTO.setYdOrderNumber(resvMeetingOrder.getResvOrder());
+                tgOrderCanCelDTO.setOrderNumber(resvMeetingOrder.getTgOrderNo());
+                boolean b = cancelTianGangOrder(tgOrderCanCelDTO);
+                if(b){
+                    updateMeetingOrderSyncStatus(resvMeetingOrder.getResvOrder(),null);
+                }
+
+            }
+        }
+    }
+
+    /**
+     * 修改天港宴会订单同步状态
+     * @param resvMeetingOrder
+     */
+    public void updateMeetingOrderSyncStatus(String resvMeetingOrder,String tgOrderNo){
+
+        ResvMeetingOrder resvMeetingOrder1 = resvMeetingOrderService.selectOne(new EntityWrapper<ResvMeetingOrder>().eq("resv_order",resvMeetingOrder));
+
+        resvMeetingOrder1.setTgIsSync(1);
+
+        if(StringUtils.isNotBlank(tgOrderNo)){
+            resvMeetingOrder1.setTgOrderNo(tgOrderNo);
+        }
+
+        resvMeetingOrderService.update(resvMeetingOrder1,new EntityWrapper<ResvMeetingOrder>().eq("resv_order",resvMeetingOrder));
+
+    }
+
+    /**
+     * 修改天港普通订单同步状态
      * @param resvOrder
      */
     public void updateOrderSyncStatus(String resvOrder,String thirdOrderNo){
@@ -627,6 +730,8 @@ public class TianGangService {
     /**
      * 对象转换
      * @param resvOrder
+     * @param mealConfigId
+     * @param thirdOrderNo
      * @return
      */
     public TGOrderUpdateDTO resvOrderToTGOrderUpdateDTO(ResvOrder resvOrder,Integer mealConfigId,String thirdOrderNo){
@@ -649,7 +754,35 @@ public class TianGangService {
 
     /**
      * 对象转换
+     * @param resvMeetingOrder
+     * @param mealConfigId
+     * @return
+     */
+    public TGOrderUpdateDTO resvMeetingOrderToTGOrderUpdateDTO(ResvMeetingOrder resvMeetingOrder,Integer mealConfigId){
+        TGOrderUpdateDTO tgOrderUpdateDTO = new TGOrderUpdateDTO();
+        tgOrderUpdateDTO.setYdOrderNumber(resvMeetingOrder.getResvOrder());
+        tgOrderUpdateDTO.setOrderNumber(resvMeetingOrder.getTgOrderNo());
+        tgOrderUpdateDTO.setCustomerName(resvMeetingOrder.getVipName());
+        tgOrderUpdateDTO.setCustomerPhone(resvMeetingOrder.getVipPhone());
+        tgOrderUpdateDTO.setCustomerGender("男".equals(resvMeetingOrder.getVipSex()) ? 2 : 1);
+        tgOrderUpdateDTO.setOwnerPhone("19857085775");
+        tgOrderUpdateDTO.setMealCategoryId(1);
+        DateFormat format = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+        tgOrderUpdateDTO.setDate(format.format(resvMeetingOrder.getResvDate()));
+        tgOrderUpdateDTO.setMealTimeTypeId(mealConfigId);
+        tgOrderUpdateDTO.setTableNumber(resvMeetingOrder.getTableAreaName() + "," + resvMeetingOrder.getTableName());
+        tgOrderUpdateDTO.setYdBanquetCategoryId(resvMeetingOrder.getResvMeetingOrderType());
+        tgOrderUpdateDTO.setExtraNotes(resvMeetingOrder.getRemark());
+        tgOrderUpdateDTO.setStandardMealMark(resvMeetingOrder.getDishStandard());
+        tgOrderUpdateDTO.setTableAmount(resvMeetingOrder.getResvTableNum());
+        return tgOrderUpdateDTO;
+    }
+
+    /**
+     * 对象转换
      * @param resvOrder
+     * @param mealConfigId
+     * @param branchCode
      * @return
      */
     public TGOrderCreateDTO resvOrderToTGOrderCreateDTO(ResvOrder resvOrder,Integer mealConfigId,String branchCode){
@@ -666,6 +799,31 @@ public class TianGangService {
         tgOrderCreateDTO.setMealTimeTypeId(mealConfigId);
         tgOrderCreateDTO.setCustomerAmount(Integer.valueOf(resvOrder.getResvNum()));
         tgOrderCreateDTO.setExtraNotes(resvOrder.getRemark());
+        return tgOrderCreateDTO;
+    }
+
+    /**
+     * 对象转换
+     * @param resvMeetingOrder
+     * @param mealConfigId
+     * @param branchCode
+     * @return
+     */
+    public TGOrderCreateDTO resvMeetingOrderToTGOrderCreateDTO(ResvMeetingOrder resvMeetingOrder,Integer mealConfigId,String branchCode){
+        TGOrderCreateDTO tgOrderCreateDTO = new TGOrderCreateDTO();
+        tgOrderCreateDTO.setYdOrderNumber(resvMeetingOrder.getResvOrder());
+        tgOrderCreateDTO.setBranchCode(branchCode);
+        tgOrderCreateDTO.setCustomerName(resvMeetingOrder.getVipName());
+        tgOrderCreateDTO.setCustomerPhone(resvMeetingOrder.getVipPhone());
+        tgOrderCreateDTO.setCustomerGender("男".equals(resvMeetingOrder.getVipSex()) ? 2 : 1);
+        tgOrderCreateDTO.setOwnerPhone("19857085775");
+        tgOrderCreateDTO.setMealCategoryId(1);
+        DateFormat format = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+        tgOrderCreateDTO.setDate(format.format(resvMeetingOrder.getResvDate()));
+        tgOrderCreateDTO.setMealTimeTypeId(mealConfigId);
+        tgOrderCreateDTO.setTableAmount(Integer.valueOf(resvMeetingOrder.getResvTableNum()));
+        tgOrderCreateDTO.setExtraNotes(resvMeetingOrder.getRemark());
+        tgOrderCreateDTO.setYdBanquetCategoryId(resvMeetingOrder.getResvMeetingOrderType());
         return tgOrderCreateDTO;
     }
 
