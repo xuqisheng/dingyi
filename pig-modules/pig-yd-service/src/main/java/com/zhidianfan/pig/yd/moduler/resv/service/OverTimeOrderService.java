@@ -50,7 +50,7 @@ public class OverTimeOrderService {
     @Autowired
     private RedisTemplate redisTemplate;
 
-//    @Async
+    @Async
     public void statisticsOverTimeOrder() {
 
         log.info("任务开始");
@@ -62,7 +62,7 @@ public class OverTimeOrderService {
             int businessPageSize = 100;
 
 
-            while(true) {
+            while (true) {
                 //翻页查询酒店
                 Page<Business> businessPage = iBusinessService.selectPage(
                         new Page<>(businessCurrentPage, businessPageSize),
@@ -91,11 +91,11 @@ public class OverTimeOrderService {
     }
 
     /**
-     *
      * 更新超时订单状态,并且推送
      *
      * @param businessList 酒店id list
      */
+
     public void updateOverTimeOrderAndPushMessage(List<Business> businessList) {
 
         log.info("updateOverTimeOrderAndPushMessage-----------task start");
@@ -107,30 +107,30 @@ public class OverTimeOrderService {
                 Date date = new Date();
 
                 // 1.筛选出订单
-                List<ResvOrder> resvOrderList = iResvOrderService.selectOverTimeOrder(business.getId(), now.toString(), "1");
+                Integer resvOrderNum = iResvOrderService.selectOverTimeOrder(business.getId(), now.toString(), "1");
 
                 //如果有需要更新的超时订单
-                if (!resvOrderList.isEmpty()){
+                if (resvOrderNum != null && resvOrderNum != 0) {
 
 
-                    for (ResvOrder resvOrder : resvOrderList) {
-                        //超时订单状态码为 8
-                        //todo 数据库订单状态mapping表
-                        resvOrder.setStatus("8");
-                    }
-                    //1.1. 更新
-                    iResvOrderService.updateBatchById(resvOrderList);
-                    //1.2. 订单变为超时更新日志
-                    ResvOrderLogs resvOrderLogs = new ResvOrderLogs();
-                    //记录日志
-                    for (ResvOrder resvOrder : resvOrderList) {
-                        resvOrderLogs.setResvOrder(resvOrder.getResvOrder()); //订单号
-                        resvOrderLogs.setStatus("8");
-                        resvOrderLogs.setStatusName("订单超时");
-                        resvOrderLogs.setLogs("变更预定状态");
-                        resvOrderLogs.setCreatedAt(date);
-                        iResvOrderLogsService.insert(resvOrderLogs);
-                    }
+//                    for (ResvOrder resvOrder : resvOrderList) {
+//                        //超时订单状态码为 8
+//                        resvOrder.setStatus("8");
+//                        resvOrder.setUpdatedAt(date);
+//                    }
+//                    //1.1. 更新
+//                    iResvOrderService.updateBatchById(resvOrderList);
+//                    //1.2. 订单变为超时更新日志
+//                    ResvOrderLogs resvOrderLogs = new ResvOrderLogs();
+//                    //记录日志
+//                    for (ResvOrder resvOrder : resvOrderList) {
+//                        resvOrderLogs.setResvOrder(resvOrder.getResvOrder()); //订单号
+//                        resvOrderLogs.setStatus("8");
+//                        resvOrderLogs.setStatusName("订单超时");
+//                        resvOrderLogs.setLogs("变更预定状态");
+//                        resvOrderLogs.setCreatedAt(date);
+//                        iResvOrderLogsService.insert(resvOrderLogs);
+//                    }
 
                     //2. 推送
                     pushMessage(business.getId());
@@ -138,17 +138,18 @@ public class OverTimeOrderService {
 
                 }
 
-            }catch (Exception e){
-                log.error("更新酒店id为:"+ business.getId()+ "的超时订单出错");
+            } catch (Exception e) {
+                log.error("推送:" + business.getId() + "的超时信息");
                 log.error(e.toString());
             }
 
-            log.debug(business.getId()+ " 更新完成");
+            log.debug(business.getId() + " 更新完成");
         }
     }
 
     /**
      * 推送消息 (超时订单状态为8)
+     *
      * @param id 酒店id
      */
     private void pushMessage(Integer id) {
@@ -176,13 +177,14 @@ public class OverTimeOrderService {
 
     /**
      * 生成key
+     *
      * @return 返回一个为long的key
      */
     private long getNextDateId() {
         String todayStr = DateFormatUtils.format(System.currentTimeMillis(), "yyyyMMdd");//历史遗留Key暂不考虑，一天也就一个。
 
         long l2 = redisTemplate.opsForValue().increment("PUSH:" + "OVERTIME_ORDER" + ":" + todayStr, 1);
-        String s1 = StringUtils.leftPad(""+l2, 7, "0");
+        String s1 = StringUtils.leftPad("" + l2, 7, "0");
         return Long.parseLong(todayStr + s1);
     }
 }

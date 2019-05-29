@@ -73,7 +73,7 @@ public class ResvOrderServiceImpl extends ServiceImpl<ResvOrderMapper, ResvOrder
     }
 
     @Override
-    public List<ResvOrder> selectOverTimeOrder(Integer id, String time, String status) {
+    public Integer selectOverTimeOrder(Integer id, String time, String status) {
         return baseMapper.selectOverTimeOrder(id,time,status);
     }
 

@@ -187,8 +187,8 @@
 
     </update>
 
-    <select id="selectOverTimeOrder" resultType="com.zhidianfan.pig.yd.moduler.common.dao.entity.ResvOrder">
-        select *
+    <select id="selectOverTimeOrder" resultType="integer">
+        select 	count(1)
         from resv_order
         where business_id = #{id}
         and resv_date = #{time}
