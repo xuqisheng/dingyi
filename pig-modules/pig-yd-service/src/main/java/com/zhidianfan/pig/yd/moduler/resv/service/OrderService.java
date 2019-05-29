@@ -407,10 +407,11 @@ public class OrderService {
     }
 
 
-    public List<BatchOrderBo> orderSearchStatus(DeskOrderDTO bean) {
+    public Page<BatchOrderBo> orderSearchStatus(DeskOrderDTO bean) {
 
         List<BatchOrderBo> batchOrderBos = new ArrayList<>();
-        List<DeskOrderBo> deskOrders = resvOrderService.findOrders(bean);
+        Page<BatchOrderBo> page = new PageFactory().defaultPage();
+        List<DeskOrderBo> deskOrders = resvOrderService.findOrders(page,bean);
 
         //已结账散客
         BatchOrderBo notVipStatus3 = new BatchOrderBo();
@@ -466,6 +467,6 @@ public class OrderService {
         batchOrderBos.add(notVipStatus3);
         batchOrderBos.add(notVipStatus2);
 
-        return batchOrderBos;
+        return page.setRecords(batchOrderBos);
     }
 }

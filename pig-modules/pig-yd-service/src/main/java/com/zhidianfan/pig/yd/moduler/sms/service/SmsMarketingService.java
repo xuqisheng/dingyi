@@ -18,7 +18,6 @@ import com.zhidianfan.pig.yd.moduler.sms.service.rmi.dto.ClMsgParam;
 import com.zhidianfan.pig.yd.moduler.sms.service.rmi.dto.SmsSendResDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.ListUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -382,32 +381,45 @@ public class SmsMarketingService {
         }
         String[] phones = targetPhones.split(",");
         List<String> list = Arrays.asList(phones);
-        int limit = countStep(phones.length);
+//        int limit = countStep(phones.length);
         //查询短信分批信息
         List<SmsMarketingBatch> smsMarketingBatches = smsMarketingBatchService.selectList(
                 new EntityWrapper<SmsMarketingBatch>()
                         .eq("sms_marketing_id", smsMarketing.getId()));
         //没有进行过分批
         if (CollectionUtils.isEmpty(smsMarketingBatches)) {
+            Map<Integer, List<String>> map = split(list);
+            map.keySet().forEach(k->{
+                List<String> sendPhones = map.get(k);
+                SmsMarketingBatch marketingBatch = new SmsMarketingBatch();
+                marketingBatch.setStatus(0);
+                marketingBatch.setTargetPhones(StringUtils.join(sendPhones, ","));
+                marketingBatch.setSmsMarketingId(smsMarketing.getId());
+                //添加分批数据
+                smsMarketingBatchService.insert(marketingBatch);
+            });
+//            List<List<String>> lists = Lists.newArrayList();
+
             ///分组生成分批数据
-            Stream.iterate(0, n -> n + 1)
-                    .limit(limit)
-                    .parallel()
-                    .map(n -> {
-                                List<String> sendPhones = list.stream()
-                                        .skip(n * MAX_NUMBER)
-                                        .limit(MAX_NUMBER)
-                                        .parallel()
-                                        .collect(Collectors.toList());
-                                SmsMarketingBatch marketingBatch = new SmsMarketingBatch();
-                                marketingBatch.setStatus(0);
-                                marketingBatch.setTargetPhones(StringUtils.join(sendPhones, ","));
-                                marketingBatch.setSmsMarketingId(smsMarketing.getId());
-                                //添加分批数据
-                                smsMarketingBatchService.insert(marketingBatch);
-                                return sendPhones;
-                            }
-                    );
+//            Stream<List<String>> listStream = Stream.iterate(0, n -> n + 1)
+//                    .limit(MAX_NUMBER)
+//
+////                    .parallel()
+//                    .map(n -> {
+//                                List<String> sendPhones = list.stream()
+//                                        .skip(n * MAX_NUMBER)
+//                                        .limit(MAX_NUMBER)
+//                                        .parallel()
+//                                        .collect(Collectors.toList());
+//                                SmsMarketingBatch marketingBatch = new SmsMarketingBatch();
+//                                marketingBatch.setStatus(0);
+//                                marketingBatch.setTargetPhones(StringUtils.join(sendPhones, ","));
+//                                marketingBatch.setSmsMarketingId(smsMarketing.getId());
+//                                //添加分批数据
+//                                smsMarketingBatchService.insert(marketingBatch);
+//                                return sendPhones;
+//                            }
+//                    );
             smsMarketingBatches = smsMarketingBatchService.selectList(
                     new EntityWrapper<SmsMarketingBatch>()
                             .eq("sms_marketing_id", smsMarketing.getId()));
@@ -495,5 +507,21 @@ public class SmsMarketingService {
 
     private static Integer countStep(Integer size) {
         return (size + MAX_NUMBER - 1) / MAX_NUMBER;
+    }
+
+    public static Map<Integer,List<String>> split(List<String> historyList){
+        int listSize = historyList.size();
+        int toIndex = 10000;
+        Map map = new HashMap();     //用map存起来新的分组后数据
+        int keyToken = 0;
+        for (int i = 0; i < historyList.size(); i += toIndex) {
+            if (i + toIndex > listSize) {        //作用为toIndex最后没有100条数据则剩余几条newList中就装几条
+                toIndex = listSize - i;
+            }
+            List newList = historyList.subList(i, i + toIndex);
+            map.put(keyToken, newList);
+            keyToken++;
+        }
+        return map;
     }
 }

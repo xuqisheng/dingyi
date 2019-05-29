@@ -1,6 +1,6 @@
 package com.zhidianfan.pig.yd.moduler.common.service;
 
-import com.zhidianfan.pig.yd.moduler.common.dao.entity.VipAppraise;
+import com.zhidianfan.pig.yd.moduler.common.dao.entity.ResvOrderSync;
 import com.baomidou.mybatisplus.service.IService;
 
 /**
@@ -8,9 +8,9 @@ import com.baomidou.mybatisplus.service.IService;
  *  服务类
  * </p>
  *
- * @author huzp
+ * @author qqx
  * @since 2019-05-27
  */
-public interface IVipAppraiseService extends IService<VipAppraise> {
+public interface IResvOrderSyncService extends IService<ResvOrderSync> {
 
 }
