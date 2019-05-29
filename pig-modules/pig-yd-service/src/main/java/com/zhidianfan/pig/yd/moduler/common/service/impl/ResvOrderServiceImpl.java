@@ -72,4 +72,9 @@ public class ResvOrderServiceImpl extends ServiceImpl<ResvOrderMapper, ResvOrder
         baseMapper.updateOrderStatus2TO3(intervalNum);
     }
 
+    @Override
+    public Integer selectOverTimeOrder(Integer id, String time, String status) {
+        return baseMapper.selectOverTimeOrder(id,time,status);
+    }
+
 }
