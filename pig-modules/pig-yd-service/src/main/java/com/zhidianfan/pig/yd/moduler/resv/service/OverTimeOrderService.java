@@ -148,7 +148,7 @@ public class OverTimeOrderService {
     }
 
     /**
-     * 推送消息 (超时订单状态为7)
+     * 推送消息 (超时订单状态为8)
      * @param id 酒店id
      */
     private void pushMessage(Integer id) {
