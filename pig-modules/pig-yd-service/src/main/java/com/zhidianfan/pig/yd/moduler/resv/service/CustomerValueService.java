@@ -103,7 +103,7 @@ public class CustomerValueService {
         VipConsumeActionLast60 vipConsumeActionLast60 = vipConsumeActionLast60Service.getVipConsumeActionLast60(vip, resvOrdersBy60days);
         List<CustomerRecord> customerRecordList = customerRecordService.getCustomerRecord(vip, resvOrders, customerValueList);
 
-        customerValueListMapper.insertOrUpdate(customerValueList);
+        // customerValueListMapper.insertOrUpdate(customerValueList);
         vipConsumeActionTotalMapper.insertOrUpdate(vipConsumeActionTotal);
         vipConsumeActionLast60Mapper.insertOrUpdate(vipConsumeActionLast60);
         customerRecordMapper.insertBatch(customerRecordList);

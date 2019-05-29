@@ -24,6 +24,21 @@ public class CustomerValueChangeFieldDTO implements Serializable {
      */
     public static final String CANCEL_ORDER_TABLE = "CANCEL_ORDER_TABLE";
 
+    /**
+     * 当前营销经理 id
+     */
+    public static final String CURRENT_APP_USER_ID = "CURRENT_APP_USER_ID";
+
+    /**
+     * 当前营销经理名称
+     */
+    public static final String CURRENT_APP_USER_NAME = "CURRENT_APP_USER_NAME";
+
+    /**
+     * 当前营销经理电话
+     */
+    public static final String CURRENT_APP_USER_PHONE = "CURRENT_APP_USER_PHONE";
+
     private Integer vipId;
     /**
      * 类型,profile-资料完善度

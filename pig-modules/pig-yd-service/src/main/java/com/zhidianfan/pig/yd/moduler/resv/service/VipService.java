@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.baomidou.mybatisplus.mapper.Wrapper;
 import com.baomidou.mybatisplus.plugins.Page;
+import com.google.common.collect.Lists;
 import com.zhidianfan.pig.common.util.PageFactory;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.Business;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.ResvOrderAndroid;
@@ -23,6 +24,7 @@ import com.zhidianfan.pig.yd.utils.ExcelUtil;
 import com.zhidianfan.pig.yd.utils.Lunar;
 import com.zhidianfan.pig.yd.utils.LunarSolarConverter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.beans.BeanUtils;
@@ -577,6 +579,18 @@ public class VipService {
         LocalDate now = LocalDate.now();
         Period between = Period.between(now, localDate);
         return between.getYears();
+    }
+
+    /**
+     * 根据主键 id 列表，查询 vip 的信息
+     * @param idList 主键集合
+     * @return Vip 信息列表
+     */
+    public List<Vip> getVipList(List<Integer> idList) {
+        if (CollectionUtils.isEmpty(idList)) {
+            return new ArrayList<>();
+        }
+        return iVipService.selectBatchIds(idList);
     }
 
 }

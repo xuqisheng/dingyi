@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 
 /**
+ * 监听 MQ 中的队列，实时插入到表中
  * @author sjl
  * 2019-05-29 09:27
  */
@@ -28,6 +29,7 @@ public class UpdateCustomerValueDataListener {
     @RabbitListener(queues = QueueName.CUSTOMER_VALUE_CHANGE_FIELD)
     public void updateField(CustomerValueChangeFieldDTO customerValueChangeFieldDTO) {
         checkParam(customerValueChangeFieldDTO);
+
         NowChangeInfo info = new NowChangeInfo();
         info.setVipId(customerValueChangeFieldDTO.getVipId());
         info.setValue(customerValueChangeFieldDTO.getValue());
