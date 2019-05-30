@@ -1,11 +1,14 @@
 package com.zhidianfan.pig.yd.moduler.resv.service;
 
+import com.zhidianfan.pig.yd.moduler.common.constant.QueueName;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.CustomerValueList;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.ResvOrder;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.Vip;
 import com.zhidianfan.pig.yd.moduler.common.service.IResvOrderService;
+import com.zhidianfan.pig.yd.moduler.resv.dto.CustomerValueChangeFieldDTO;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -121,5 +124,21 @@ public class CustomerValueBaseInfoServiceTest {
         vip.setId(5698542);
         CustomerValueList valueList = new CustomerValueList();
         recordService.getCustomerRecord(vip, getOrder(), valueList);
+    }
+
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
+
+    @Test
+    public void testProducer() {
+        for (int i = 0; i < 10; i++) {
+            CustomerValueChangeFieldDTO dto = new CustomerValueChangeFieldDTO();
+            dto.setVipId(5698542);
+            dto.setType("CANCEL_ORDER_TABLE");
+            dto.setValue(i + "-" + 1);
+            rabbitTemplate.convertAndSend(QueueName.CUSTOMER_VALUE_DIRECT_EXCHANGE, QueueName.CUSTOMER_VALUE_TOUTINGKEY, dto);
+        }
+
+
     }
 }

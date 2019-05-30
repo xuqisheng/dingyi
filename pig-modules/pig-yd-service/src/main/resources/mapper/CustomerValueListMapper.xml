@@ -15,11 +15,7 @@
         <result column="app_user_name" property="appUserName" />
         <result column="hotel_id" property="hotelId" />
         <result column="customer_count" property="customerCount" />
-        <result column="customer_table" property="customerTable" />
-        <result column="customer_person" property="customerPerson" />
-        <result column="cancel_order" property="cancelOrder" />
         <result column="customer_amount_total" property="customerAmountTotal" />
-        <result column="customer_amount_table" property="customerAmountTable" />
         <result column="customer_amount_avg" property="customerAmountAvg" />
         <result column="last_eat_time" property="lastEatTime" />
         <result column="first_class_value" property="firstClassValue" />

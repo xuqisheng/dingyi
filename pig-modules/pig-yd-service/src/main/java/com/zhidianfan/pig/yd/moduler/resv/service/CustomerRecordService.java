@@ -38,8 +38,8 @@ public class CustomerRecordService {
         List<CustomerRecord> customerRecords2 = manOrder(resvOrders);
         List<CustomerRecord> customerRecords3 = guestOrder(vip, resvOrders);
         //todo 用户价值列表
-        CustomerRecord valueChangeRecord = valueChange(customerValueList);
-        CustomerRecord userChangeRecord = appUserChange(customerValueList);
+        CustomerRecord valueChangeRecord = valueChange(vip, customerValueList);
+        CustomerRecord userChangeRecord = appUserChange(vip, customerValueList);
 
         insertRecordList.addAll(customerRecords);
         insertRecordList.addAll(customerRecords1);
@@ -139,6 +139,9 @@ public class CustomerRecordService {
                         return false;
                     }
                     Integer manVipId = order.getManVipId();
+                    if (manVipId == null) {
+                        return false;
+                    }
                     return !vipId.equals(manVipId);
                 })
                 .map(order -> setRecordOrder(order, CustomerValueConstants.RECORD_TYPE_MAN))
@@ -155,12 +158,8 @@ public class CustomerRecordService {
         Integer id = vip.getId();
         List<CustomerRecord> orderList = otherResvOrders.stream()
                 .filter(order -> {
-                    Integer vipId = order.getGuestVip();
-                    Integer manVipId = order.getManVipId();
-                    if (manVipId == null) {
-                        return false;
-                    }
-                    return !vipId.equals(manVipId);
+                    Integer guestVip = order.getGuestVip();
+                    return guestVip != null;
                 })
                 .filter(order -> {
                     Integer guestVip = order.getGuestVip();
@@ -175,16 +174,16 @@ public class CustomerRecordService {
     /**
      * 价值变更，之前的价值变更与现在的价值进行对比
      */
-    private CustomerRecord valueChange(CustomerValueList customerValueList) {
-//        Integer firstClassValue = customerValueList.getFirstClassValue();
-        Integer firstClassValue = 1;
-        Integer customerValue = getCustomerValue(customerValueList.getVipId());
+    private CustomerRecord valueChange(Vip vip, CustomerValueList customerValueList) {
+        Integer firstClassValue = customerValueList.getFirstClassValue();
+//        Integer firstClassValue = 1;
+        Integer customerValue = getCustomerValue(vip);
         if (!firstClassValue.equals(customerValue)) {
             CustomerRecord record = new CustomerRecord();
             record.setVipId(customerValueList.getVipId());
             record.setLogType(CustomerValueConstants.RECORD_TYPE_VALUE_CHANGE);
             record.setLogTime(LocalDateTime.now());
-            record.setResvOrder("");
+            record.setResvOrder(StringUtils.EMPTY);
             record.setResvDate(LocalDateTime.now());
             record.setMealTypeId(0);
             record.setMealTypeName("");
@@ -196,7 +195,7 @@ public class CustomerRecordService {
             record.setVipPhone("");
             record.setAppUserName("");
             record.setAppUserId(0);
-            record.setOperationLog("");
+            record.setOperationLog("由" + firstClassValue + "变更为" + customerValue);
             record.setCreateUserId(0L);
             record.setCreateTime(LocalDateTime.now());
             record.setUpdateUserId(0L);
@@ -209,22 +208,23 @@ public class CustomerRecordService {
 
     /**
      * 客户一级价值
-     * @param vipId vipid
+     * @param vip 客户信息
      * @return
      */
-    private Integer getCustomerValue(Integer vipId) {
-        CustomerValueList customerValueList = customerValueListMapper.selectById(vipId);
-        CustomerValueList optValue = Optional.ofNullable(customerValueList).orElseGet(CustomerValueList::new);
-        return optValue.getFirstClassValue();
+    private Integer getCustomerValue(Vip vip) {
+        Integer vipValueId = vip.getVipValueId();
+        String vipName = vip.getVipName();
+
+        return vipValueId;
     }
 
     /**
      * 营销经理变更
      */
-    private CustomerRecord appUserChange(CustomerValueList customerValueList) {
+    private CustomerRecord appUserChange(Vip vip, CustomerValueList customerValueList) {
 //        Integer appUserId = customerValueList.getAppUserId();
         Integer appUserId = 1;
-        Integer changeAppUserId = getAppUserId(customerValueList.getVipId());
+        Integer changeAppUserId = getAppUserId(vip);
         if (!appUserId.equals(changeAppUserId)) {
             CustomerRecord record = new CustomerRecord();
             record.setVipId(customerValueList.getVipId());
@@ -255,14 +255,13 @@ public class CustomerRecordService {
 
     /**
      * 指定 vipId 获取其当前的 营销经理
-     * @param vipId vipid
+     * @param vip vip
      * @return 营销经理对应的 app_user_id
      */
-    private Integer getAppUserId(Integer vipId) {
-        // customer_value_list
-        CustomerValueList customerValueList = customerValueListMapper.selectById(vipId);
-        CustomerValueList optValue = Optional.ofNullable(customerValueList).orElseGet(CustomerValueList::new);
-        return optValue.getAppUserId();
+    private Integer getAppUserId(Vip vip) {
+        Integer appUserId = vip.getAppUserId();
+        Optional<Integer> optional = Optional.ofNullable(appUserId);
+        return optional.orElse(-1);
     }
 
 

@@ -31,10 +31,11 @@ public class CustomerValueController {
      * 执行任务的入口-客户价值
      */
     @PostMapping("/task")
-    public void gcustomerValue() {
+    public ResponseEntity gcustomerValue() {
         log.info("开始执行任务:{}", LocalDateTime.now());
         customerValueService.getCustomerValueBaseInfo();
         log.info("任务执行结束:{}", LocalDateTime.now());
+        return ResponseEntity.ok().build();
     }
 
     /**

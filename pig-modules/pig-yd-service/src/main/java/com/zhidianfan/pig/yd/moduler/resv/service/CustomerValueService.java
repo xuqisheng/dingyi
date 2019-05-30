@@ -65,14 +65,15 @@ public class CustomerValueService {
     public void getCustomerValueBaseInfo() {
         LocalDateTime startTime = LocalDateTime.now();
         CustomerValueTask customerValueTask = customerValueTaskService.getCustomerValueTask();
+        log.info("获取到的任务编号：{}", customerValueTask.getId());
         // 1. 从任务表中取出酒店 id
         Long hotelId = customerValueTask.getHotelId();
         // 1.1 查询属于该酒店的所有客户
-//        List<Vip> vips = vipService.getVipList(hotelId);
-        List<Vip> vips = vipService.getVipList(30);
+        List<Vip> vips = vipService.getVipList(hotelId);
+//        List<Vip> vips = vipService.getVipList(30);
 
-//        Long taskId = customerValueTask.getId();
-        long taskId = 1131751120788840450L;
+        Long taskId = customerValueTask.getId();
+//        long taskId = 1131751120788840450L;
         log.info("任务开始，taskId：{}, 开始时间：{}", taskId, DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(startTime));
         // 任务执行标记,0-未开始,1-执行中,2-执行成功,3-执行异常
         for (Vip vip : vips) {
@@ -103,7 +104,7 @@ public class CustomerValueService {
         VipConsumeActionLast60 vipConsumeActionLast60 = vipConsumeActionLast60Service.getVipConsumeActionLast60(vip, resvOrdersBy60days);
         List<CustomerRecord> customerRecordList = customerRecordService.getCustomerRecord(vip, resvOrders, customerValueList);
 
-        // customerValueListMapper.insertOrUpdate(customerValueList);
+         customerValueListMapper.insertOrUpdate(customerValueList);
         vipConsumeActionTotalMapper.insertOrUpdate(vipConsumeActionTotal);
         vipConsumeActionLast60Mapper.insertOrUpdate(vipConsumeActionLast60);
         customerRecordMapper.insertBatch(customerRecordList);

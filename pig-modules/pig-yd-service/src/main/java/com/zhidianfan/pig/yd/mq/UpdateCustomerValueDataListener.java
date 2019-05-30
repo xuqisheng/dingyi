@@ -26,8 +26,9 @@ public class UpdateCustomerValueDataListener {
     private INowChangeInfoService nowChangeInfoService;
 
     @RabbitHandler
-    @RabbitListener(queues = QueueName.CUSTOMER_VALUE_CHANGE_FIELD)
+    @RabbitListener(queues = QueueName.CUSTOMER_VALUE_QUEUE)
     public void updateField(CustomerValueChangeFieldDTO customerValueChangeFieldDTO) {
+        // vip_birthday_nl vip_birthday , 有一个不为空即可
         checkParam(customerValueChangeFieldDTO);
 
         NowChangeInfo info = new NowChangeInfo();
@@ -39,7 +40,7 @@ public class UpdateCustomerValueDataListener {
         info.setCreateTime(LocalDateTime.now());
         info.setUpdateTime(LocalDateTime.now());
 
-        nowChangeInfoService.insert(info);
+        nowChangeInfoService.insertOrUpdate(info);
     }
 
     /**

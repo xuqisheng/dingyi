@@ -14,6 +14,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -38,9 +39,13 @@ public class CustomerValueTaskService {
      * @return 酒店 id
      */
     public CustomerValueTask getCustomerValueTask() {
-        List<CustomerValueTask> customerValueTasks = customerValueTaskMapper.selectList(new EntityWrapper<>());
+        EntityWrapper<CustomerValueTask> wrapper = new EntityWrapper<>();
+        wrapper.eq("flag", 0);
+        List<CustomerValueTask> customerValueTasks = customerValueTaskMapper.selectList(wrapper);
         Optional<CustomerValueTask> optionalCustomerValueTask = customerValueTasks.stream()
-                .max(((o1, o2) -> o1.getSort() > o2.getSort() ? 1 : -1));
+                .max(Comparator.comparing(CustomerValueTask::getSort)
+                                .thenComparing(CustomerValueTask::getId, Comparator.reverseOrder())
+                );
         return optionalCustomerValueTask.orElseThrow(RuntimeException::new);
     }
 

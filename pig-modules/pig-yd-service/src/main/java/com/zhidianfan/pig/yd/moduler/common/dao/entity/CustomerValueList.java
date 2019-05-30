@@ -79,30 +79,10 @@ public class CustomerValueList extends Model<CustomerValueList> {
     @TableField("customer_count")
     private Integer customerCount;
     /**
-     * 总消费桌数
-     */
-    @TableField("customer_table")
-    private Integer customerTable;
-    /**
-     * 总消费人数
-     */
-    @TableField("customer_person")
-    private Integer customerPerson;
-    /**
-     * 撤单,0:代表无
-     */
-    @TableField("cancel_order")
-    private Integer cancelOrder;
-    /**
      * 总消费金额,单位:分
      */
     @TableField("customer_amount_total")
     private Integer customerAmountTotal;
-    /**
-     * 桌均消费金额,单位:分/每桌
-     */
-    @TableField("customer_amount_table")
-    private Integer customerAmountTable;
     /**
      * 人均消费,单位:分
      */
@@ -228,44 +208,12 @@ public class CustomerValueList extends Model<CustomerValueList> {
         this.customerCount = customerCount;
     }
 
-    public Integer getCustomerTable() {
-        return customerTable;
-    }
-
-    public void setCustomerTable(Integer customerTable) {
-        this.customerTable = customerTable;
-    }
-
-    public Integer getCustomerPerson() {
-        return customerPerson;
-    }
-
-    public void setCustomerPerson(Integer customerPerson) {
-        this.customerPerson = customerPerson;
-    }
-
-    public Integer getCancelOrder() {
-        return cancelOrder;
-    }
-
-    public void setCancelOrder(Integer cancelOrder) {
-        this.cancelOrder = cancelOrder;
-    }
-
     public Integer getCustomerAmountTotal() {
         return customerAmountTotal;
     }
 
     public void setCustomerAmountTotal(Integer customerAmountTotal) {
         this.customerAmountTotal = customerAmountTotal;
-    }
-
-    public Integer getCustomerAmountTable() {
-        return customerAmountTable;
-    }
-
-    public void setCustomerAmountTable(Integer customerAmountTable) {
-        this.customerAmountTable = customerAmountTable;
     }
 
     public Integer getCustomerAmountAvg() {
@@ -343,11 +291,7 @@ public class CustomerValueList extends Model<CustomerValueList> {
         ", appUserName=" + appUserName +
         ", hotelId=" + hotelId +
         ", customerCount=" + customerCount +
-        ", customerTable=" + customerTable +
-        ", customerPerson=" + customerPerson +
-        ", cancelOrder=" + cancelOrder +
         ", customerAmountTotal=" + customerAmountTotal +
-        ", customerAmountTable=" + customerAmountTable +
         ", customerAmountAvg=" + customerAmountAvg +
         ", lastEatTime=" + lastEatTime +
         ", firstClassValue=" + firstClassValue +

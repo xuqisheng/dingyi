@@ -59,7 +59,8 @@ public class CustomerValueListService {
         String lossValue = getLossValue(resvOrders, businessId);
         // 自定义分类
         // todo 使用之前的分类
-        String customerClass = vip.getVipValueName();;
+        String customerClass = vip.getVipClassName();
+        customerClass = Optional.ofNullable(customerClass).orElse(StringUtils.EMPTY);
 //        String customerClass = getCustomerClass(resvOrders, businessId);
 
         Integer appUserId = vip.getAppUserId();
