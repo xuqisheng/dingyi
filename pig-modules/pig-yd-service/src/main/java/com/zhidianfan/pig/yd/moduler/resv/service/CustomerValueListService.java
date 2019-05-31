@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import java.time.*;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.collectingAndThen;
@@ -98,7 +99,7 @@ public class CustomerValueListService {
      */
     private String getVipPhone(Vip vip) {
         String vipPhone = vip.getVipPhone();
-        if (StringUtils.isNotBlank(vipPhone)) {
+        if (StringUtils.isBlank(vipPhone)) {
             return StringUtils.EMPTY;
         }
         return vipPhone;
@@ -193,7 +194,7 @@ public class CustomerValueListService {
                 })
                 .average();
         double v = optAverage.orElse(CustomerValueConstants.DEFAULT_CUSTOMER_AVG);
-        return (int) v * 100;
+        return (int) (v * 100);
     }
 
 
@@ -203,14 +204,11 @@ public class CustomerValueListService {
      * @return 2000-1-1 0:0:0 表示坎
      */
     private LocalDateTime getLastEatTime(List<ResvOrder> resvOrders) {
+        // 最近一笔已入座/完成的订单
         Optional<LocalDateTime> optionalLocalDateTime = resvOrders.stream()
-                .map(ResvOrder::getCreatedAt)
-                .max((o1, o2) -> {
-                    Instant one = o1.toInstant();
-                    Instant two = o2.toInstant();
-                    boolean after = one.isAfter(two);
-                    return after ? 1 : -1;
-                })
+                .filter(order -> "2".equals(order.getStatus()) || "3".equals(order.getStatus()))
+                .map(ResvOrder::getUpdatedAt)
+                .max(Comparator.naturalOrder())
                 .map(date -> {
                     Instant instant = date.toInstant();
                     return LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
@@ -226,51 +224,55 @@ public class CustomerValueListService {
      * @return 0-未配置,1-意向客户，2-活跃客户，3-沉睡客户，4-流失客户
      */
     private int getFirstValue(List<ResvOrder> resvOrders, Integer hotelId) {
+        /* 意向客户 未消费客户
+        * 活跃客户 30天内，有消费的客户
+        * 沉睡客户 30天内未消费，且在30-60天内有消费行为
+        * 流失客户 60天内未消费，但有历史消费行为
+        */
+
+        // 获取每个酒店自己的配置
         FirstValueConfig config = firstValueConfigService.getConfig(hotelId);
         if (config == null) {
-            return 0;
+            log.error("hotelId:{}, 查询不到一级价值的配置-----", hotelId);
+            return -1;
         }
         Integer startValue = config.getStartValue();
         Integer endValue = config.getEndValue();
         if (resvOrders.isEmpty()) {
-            //todo 意向客户
+            //意向客户 未消费客户
             return CustomerValueConstants.INTENTION_CUSTOMER;
         }
-        List<LocalDateTime> activeCustomerList = resvOrders.stream()
-                .map(ResvOrder::getResvDate)
-                .map(date -> {
-                    Instant instant = date.toInstant();
-                    return LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
-                })
+        List<LocalDateTime> activeCustomerList = getPayTimeStream(resvOrders)
                 .filter(localDateTime -> {
                     Period period = Period.between(localDateTime.toLocalDate(), LocalDate.now());
-                    // todo 此处查数据库配置获取
                     return period.getDays() <= startValue;
                 })
                 .collect(Collectors.toList());
         if (!activeCustomerList.isEmpty()) {
-            // todo 30 天内有消费行为的，为活跃客户
             return CustomerValueConstants.ACTIVE_CUSTOMER;
         }
 
-        List<LocalDateTime> sleepCustomerList = resvOrders.stream()
-                .map(ResvOrder::getResvDate)
-                .map(date -> {
-                    Instant instant = date.toInstant();
-                    return LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
-                })
+        List<LocalDateTime> sleepCustomerList = getPayTimeStream(resvOrders)
                 .filter(localDateTime -> {
                     Period period = Period.between(localDateTime.toLocalDate(), LocalDate.now());
                     return period.getDays() > startValue && period.getDays() <= endValue;
                 })
                 .collect(Collectors.toList());
         if (!sleepCustomerList.isEmpty()) {
-            // todo 沉睡客户
             return CustomerValueConstants.SLEEP_CUSTOMER;
         }
 
-        // todo 流失客户
         return CustomerValueConstants.LOSS_CUSTOMER;
+    }
+
+    private Stream<LocalDateTime> getPayTimeStream(List<ResvOrder> resvOrders) {
+        return resvOrders.stream()
+                .filter(order -> "3".equals(order.getStatus()))
+                .map(ResvOrder::getUpdatedAt)
+                .map(date -> {
+                    Instant instant = date.toInstant();
+                    return LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
+                });
     }
 
 
@@ -283,13 +285,16 @@ public class CustomerValueListService {
      */
     private String getLossValue(List<ResvOrder> resvOrders, Integer hotelId) {
         List<LossValueConfig> lossValueConfigList = lossValueConfigService.getLossValueConfig(hotelId);
-        lossValueConfigList.sort(((o1, o2) -> o1.getSort() > o2.getSort() ? 1 : -1));
+        // 排序小的在前面
+        lossValueConfigList.sort(Comparator.comparing(LossValueConfig::getSort));
 
-        double personAvg = getPersonAvg(resvOrders);
+        // 单位：分
+        int personAvg = getPersonAvg(resvOrders);
         double customerAmount = getCustomerAmount(resvOrders);
         int customerCount = getCustomerCount(resvOrders);
         for (LossValueConfig lossValueConfig : lossValueConfigList) {
             String valueName = lossValueConfig.getValueName();
+            // 单位:分
             Integer customerPersonAvgStart = lossValueConfig.getCustomerPersonAvgStart();
             Integer customerPersonAvgEnd = lossValueConfig.getCustomerPersonAvgEnd();
             Integer customerTotalStart = lossValueConfig.getCustomerTotalStart();
