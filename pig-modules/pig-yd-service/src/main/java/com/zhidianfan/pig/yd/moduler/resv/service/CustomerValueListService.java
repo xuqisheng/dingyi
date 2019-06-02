@@ -184,7 +184,7 @@ public class CustomerValueListService {
      * @param resvOrders 用户id
      * @return 人均消费金额，单元:分
      */
-    private int getPersonAvg(List<ResvOrder> resvOrders) {
+    public int getPersonAvg(List<ResvOrder> resvOrders) {
         OptionalDouble optAverage = resvOrders.stream()
                 .filter(order -> "3".equals(order.getStatus()))
                 .map(ResvOrder::getPayamount)

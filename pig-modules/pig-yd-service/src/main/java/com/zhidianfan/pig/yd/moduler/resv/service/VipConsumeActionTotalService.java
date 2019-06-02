@@ -1,21 +1,20 @@
 package com.zhidianfan.pig.yd.moduler.resv.service;
 
+import com.baomidou.mybatisplus.mapper.EntityWrapper;
+import com.baomidou.mybatisplus.mapper.Wrapper;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.ResvOrder;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.Vip;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.VipConsumeActionTotal;
+import com.zhidianfan.pig.yd.moduler.common.service.IVipConsumeActionTotalService;
 import com.zhidianfan.pig.yd.moduler.resv.constants.CustomerValueConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.*;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Stream;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
@@ -29,13 +28,12 @@ import static java.util.stream.Collectors.toList;
 public class VipConsumeActionTotalService {
 
     @Autowired
-    private VipService vipService;
+    private IVipConsumeActionTotalService vipConsumeActionTotalMapper;
 
     @Autowired
     private CustomerValueListService customerValueListService;
 
     public VipConsumeActionTotal getVipConsumeActionTotal(Vip vip, List<ResvOrder> resvOrders) {
-        // todo 计算总体消费行为，并插入
         // 消费订单总次数
         VipConsumeActionTotal vipConsumeActionTotal = new VipConsumeActionTotal();
         vipConsumeActionTotal.setVipId(vip.getId());
@@ -126,7 +124,6 @@ public class VipConsumeActionTotalService {
             return period.getMonths();
         });
         Integer month = optional.orElse(1);
-        // todo 这里涉及到精度的问题
         int m = month == 0 ? 1 : month;
         return customerSize / m;
     }
@@ -164,41 +161,7 @@ public class VipConsumeActionTotalService {
     private Integer getConsumerPersonAmount(List<ResvOrder> resvOrders) {
         // 总消费金额/对应批次号的订单实际人数之和。（如果订单没有实际人数，用预订人数代替）
         // 有实际金额的订单
-        Stream<ResvOrder> resvOrderStream = resvOrders.stream()
-                .filter(order -> {
-                    String payamount = order.getPayamount();
-                    if (StringUtils.isNotBlank(payamount)) {
-                        return NumberUtils.isCreatable(payamount);
-                    }
-                    return false;
-                });
-
-        List<Integer> collect = resvOrderStream.map(order -> {
-            int personCount = 1;
-            String actualNum = order.getActualNum();
-            if (StringUtils.isNotBlank(actualNum)) {
-                try {
-                    Integer.parseInt(actualNum);
-                } catch (NumberFormatException e) {
-                    personCount = 1;
-                }
-            } else {
-                String resvNum = order.getResvNum();
-                if (StringUtils.isNotBlank(resvNum)) {
-                    try {
-                        Integer.parseInt(resvNum);
-                    } catch (NumberFormatException e) {
-                        personCount = 1;
-                    }
-                }
-            }
-            return personCount;
-        }).collect(toList());
-        int orderCount = collect.size();
-
-        // todo 有潜在 bug
-
-        return 0;
+        return customerValueListService.getPersonAvg(resvOrders);
     }
 
     /**
@@ -262,11 +225,38 @@ public class VipConsumeActionTotalService {
         Optional<Date> min = resvOrders.stream()
                 .filter(resvOrder -> "2".equals(resvOrder.getStatus()) || "3".equals(resvOrder.getStatus()))
                 .map(ResvOrder::getUpdatedAt)
-                //todo 此处会有 NPE 的问题发生
                 .filter(Objects::nonNull)
-                .min((o1, o2) -> o1.before(o2) ? 1 : -1);
+                .max(Comparator.naturalOrder());
         Optional<LocalDateTime> optional = min.map(date -> LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault()));
         return optional.orElse(CustomerValueConstants.DEFAULT_START_TIME);
     }
 
+    /**
+     * 撤单桌数
+     * @param vipId vip 表主键
+     * @param value 桌数，Integer 类型
+     */
+    public void updateCancelTableNo(Integer vipId, String value) {
+        int cancelTableNo = Integer.parseInt(value);
+        VipConsumeActionTotal total = new VipConsumeActionTotal();
+        total.setVipId(vipId);
+        total.setCancelTableNo(cancelTableNo);
+        total.setUpdateTime(LocalDateTime.now());
+        vipConsumeActionTotalMapper.updateById(total);
+    }
+
+    /**
+     * 首次消费时间
+     * @param vipId 主键
+     * @param value 首次消费时间，yyy-MM-dd HH:mm:ss
+     */
+    public void updateFirstConsumeTime(Integer vipId, String value) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        LocalDateTime dateTime = LocalDateTime.parse(value, formatter);
+        VipConsumeActionTotal total = new VipConsumeActionTotal();
+        total.setVipId(vipId);
+        total.setFirstConsumeTime(dateTime);
+        total.setUpdateTime(LocalDateTime.now());
+        vipConsumeActionTotalMapper.updateById(total);
+    }
 }

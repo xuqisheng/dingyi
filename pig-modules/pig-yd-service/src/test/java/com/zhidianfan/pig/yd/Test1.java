@@ -12,8 +12,13 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.UnsupportedEncodingException;
-import java.util.Base64;
-import java.util.Map;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAccessor;
+import java.time.temporal.TemporalField;
+import java.time.temporal.TemporalUnit;
+import java.util.*;
 
 /**
  * @Author sherry
@@ -120,5 +125,28 @@ public class Test1 {
         return responseEntity.getBody();
     }
 
+
+    @Test
+    public void test() {
+        Date date = new Date(2019-1900, 4, 20);
+        Date date1 = new Date(2019-1900, 4, 23);
+        Date date2 = new Date(2019-1900, 4, 31);
+        List<Date> dateList = Arrays.asList(date, date1, date2);
+        Date date3 = dateList.stream()
+                .max(Comparator.naturalOrder())
+                .get();
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        System.out.println(format.format(date3));
+
+    }
+
+    @Test
+    public void test4() {
+        String date = "2019-6-2";
+        LocalDate parseDate = LocalDate.parse(date);
+
+
+        System.out.println(parseDate);
+    }
 
 }

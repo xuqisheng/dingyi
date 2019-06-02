@@ -57,7 +57,7 @@ public class CustomerValueBaseInfoServiceTest {
 
     @Test
     public void addCuster() {
-        customerValueTaskService.addCustomerList();
+        customerValueTaskService.addCustomerList(null);
     }
 
     @Test

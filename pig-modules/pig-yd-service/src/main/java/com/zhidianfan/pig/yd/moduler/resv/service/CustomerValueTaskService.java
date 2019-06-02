@@ -1,6 +1,7 @@
 package com.zhidianfan.pig.yd.moduler.resv.service;
 
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
+import com.baomidou.mybatisplus.mapper.Wrapper;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.Business;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.CustomerValueTask;
 import com.zhidianfan.pig.yd.moduler.common.service.IBusinessService;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
@@ -44,7 +46,7 @@ public class CustomerValueTaskService {
         List<CustomerValueTask> customerValueTasks = customerValueTaskMapper.selectList(wrapper);
         Optional<CustomerValueTask> optionalCustomerValueTask = customerValueTasks.stream()
                 .max(Comparator.comparing(CustomerValueTask::getSort)
-                                .thenComparing(CustomerValueTask::getId, Comparator.reverseOrder())
+                        .thenComparing(CustomerValueTask::getId, Comparator.reverseOrder())
                 );
         return optionalCustomerValueTask.orElseThrow(RuntimeException::new);
     }
@@ -56,7 +58,6 @@ public class CustomerValueTaskService {
      * @param exceptionMessage 异常信息
      */
     public void updateTaskStatus(Long taskId, Integer flag, LocalDateTime startTime, LocalDateTime endTime, String exceptionMessage) {
-        // todo 更新任务表状态
         CustomerValueTask task = new CustomerValueTask();
         task.setId(taskId);
         task.setStartTime(startTime);
@@ -76,9 +77,9 @@ public class CustomerValueTaskService {
     /**
      * 每天执行，把酒店全部插入到任务表中，后面数据计算都任务表中取酒店 id,然后根据酒店分别执行任务
      */
-    public void addCustomerList() {
+    public void addCustomerList(String date) {
         log.info("开始执行 getCustomerList() ，将要执行的任务写入任务批次表中...");
-        // todo 如果任务路途退出，需要清除之前跑了一半的脏数据
+        cleanData(date);
         try {
             // 查询出所有酒店,写入任务批次表中
             List<Business> businesses = businessMapper.selectList(new EntityWrapper<>());
@@ -107,6 +108,24 @@ public class CustomerValueTaskService {
         } catch (Exception e) {
             log.error("任务执行发生异常...", e);
         }
+    }
+
+    /**
+     * 清除脏数据
+     */
+    private void cleanData(String strDate) {
+        LocalDate date;
+        try {
+            date = LocalDate.parse(strDate);
+        } catch (RuntimeException e) {
+            throw new RuntimeException("日期格式错误", e);
+        }
+        Wrapper<CustomerValueTask> wrapper = new EntityWrapper<>();
+        LocalTime time = LocalTime.of(0, 0, 0);
+        LocalDateTime dateTime = LocalDateTime.of(date, time);
+        wrapper.ge("create_time", dateTime);
+        wrapper.lt("create_time", dateTime);
+        customerValueTaskMapper.delete(wrapper);
     }
 
     /**

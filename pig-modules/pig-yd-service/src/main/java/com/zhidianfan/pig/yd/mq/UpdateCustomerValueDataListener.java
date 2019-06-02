@@ -4,6 +4,7 @@ import com.zhidianfan.pig.yd.moduler.common.constant.QueueName;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.NowChangeInfo;
 import com.zhidianfan.pig.yd.moduler.common.service.INowChangeInfoService;
 import com.zhidianfan.pig.yd.moduler.resv.dto.CustomerValueChangeFieldDTO;
+import com.zhidianfan.pig.yd.moduler.resv.service.VipConsumeActionTotalService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.amqp.rabbit.annotation.RabbitHandler;
@@ -25,22 +26,28 @@ public class UpdateCustomerValueDataListener {
     @Autowired
     private INowChangeInfoService nowChangeInfoService;
 
+    @Autowired
+    private VipConsumeActionTotalService vipConsumeActionTotalService;
+
     @RabbitHandler
     @RabbitListener(queues = QueueName.CUSTOMER_VALUE_QUEUE)
     public void updateField(CustomerValueChangeFieldDTO customerValueChangeFieldDTO) {
         // vip_birthday_nl vip_birthday , 有一个不为空即可
         checkParam(customerValueChangeFieldDTO);
 
-        NowChangeInfo info = new NowChangeInfo();
-        info.setVipId(customerValueChangeFieldDTO.getVipId());
-        info.setValue(customerValueChangeFieldDTO.getValue());
-        info.setType(customerValueChangeFieldDTO.getType());
-        info.setChangeTime(LocalDateTime.now());
-        info.setRemark(StringUtils.EMPTY);
-        info.setCreateTime(LocalDateTime.now());
-        info.setUpdateTime(LocalDateTime.now());
+        String type = customerValueChangeFieldDTO.getType();
+        Integer vipId = customerValueChangeFieldDTO.getVipId();
+        String value = customerValueChangeFieldDTO.getValue();
+        if (CustomerValueChangeFieldDTO.FIRST_CUSTOMER_TIME.equals(type)) {
+            // 首次消费时间
 
-        nowChangeInfoService.insertOrUpdate(info);
+            vipConsumeActionTotalService.updateFirstConsumeTime(vipId, value);
+        } else if (CustomerValueChangeFieldDTO.CANCEL_ORDER_TABLE.equals(type)) {
+            // 撤单桌数
+            vipConsumeActionTotalService.updateCancelTableNo(vipId, value);
+        }
+
+        log.error("错误的类型,{}", customerValueChangeFieldDTO);
     }
 
     /**

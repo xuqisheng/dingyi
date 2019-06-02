@@ -1,12 +1,15 @@
 package com.zhidianfan.pig.yd.moduler.resv.controller;
 
+import com.zhidianfan.pig.yd.moduler.common.dao.entity.CustomerValueTask;
 import com.zhidianfan.pig.yd.moduler.resv.service.BusinessCustomerAnalysisInfoService;
 import com.zhidianfan.pig.yd.moduler.resv.service.CustomerValueService;
+import com.zhidianfan.pig.yd.moduler.resv.service.CustomerValueTaskService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
@@ -18,7 +21,7 @@ import java.time.format.DateTimeFormatter;
  */
 @Slf4j
 @RestController
-@RequestMapping("/customervalue")
+@RequestMapping("/customer")
 public class CustomerValueController {
 
     @Autowired
@@ -27,10 +30,24 @@ public class CustomerValueController {
     @Autowired
     private BusinessCustomerAnalysisInfoService businessCustomerAnalysisInfoService;
 
+    @Autowired
+    private CustomerValueTaskService customerValueTaskService;
+
+    /**
+     * 生成待执行的任务
+     * @return
+     */
+    @PostMapping("/task")
+    public ResponseEntity task(@RequestParam(required = false) String date) {
+        log.info("生成任务");
+        customerValueTaskService.addCustomerList(date);
+        return ResponseEntity.ok().build();
+    }
+
     /**
      * 执行任务的入口-客户价值
      */
-    @PostMapping("/task")
+    @PostMapping("/customervalue")
     public ResponseEntity gcustomerValue() {
         log.info("开始执行任务:{}", LocalDateTime.now());
         customerValueService.getCustomerValueBaseInfo();
