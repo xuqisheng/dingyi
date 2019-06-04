@@ -348,6 +348,9 @@ public class YdService {
                     resvOrderAndroid.setBatchNo("pc" + orderNo);
                     resvOrderAndroid.setVipSex(meituanOrderDTO.getGender() == 10 ? "女" : "男");
 
+                    resvOrderAndroid.setExternalSourceName("2");
+                    resvOrderAndroid.setExternalSourceName(resvOrderThird.getSource());
+
                     resvOrderAndroid.setVipId(0);
                     boolean insert = iResvOrderAndroidService.insert(resvOrderAndroid);
                     //插入订单自动接单日志
@@ -841,10 +844,15 @@ public class YdService {
             resvOrderAndroid.setTableId(tableId);
             resvOrderAndroid.setTableName(tableName);
             String orderNo = IdUtils.makeOrderNo();
+            //增加ExternalSourceName  ID
+            resvOrderAndroid.setExternalSourceName("4");
+            resvOrderAndroid.setExternalSourceName(resvOrderThird.getSource());
             resvOrderAndroid.setResvOrder(orderNo);
             resvOrderAndroid.setBatchNo("pc" + orderNo);
             resvOrderAndroid.setVipSex(resvOrderThird.getVipSex().equals("先生") ? "男" : "女");
             resvOrderAndroid.setVipId(vip1.getId());
+
+
             boolean insert = iResvOrderAndroidService.insert(resvOrderAndroid);
             //插入订单自动接单日志
             insertAutoAcceptLogs(resvOrderAndroid.getResvOrder());
