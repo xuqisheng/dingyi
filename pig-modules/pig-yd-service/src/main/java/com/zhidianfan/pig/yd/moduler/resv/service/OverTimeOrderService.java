@@ -55,7 +55,7 @@ public class OverTimeOrderService {
     @Async
     public void statisticsOverTimeOrder() {
 
-        log.info("任务开始");
+        log.info("statisticsOverTimeOrder------任务开始");
 
         ExecutorService executorService = Executors.newFixedThreadPool(10);
 
@@ -93,25 +93,24 @@ public class OverTimeOrderService {
     }
 
     /**
-     * 更新超时订单状态,并且推送
+     * 统计超时订单状态,并且推送
      *
      * @param businessList 酒店id list
      */
 
-    public void updateOverTimeOrderAndPushMessage(List<Business> businessList) {
+    public void countOverTimeOrderAndPushMessage(List<Business> businessList) {
 
-        log.info("updateOverTimeOrderAndPushMessage-----------task start");
+        log.info("统计超时订单数量,并且推送: countOverTimeOrderAndPushMessage-----------task start");
 
         for (Business business : businessList) {
             try {
 
                 LocalDate now = LocalDate.now();
-                Date date = new Date();
 
                 // 1.筛选出订单
                 Integer resvOrderNum = iResvOrderService.selectOverTimeOrder(business.getId(), now.toString(), "1");
 
-                //如果有需要更新的超时订单
+                //如果超时订单数量不为0 ,则推送该酒店的信息
                 if (resvOrderNum != null && resvOrderNum != 0) {
 
 
