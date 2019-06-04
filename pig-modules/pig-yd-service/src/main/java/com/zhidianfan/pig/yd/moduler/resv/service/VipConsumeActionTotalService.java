@@ -46,7 +46,7 @@ public class VipConsumeActionTotalService {
         // 撤单桌数
         vipConsumeActionTotal.setCancelTableNo(getCancelOrderTable(resvOrders));
         // 消费总金额，单位：分
-        vipConsumeActionTotal.setTotalConsumeAvg(getConsumerTotalAmount(resvOrders));
+        vipConsumeActionTotal.setTotalConsumeAmount(getConsumerTotalAmount(resvOrders));
         // 桌均消费,单位:分
         vipConsumeActionTotal.setTableConsumeAvg(getConsumerTableAmount(resvOrders));
         // 人均消费,单位:分

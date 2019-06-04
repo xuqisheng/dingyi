@@ -134,7 +134,7 @@ public class CustomerValueBaseInfoServiceTest {
         for (int i = 0; i < 10; i++) {
             CustomerValueChangeFieldDTO dto = new CustomerValueChangeFieldDTO();
             dto.setVipId(5698542);
-            dto.setType("CANCEL_ORDER_TABLE");
+            dto.setType("PROFILE");
             dto.setValue(i + "-" + 1);
             rabbitTemplate.convertAndSend(QueueName.CUSTOMER_VALUE_DIRECT_EXCHANGE, QueueName.CUSTOMER_VALUE_TOUTINGKEY, dto);
         }
