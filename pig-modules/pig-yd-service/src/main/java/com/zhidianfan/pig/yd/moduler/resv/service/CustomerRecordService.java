@@ -8,6 +8,7 @@ import com.zhidianfan.pig.yd.moduler.common.dao.entity.Vip;
 import com.zhidianfan.pig.yd.moduler.common.service.ICustomerRecordService;
 import com.zhidianfan.pig.yd.moduler.common.service.ICustomerValueListService;
 import com.zhidianfan.pig.yd.moduler.resv.constants.CustomerValueConstants;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +26,7 @@ import java.util.stream.Collectors;
  * @author sjl
  * 2019-05-28 13:33
  */
+@Slf4j
 @Service
 public class CustomerRecordService {
 
@@ -32,23 +34,22 @@ public class CustomerRecordService {
     private ICustomerValueListService customerValueListMapper;
 
     public List<CustomerRecord> getCustomerRecord(Vip vip, List<ResvOrder> resvOrders, CustomerValueList customerValueList) {
-        List<CustomerRecord> insertRecordList = Lists.newArrayList();
+        List<CustomerRecord> recordList = Lists.newArrayList();
         List<CustomerRecord> customerRecords = reserveOrderCustomer(vip, resvOrders);
         List<CustomerRecord> customerRecords1 = reserveOrderESC(vip, resvOrders);
         List<CustomerRecord> customerRecords2 = manOrder(resvOrders);
         List<CustomerRecord> customerRecords3 = guestOrder(vip, resvOrders);
-        //todo 用户价值列表
         CustomerRecord valueChangeRecord = valueChange(vip, customerValueList);
         CustomerRecord userChangeRecord = appUserChange(vip, customerValueList);
 
-        insertRecordList.addAll(customerRecords);
-        insertRecordList.addAll(customerRecords1);
-        insertRecordList.addAll(customerRecords2);
-        insertRecordList.addAll(customerRecords3);
-        insertRecordList.add(valueChangeRecord);
-        insertRecordList.add(userChangeRecord);
+        recordList.addAll(customerRecords);
+        recordList.addAll(customerRecords1);
+        recordList.addAll(customerRecords2);
+        recordList.addAll(customerRecords3);
+        recordList.add(valueChangeRecord);
+        recordList.add(userChangeRecord);
 
-        return insertRecordList;
+        return recordList;
     }
 
     /**
@@ -106,10 +107,11 @@ public class CustomerRecordService {
         record.setVipPhone(order.getVipPhone());
         record.setAppUserName(order.getAppUserName());
         record.setAppUserId(order.getAppUserId());
-        record.setOperationLog("");
-        record.setCreateUserId(0L);
+        record.setAppUserPhone(order.getAppUserPhone());
+        record.setOperationLog(StringUtils.EMPTY);
+        record.setCreateUserId(CustomerValueConstants.DEFAULT_USER_ID);
         record.setCreateTime(LocalDateTime.now());
-        record.setUpdateUserId(0L);
+        record.setUpdateUserId(CustomerValueConstants.DEFAULT_USER_ID);
         record.setUpdateTime(LocalDateTime.now());
         return record;
     }
@@ -175,6 +177,7 @@ public class CustomerRecordService {
      * 价值变更，之前的价值变更与现在的价值进行对比
      */
     private CustomerRecord valueChange(Vip vip, CustomerValueList customerValueList) {
+        // 1-意向客户，2-活跃客户，3-沉睡客户，4-流失客户
         Integer firstClassValue = customerValueList.getFirstClassValue();
 //        Integer firstClassValue = 1;
         Integer customerValue = getCustomerValue(vip);
@@ -195,15 +198,42 @@ public class CustomerRecordService {
             record.setVipPhone("");
             record.setAppUserName("");
             record.setAppUserId(0);
-            record.setOperationLog("由" + firstClassValue + "变更为" + customerValue);
-            record.setCreateUserId(0L);
+            String value = getFirstClassValueStr(firstClassValue);
+            String customerValueName = getCustomerValueName(vip);
+            record.setOperationLog("由" + value + "变更为" + customerValueName);
+            record.setCreateUserId(CustomerValueConstants.DEFAULT_USER_ID);
             record.setCreateTime(LocalDateTime.now());
-            record.setUpdateUserId(0L);
+            record.setUpdateUserId(CustomerValueConstants.DEFAULT_USER_ID);
             record.setUpdateTime(LocalDateTime.now());
             return record;
         }
         // todo 返回值类型
         return null;
+    }
+
+    private String getCustomerValueName(Vip vip) {
+        String vipValueName = vip.getVipValueName();
+        if (StringUtils.isNotBlank(vipValueName)) {
+            return vipValueName;
+        }
+        log.error("vip 信息为 null,[{}]", vip);
+        return StringUtils.EMPTY;
+    }
+
+    private String getFirstClassValueStr(Integer firstClassValue) {
+        // 1-意向客户，2-活跃客户，3-沉睡客户，4-流失客户
+        if (firstClassValue.equals(1)) {
+            return "意向客户";
+        } else if (firstClassValue.equals(2)) {
+            return "活跃客户";
+        }else if (firstClassValue.equals(3)) {
+            return "沉睡客户";
+        }else if (firstClassValue.equals(4)) {
+            return "流失客户";
+        }
+        log.error("客户一级价值错误:[{}]", firstClassValue);
+        return StringUtils.EMPTY;
+
     }
 
     /**
