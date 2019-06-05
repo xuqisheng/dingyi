@@ -76,4 +76,9 @@ public class TGOrderCreateDTO {
      */
     private Integer customerAmount;
 
+    /**
+     * 桌号
+     */
+    private String tableNumber;
+
 }

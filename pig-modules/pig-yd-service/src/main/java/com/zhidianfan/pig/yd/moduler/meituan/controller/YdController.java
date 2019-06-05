@@ -1,6 +1,7 @@
 package com.zhidianfan.pig.yd.moduler.meituan.controller;
 
 import com.alibaba.fastjson.JSONObject;
+import com.zhidianfan.pig.yd.moduler.common.dao.entity.BusinessWeixin;
 import com.zhidianfan.pig.yd.moduler.common.dto.ErrorTip;
 import com.zhidianfan.pig.yd.moduler.common.dto.SuccessTip;
 import com.zhidianfan.pig.yd.moduler.common.dto.Tip;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import java.text.ParseException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -186,6 +188,47 @@ public class YdController {
     public ResponseEntity orderUpdateByPublic(@RequestParam String thirdOrderId) {
 
         Tip tip  = ydService.PAOrderUpdate(thirdOrderId);
+
+        return ResponseEntity.ok(tip);
+    }
+
+    /**
+     * 徐记微信公众号第三方订单状态变更 (客户取消)
+     * @param thirdOrderId 第三方订单id
+     * @return 操作结果
+     */
+    @GetMapping(value = "/xj/order/cancel")
+    public ResponseEntity xjOrderUpdate(@RequestParam String thirdOrderId) {
+
+        Tip tip  = ydService.xjOrderUpdate(thirdOrderId);
+
+        return ResponseEntity.ok(tip);
+    }
+
+
+    /**
+     * 获取徐记微信酒店列表
+     * @param brandId
+     * @return
+     */
+    @GetMapping(value = "/business/list")
+    public ResponseEntity orderUpdateByPublic(@RequestParam Integer brandId) {
+
+        List<BusinessWeixin> businessWeixinList = ydService.getWeixinBusinessList(brandId);
+
+        return ResponseEntity.ok(businessWeixinList);
+    }
+
+    /**
+     * 微信公众号徐记订单 生成
+     * @param publicOrderDTO
+     * @return
+     */
+    @PostMapping(value = "/xj/order/create")
+    public ResponseEntity xjOrderCreate(@RequestBody PublicOrderDTO publicOrderDTO) {
+
+        boolean b = ydService.xjCreatOrder(publicOrderDTO);
+        Tip tip = (b ? SuccessTip.SUCCESS_TIP : ErrorTip.ERROR_TIP);
 
         return ResponseEntity.ok(tip);
     }

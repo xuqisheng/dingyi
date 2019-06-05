@@ -35,7 +35,7 @@ public class EntityGenerator {
         gc.setEnableCache(false);// XML 二级缓存
         gc.setBaseResultMap(true);// XML ResultMap
         gc.setBaseColumnList(false);// XML columList
-        gc.setAuthor("huzp");
+        gc.setAuthor("qqx");
         mpg.setGlobalConfig(gc);
 
         // 数据源配置
@@ -62,7 +62,7 @@ public class EntityGenerator {
         StrategyConfig strategy = new StrategyConfig();
         //strategy.setTablePrefix(new String[]{"_"});// 此处可以修改为您的表前缀
         strategy.setNaming(NamingStrategy.underline_to_camel);// 表名生成策略
-        strategy.setInclude(new String[]{"vip_appraise"});
+        strategy.setInclude(new String[]{"business_weixin"});
         mpg.setStrategy(strategy);
 
         // 包配置
