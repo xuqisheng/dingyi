@@ -8,6 +8,7 @@ import com.zhidianfan.pig.yd.moduler.common.service.IBusinessService;
 import com.zhidianfan.pig.yd.moduler.common.service.ICustomerValueTaskService;
 import com.zhidianfan.pig.yd.moduler.resv.constants.CustomerValueConstants;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -77,9 +78,9 @@ public class CustomerValueTaskService {
     /**
      * 每天执行，把酒店全部插入到任务表中，后面数据计算都任务表中取酒店 id,然后根据酒店分别执行任务
      */
-    public void addCustomerList(String date) {
+    public void addCustomerList() {
         log.info("开始执行 getCustomerList() ，将要执行的任务写入任务批次表中...");
-        cleanData(date);
+        cleanData();
         try {
             // 查询出所有酒店,写入任务批次表中
             List<Business> businesses = businessMapper.selectList(new EntityWrapper<>());
@@ -90,10 +91,7 @@ public class CustomerValueTaskService {
                         task.setTaskBatchNo(getBatchNo(business.getId()));
                         task.setHotelId(Long.valueOf(business.getId()));
                         Integer brandId = business.getBrandId();
-                        if (brandId == null) {
-                            brandId = -1;
-                        }
-                        task.setBrandId(brandId);
+                        task.setBrandId(brandId == null ? -1 : brandId);
                         task.setPlanTime(LocalDate.now());
                         task.setCreateTime(LocalDateTime.now());
                         task.setUpdateTime(LocalDateTime.now());
@@ -102,9 +100,10 @@ public class CustomerValueTaskService {
                         task.setSpendTime(CustomerValueConstants.DEFAULT_SPEND_TIME);
                         task.setFlag(CustomerValueConstants.NON_EXECUTE);
                         return task;
-                    }).collect(Collectors.toList());
+                    })
+                    .collect(Collectors.toList());
             customerValueTaskMapper.insertBatch(valueTaskList);
-            log.info("执行 getCustomerList() 完成,写入任务批次表中数据{}...", valueTaskList.size());
+            log.info("执行 getCustomerList() 完成,写入任务批次表中数据[{}]...", valueTaskList.size());
         } catch (Exception e) {
             log.error("任务执行发生异常...", e);
         }
@@ -113,18 +112,15 @@ public class CustomerValueTaskService {
     /**
      * 清除脏数据
      */
-    private void cleanData(String strDate) {
-        LocalDate date;
-        try {
-            date = LocalDate.parse(strDate);
-        } catch (RuntimeException e) {
-            throw new RuntimeException("日期格式错误", e);
-        }
+    private void cleanData() {
         Wrapper<CustomerValueTask> wrapper = new EntityWrapper<>();
-        LocalTime time = LocalTime.of(0, 0, 0);
-        LocalDateTime dateTime = LocalDateTime.of(date, time);
-        wrapper.ge("create_time", dateTime);
-        wrapper.lt("create_time", dateTime);
+        LocalDate date = LocalDate.now();
+        LocalTime startTime = LocalTime.of(0, 0, 0);
+        LocalTime endTime = LocalTime.of(23, 59, 59);
+        LocalDateTime startDateTime = LocalDateTime.of(date, startTime);
+        LocalDateTime endDateTime = LocalDateTime.of(date, endTime);
+        wrapper.ge("create_time", startDateTime);
+        wrapper.lt("create_time", endDateTime);
         customerValueTaskMapper.delete(wrapper);
     }
 

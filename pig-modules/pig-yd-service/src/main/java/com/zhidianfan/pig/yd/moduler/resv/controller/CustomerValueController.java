@@ -38,9 +38,10 @@ public class CustomerValueController {
      * @return
      */
     @PostMapping("/task")
-    public ResponseEntity task(@RequestParam(required = false) String date) {
-        log.info("生成任务");
-        customerValueTaskService.addCustomerList(date);
+    public ResponseEntity task() {
+        log.info("生成任务,时间:[{}]", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(LocalDateTime.now()));
+        customerValueTaskService.addCustomerList();
+        log.info("任务结束，时间[{}]", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(LocalDateTime.now()));
         return ResponseEntity.ok().build();
     }
 
@@ -49,9 +50,9 @@ public class CustomerValueController {
      */
     @PostMapping("/customervalue")
     public ResponseEntity gcustomerValue() {
-        log.info("开始执行任务:{}", LocalDateTime.now());
+        log.info("开始执行任务:[{}]", LocalDateTime.now());
         customerValueService.getCustomerValueBaseInfo();
-        log.info("任务执行结束:{}", LocalDateTime.now());
+        log.info("任务执行结束:[{}]", LocalDateTime.now());
         return ResponseEntity.ok().build();
     }
 
@@ -60,11 +61,12 @@ public class CustomerValueController {
      * @param resvDate
      */
     @PostMapping("/analysis")
-    public void customerAnalysis(String resvDate) {
+    public ResponseEntity customerAnalysis(String resvDate) {
         DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
-        log.info("开始执行任务:{}", formatter.format(LocalDateTime.now()));
+        log.info("开始执行任务:[{}]", formatter.format(LocalDateTime.now()));
         businessCustomerAnalysisInfoService.saveAnalysisDetail(resvDate);
-        log.info("任务执行结束:{}", formatter.format(LocalDateTime.now()));
+        log.info("任务执行结束:[{}]", formatter.format(LocalDateTime.now()));
+        return ResponseEntity.ok().build();
     }
 
 }
