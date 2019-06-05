@@ -85,4 +85,6 @@ public interface ResvOrderMapper extends BaseMapper<ResvOrder> {
     void updateOrderStatus1TO4(@Param("intervalNum")Integer intervalNum);
 
     void updateOrderStatus2TO3(@Param("intervalNum")Integer intervalNum);
+
+    Integer selectOverTimeOrder(@Param("id")Integer id, @Param("time")String time,@Param("status") String status);
 }

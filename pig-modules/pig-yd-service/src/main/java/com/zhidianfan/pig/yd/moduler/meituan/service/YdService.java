@@ -347,6 +347,9 @@ public class YdService {
                     resvOrderAndroid.setBatchNo("pc" + orderNo);
                     resvOrderAndroid.setVipSex(meituanOrderDTO.getGender() == 10 ? "女" : "男");
 
+                    resvOrderAndroid.setExternalSourceName("2");
+                    resvOrderAndroid.setExternalSourceName(resvOrderThird.getSource());
+
                     resvOrderAndroid.setVipId(0);
                     boolean insert = iResvOrderAndroidService.insert(resvOrderAndroid);
                     //插入订单自动接单日志
@@ -383,7 +386,11 @@ public class YdService {
                     jgPush.setType("ANDROID_PHONE");
                     pushFeign.pushMsg(jgPush.getType(), jgPush.getUsername(), jgPush.getMsgSeq(), jgPush.getBusinessId(), jgPush.getMsg());
                 }
-                List<Business> businessList = businessService.selectList(new EntityWrapper<Business>().eq("brand_id", business.getBrandId()).eq("status", '1'));
+
+                List<Business> businessList = businessService.selectList(new EntityWrapper<Business>()
+                        .eq("brand_id", business.getBrandId())
+                        .eq("status", '1'));
+
                 for (Business business1 : businessList) {
                     if (business1.getIsPcPush() == 1) {
                         jgPush.setType("WEB");
@@ -885,10 +892,15 @@ public class YdService {
             resvOrderAndroid.setTableId(tableId);
             resvOrderAndroid.setTableName(tableName);
             String orderNo = IdUtils.makeOrderNo();
+            //增加ExternalSourceName  ID
+            resvOrderAndroid.setExternalSourceName("4");
+            resvOrderAndroid.setExternalSourceName(resvOrderThird.getSource());
             resvOrderAndroid.setResvOrder(orderNo);
             resvOrderAndroid.setBatchNo("pc" + orderNo);
             resvOrderAndroid.setVipSex(resvOrderThird.getVipSex().equals("先生") ? "男" : "女");
             resvOrderAndroid.setVipId(vip1.getId());
+
+
             boolean insert = iResvOrderAndroidService.insert(resvOrderAndroid);
             //插入订单自动接单日志
             insertAutoAcceptLogs(resvOrderAndroid.getResvOrder());
@@ -1232,7 +1244,7 @@ public class YdService {
      * @param type 类型
      * @return 序列
      */
-    private long getNextDateId(String type) {
+    public long getNextDateId(String type) {
         String todayStr = DateFormatUtils.format(System.currentTimeMillis(), "yyyyMMdd");//历史遗留Key暂不考虑，一天也就一个。
         long l2 = redisTemplate.opsForValue().increment("PUSH:" + type + ":" + todayStr, 1);
         String s1 = StringUtils.leftPad("" + l2, 7, "0");
