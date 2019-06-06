@@ -348,7 +348,7 @@ public class YdService {
                     resvOrderAndroid.setBatchNo("pc" + orderNo);
                     resvOrderAndroid.setVipSex(meituanOrderDTO.getGender() == 10 ? "女" : "男");
 
-                    resvOrderAndroid.setExternalSourceName("2");
+                    resvOrderAndroid.setExternalSourceId(2);
                     resvOrderAndroid.setExternalSourceName(resvOrderThird.getSource());
 
                     resvOrderAndroid.setVipId(0);
@@ -537,7 +537,10 @@ public class YdService {
         MeituanOrderUpdateDTO meituanOrderUpdateDTO = JSONObject.parseObject(orderDTO.getData(), MeituanOrderUpdateDTO.class);
         log.info("meituanOrderUpdateDTO:" + meituanOrderUpdateDTO);
 
-        resvOrderThird.setFlag(0);
+        //如果是客户取消订单,则设置消息为未读
+        if(meituanOrderUpdateDTO.getStatus() == 70){
+            resvOrderThird.setFlag(0);
+        }
 
         //如果订单状态为30
 //        if (meituanOrderUpdateDTO.getStatus() == 30) {
@@ -618,6 +621,8 @@ public class YdService {
             }
             orderBO.setData("OK");
             orderBO.setError(null);
+
+
             JgPush jgPush = new JgPush();
             jgPush.setBusinessId(orderDTO.getEPoiId());
             jgPush.setMsgSeq(String.valueOf(getNextDateId("MT_ORDER")));
@@ -627,6 +632,7 @@ public class YdService {
             String orderMsg = JsonUtils.obj2Json(resvOrderThird).replaceAll("\r|\n", "").replaceAll("\\s*", "");
             jsonObject.put("data", orderMsg);
             jgPush.setMsg(jsonObject.toString());
+
             try {
                 pushFeign.pushMsg(jgPush.getType(), jgPush.getUsername(), jgPush.getMsgSeq(), jgPush.getBusinessId(), jgPush.getMsg());
                 jgPush.setType("ANDROID_PHONE");
@@ -845,7 +851,7 @@ public class YdService {
             resvOrderAndroid.setTableName(tableName);
             String orderNo = IdUtils.makeOrderNo();
             //增加ExternalSourceName  ID
-            resvOrderAndroid.setExternalSourceName("4");
+            resvOrderAndroid.setExternalSourceId(4);
             resvOrderAndroid.setExternalSourceName(resvOrderThird.getSource());
             resvOrderAndroid.setResvOrder(orderNo);
             resvOrderAndroid.setBatchNo("pc" + orderNo);
