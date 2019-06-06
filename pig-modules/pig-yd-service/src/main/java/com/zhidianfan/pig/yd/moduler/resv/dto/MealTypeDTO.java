@@ -26,6 +26,10 @@ public class MealTypeDTO {
     @ApiModelProperty(value="餐别名称")
     private String mealTypeName;
 
+
+    @ApiModelProperty(value="同步餐别id")
+    private String mealTypeCode;
+
     /**
      * 状态：1启动，0不启动
      */
