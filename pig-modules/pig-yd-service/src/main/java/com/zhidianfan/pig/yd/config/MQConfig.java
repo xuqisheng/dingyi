@@ -51,7 +51,7 @@ public class MQConfig {
      */
     @Bean
     public Binding bindingSmsMarking(DirectExchange customerValueDirectExchange, Queue customerValueQueue) {
-        return BindingBuilder.bind(customerValueQueue).to(customerValueDirectExchange).with(QueueName.CUSTOMER_VALUE_TOUTINGKEY);
+        return BindingBuilder.bind(customerValueQueue).to(customerValueDirectExchange).with(QueueName.CUSTOMER_VALUE_ROUTINGKEY);
     }
 
 }

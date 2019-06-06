@@ -13,5 +13,5 @@ public class QueueName {
 
     public static final String CUSTOMER_VALUE_QUEUE = "CUSTOMER_VALUE_QUEUE";
     public static final String CUSTOMER_VALUE_DIRECT_EXCHANGE = "CUSTOMER_VALUE_DIRECT_EXCHANGE";
-    public static final String CUSTOMER_VALUE_TOUTINGKEY = "CUSTOMER_VALUE_TOUTINGKEY";
+    public static final String CUSTOMER_VALUE_ROUTINGKEY = "CUSTOMER_VALUE_ROUTINGKEY";
 }
