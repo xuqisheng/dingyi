@@ -14,6 +14,7 @@ import com.zhidianfan.pig.yd.moduler.common.service.IRatingConfigService;
 import com.zhidianfan.pig.yd.moduler.common.service.IResvOrderAndroidService;
 import com.zhidianfan.pig.yd.moduler.common.service.IResvOrderRatingService;
 import com.zhidianfan.pig.yd.moduler.resv.bo.BatchOrderBo;
+import com.zhidianfan.pig.yd.moduler.resv.bo.DeskOrderBo;
 import com.zhidianfan.pig.yd.moduler.resv.dto.*;
 import com.zhidianfan.pig.yd.moduler.resv.qo.LockTablQO;
 import com.zhidianfan.pig.yd.moduler.resv.service.OrderService;
@@ -30,9 +31,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @Author panqianyong
@@ -65,7 +64,6 @@ public class OrderController {
      */
     @PostMapping(value = "/delete/orders")
     public ResponseEntity deleteOrders(@RequestBody ResvOrderDTO resvOrderDTO) {
-        //todo 新表删除
 
         orderService.deleteOrders(resvOrderDTO);
 
@@ -110,10 +108,11 @@ public class OrderController {
     @ApiImplicitParam(paramType="query", name = "batchNo", value = "订单批次号", dataType = "String")
     public ResponseEntity orderByBatchNo(String batchNo) {
 
-        ResvOrderAndroid resvOrderId = new ResvOrderAndroid();
-        resvOrderId.setBatchNo(batchNo);
-        List<ResvOrderAndroid> resvOrder = iResvOrderService.selectList(new EntityWrapper<>(resvOrderId));
-        return ResponseEntity.ok(resvOrder);
+
+        // 增加订单信息携带过敏源
+        List<DeskOrderBo> deskOrderBos = iResvOrderService.selectListWithAllergen(batchNo);
+
+        return ResponseEntity.ok(deskOrderBos);
     }
 
     /**

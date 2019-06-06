@@ -1133,6 +1133,7 @@ public class YdService {
             resvOrderThird.setRemark("客户取消易订公众号订单");
             iResvOrderThirdService.updateById(resvOrderThird);
 
+            
             //根据有无订单是否修改订单状态
             List<ResvOrderAndroid> orderAndroidList = iResvOrderAndroidService.selectList(new EntityWrapper<ResvOrderAndroid>()
                     .eq("third_order_no", thirdOrderId));

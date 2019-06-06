@@ -230,8 +230,9 @@
         select o.*,
         v.vip_value_name as vipValueName,
         v.vip_class_name as vipClassName,
-        ror.id as orderRatingId
+        v.allergen as allergen,
 
+        ror.id as orderRatingId
         from resv_order_android o
         left join vip v on v.id=o.vip_id
         left join resv_order_rating ror on ror.batch_no=o.batch_no
@@ -755,5 +756,17 @@
         UPDATE resv_order_android SET `status` = 3,updated_at=now() WHERE `status`=2 AND resv_date &lt;= DATE_SUB(CURDATE(),INTERVAL ${intervalNum} DAY) AND payamount IS NOT NULL AND payamount !=''
 
     </update>
+
+
+    <select id="selectListWithAllergen"  resultType="com.zhidianfan.pig.yd.moduler.resv.bo.DeskOrderBo">
+        SELECT
+            r.*,
+            v.allergen
+        FROM
+            resv_order_android r
+            LEFT JOIN vip v ON r.vip_id = v.id
+        WHERE
+            batch_no = #{batchNo}
+    </select>
 
 </mapper>

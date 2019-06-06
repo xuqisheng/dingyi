@@ -158,5 +158,10 @@ public class ResvOrderAndroidServiceImpl extends ServiceImpl<ResvOrderAndroidMap
         baseMapper.updateAndroidOrderStatus2TO3(intervalNum);
     }
 
+    @Override
+    public List<DeskOrderBo> selectListWithAllergen(String batchNo) {
+        return baseMapper.selectListWithAllergen(batchNo);
+    }
+
 
 }

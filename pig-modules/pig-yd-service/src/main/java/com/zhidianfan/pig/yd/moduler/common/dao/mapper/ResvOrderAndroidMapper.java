@@ -79,4 +79,6 @@ public interface ResvOrderAndroidMapper extends BaseMapper<ResvOrderAndroid> {
     void updateAndroidOrderStatus1TO4(@Param("intervalNum")Integer intervalNum);
 
     void updateAndroidOrderStatus2TO3(@Param("intervalNum")Integer intervalNum);
+
+    List<DeskOrderBo> selectListWithAllergen(@Param("batchNo")String batchNo);
 }

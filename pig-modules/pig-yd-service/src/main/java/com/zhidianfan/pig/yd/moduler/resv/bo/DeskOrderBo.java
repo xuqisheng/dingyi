@@ -27,6 +27,11 @@ public class DeskOrderBo extends ResvOrderAndroid {
 
 
     /**
+     * 客户忌口
+     */
+    private String allergen;
+
+    /**
      * 批次订单需桌位
      */
     private List tables;

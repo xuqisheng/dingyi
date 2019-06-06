@@ -179,5 +179,6 @@ public class VipInfoDTO {
 
     private Integer isLeap;
 
+    private String allergen;
 
 }

@@ -85,4 +85,6 @@ public interface IResvOrderAndroidService extends IService<ResvOrderAndroid> {
     void updateAndroidOrderStatus1TO4(Integer intervalNum);
 
     void updateAndroidOrderStatus2TO3(Integer intervalNum);
+
+    List<DeskOrderBo> selectListWithAllergen(String batchNo);
 }
