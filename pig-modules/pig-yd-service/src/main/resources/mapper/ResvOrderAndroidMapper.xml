@@ -769,4 +769,20 @@
             batch_no = #{batchNo}
     </select>
 
+
+    <select id="selectBrandLastEatTime" resultMap="BaseResultMap">
+        SELECT
+            *
+        FROM
+            resv_order_android
+        WHERE
+            vip_phone = #{phone}
+            AND business_id IN ( SELECT id FROM business WHERE brand_id = #{brandId} )
+            AND status = 3
+        ORDER BY
+            resv_date DESC
+            LIMIT 1
+    </select>
+
+
 </mapper>

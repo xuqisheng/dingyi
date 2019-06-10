@@ -116,6 +116,31 @@ public class VipController {
     }
 
 
+
+    @ApiOperation(value="来电弹屏客户信息展示")
+    @GetMapping(value = "/callscreenvipinfo")
+    public ResponseEntity getCallscreenVipInfo(@RequestParam Integer brandId,
+                                          @RequestParam Integer businessId,
+                                     @RequestParam String phone) {
+
+        VipInfoDTO vipInfo = vipService.callscreenvipinfo(brandId,businessId, phone);
+
+        //Vip客户信息获取查询异常判断
+        if (null == vipInfo) {
+            ErrorTip tip = new ErrorTip();
+            //国际化
+            Locale locale = LocaleContextHolder.getLocale();
+            String msg = messageSource.getMessage("vipaf", null, locale);
+            tip.setMsg(msg);
+            return ResponseEntity.ok(tip);
+        }
+        return ResponseEntity.ok(vipInfo);
+
+    }
+
+
+
+
     /**
      * 价值类别客户统计
      *

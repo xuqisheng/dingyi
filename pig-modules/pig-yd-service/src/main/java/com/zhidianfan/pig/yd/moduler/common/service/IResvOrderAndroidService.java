@@ -87,4 +87,6 @@ public interface IResvOrderAndroidService extends IService<ResvOrderAndroid> {
     void updateAndroidOrderStatus2TO3(Integer intervalNum);
 
     List<DeskOrderBo> selectListWithAllergen(String batchNo);
+
+    ResvOrderAndroid selectBrandLastEatTime(String phone, Integer brandId);
 }

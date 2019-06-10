@@ -81,4 +81,6 @@ public interface ResvOrderAndroidMapper extends BaseMapper<ResvOrderAndroid> {
     void updateAndroidOrderStatus2TO3(@Param("intervalNum")Integer intervalNum);
 
     List<DeskOrderBo> selectListWithAllergen(@Param("batchNo")String batchNo);
+
+    ResvOrderAndroid selectBrandLastEatTime(@Param("phone")String phone,@Param("brandId") Integer brandId);
 }
