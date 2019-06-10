@@ -33,6 +33,7 @@ public class SyncInterfaceController {
 
 
 
+
     @GetMapping(value = "/all")
     public ResponseEntity getSyncInterface() {
 
