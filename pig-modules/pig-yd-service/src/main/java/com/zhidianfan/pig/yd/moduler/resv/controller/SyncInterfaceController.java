@@ -17,7 +17,7 @@ import java.util.List;
 
 /**
  * <p>
- * 前端控制器
+ * 第三方接口
  * </p>
  *
  * @author huzp

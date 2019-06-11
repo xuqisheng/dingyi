@@ -13,4 +13,5 @@ import com.baomidou.mybatisplus.mapper.BaseMapper;
  */
 public interface BusinessSyncAccountMapper extends BaseMapper<BusinessSyncAccount> {
 
+    boolean updateSyncInfo(BusinessSyncAccount businessSyncAccount);
 }
