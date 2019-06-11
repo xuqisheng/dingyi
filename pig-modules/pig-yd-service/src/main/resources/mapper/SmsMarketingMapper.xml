@@ -14,6 +14,8 @@
         <result column="created_at" property="createdAt" />
         <result column="updated_at" property="updatedAt" />
         <result column="remark" property="remark" />
+
+
         <result column="num" property="num" />
         <result column="sms_num" property="smsNum" />
         <result column="vip_value_id" property="vipValueId" />
@@ -24,6 +26,7 @@
         <result column="campaign_id" property="campaignId" />
         <result column="sex" property="sex" />
     </resultMap>
+
     <select id="sendSmsNum" resultType="java.lang.Integer">
 
         select if(sum(s.sms_num) is null,0,sum(s.sms_num))

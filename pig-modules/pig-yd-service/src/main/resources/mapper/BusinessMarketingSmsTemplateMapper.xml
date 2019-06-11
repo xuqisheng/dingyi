@@ -12,6 +12,11 @@
         <result column="update_at" property="updateAt" />
         <result column="is_enable" property="isEnable" />
         <result column="use_num" property="useNum" />
+        <result column="is_auto_send" property="isAutoSend" />
+        <result column="anniversary_type" property="anniversaryType" />
+        <result column="anniversary_obj" property="anniversaryObj" />
+        <result column="advance_day_num" property="advanceDayNum" />
+        <result column="send_time" property="sendTime" />
     </resultMap>
     <update id="UpdateAddUseNum">
 

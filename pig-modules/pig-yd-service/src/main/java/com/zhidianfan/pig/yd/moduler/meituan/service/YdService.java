@@ -540,6 +540,7 @@ public class YdService {
         //如果是客户取消订单,则设置消息为未读
         if(meituanOrderUpdateDTO.getStatus() == 70){
             resvOrderThird.setFlag(0);
+            log.info("如果是客户取消订单,则设置消息为未读: resvOrderThird.getFlag" +resvOrderThird.getFlag());
         }
 
         //如果订单状态为30
