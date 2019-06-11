@@ -199,6 +199,7 @@ public class OrderService {
                 Vip vip = iVipService.selectById(resvOrder.getVipId());
                 if(vip!=null) {
                     deskOrderBo.setVipValueName(vip.getVipValueName());
+                    deskOrderBo.setAllergen(vip.getAllergen());
                 }
 
                 //严重超时固定为30分钟
