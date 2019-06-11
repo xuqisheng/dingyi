@@ -20,6 +20,7 @@ import com.zhidianfan.pig.yd.moduler.resv.bo.VipValueCountBo;
 import com.zhidianfan.pig.yd.moduler.resv.constants.CustomerValueConstants;
 import com.zhidianfan.pig.yd.moduler.resv.dto.*;
 import com.zhidianfan.pig.yd.moduler.resv.enums.OrderStatus;
+import com.zhidianfan.pig.yd.mq.MQSender;
 import com.zhidianfan.pig.yd.utils.ExcelUtil;
 import com.zhidianfan.pig.yd.utils.Lunar;
 import com.zhidianfan.pig.yd.utils.LunarSolarConverter;
@@ -73,6 +74,9 @@ public class VipService {
     @Resource
     private IResvOrderRatingService iResvOrderRatingService;
 
+    @Autowired
+    private MQSender mqSender;
+
 
     /**
      * 根据酒店id与手机号更新或者新增Vip
@@ -105,10 +109,38 @@ public class VipService {
             vip.setId(vipInfo.getId());
             vip.setUpdatedAt(new Date());
             b = iVipService.updateById(vip);
+            // todo 添加发送 MQ
+            if (b) {
+                sendMq(vip);
+            }
         }
 
 
         return b;
+    }
+
+    private void sendMq(Vip vip) {
+        try {
+            Integer vipId = vip.getId();
+            if (vipId == null) {
+                log.error("Vip id 为 null, 发送 MQ 不向 RabbitMQ 发送消息");
+                return;
+            }
+            CustomerValueChangeFieldDTO dto = new CustomerValueChangeFieldDTO();
+            int vipIdInt;
+            try {
+                vipIdInt = Math.toIntExact(vipId);
+            } catch (Exception e) {
+                log.error("转为 int 失败，不发送 MQ ");
+                return;
+            }
+            dto.setVipId(vipIdInt);
+            dto.setType(CustomerValueChangeFieldDTO.PROFILE);
+            dto.setValue(CustomerValueChangeFieldDTO.PROFILE);
+            mqSender.sendMQ(dto);
+        } catch (Exception e) {
+            log.error("发送 MQ 发生异常，不影响正常的执行", e);
+        }
     }
 
     /**

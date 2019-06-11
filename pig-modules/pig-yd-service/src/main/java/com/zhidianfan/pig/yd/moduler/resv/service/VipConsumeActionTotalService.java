@@ -251,6 +251,7 @@ public class VipConsumeActionTotalService {
      * @param value 首次消费时间，yyy-MM-dd HH:mm:ss
      */
     public void updateFirstConsumeTime(Integer vipId, String value) {
+        // todo 逻辑修改，客户结账时角发该操作，然后在重新查询订单表
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         LocalDateTime dateTime = LocalDateTime.parse(value, formatter);
         VipConsumeActionTotal total = new VipConsumeActionTotal();

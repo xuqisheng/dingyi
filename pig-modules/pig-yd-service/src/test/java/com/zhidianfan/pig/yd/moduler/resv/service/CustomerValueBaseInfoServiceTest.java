@@ -136,7 +136,7 @@ public class CustomerValueBaseInfoServiceTest {
             dto.setVipId(5698542);
             dto.setType("PROFILE");
             dto.setValue(i + "-" + 1);
-            rabbitTemplate.convertAndSend(QueueName.CUSTOMER_VALUE_DIRECT_EXCHANGE, QueueName.CUSTOMER_VALUE_TOUTINGKEY, dto);
+            rabbitTemplate.convertAndSend(QueueName.CUSTOMER_VALUE_DIRECT_EXCHANGE, QueueName.CUSTOMER_VALUE_ROUTINGKEY, dto);
         }
 
 

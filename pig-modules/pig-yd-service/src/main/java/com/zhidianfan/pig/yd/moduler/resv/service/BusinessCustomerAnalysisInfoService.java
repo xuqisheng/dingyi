@@ -79,8 +79,8 @@ public class BusinessCustomerAnalysisInfoService {
                     List<ResvOrder> resvOrders = getResvOrder(vipId);
                     Integer appUserId = vip.getAppUserId();
                     AppUser appUser = getAppUser(appUserId);
-                    String appUserName = appUser.getAppUserName();
-                    String appUserPhone = appUser.getAppUserPhone();
+                    String appUserName = getAppUserName(appUser);
+                    String appUserPhone = getAppUserPhone(appUser);
                     Integer currentAppUserId = getCurrentAppUserId(vipId, resvOrders);
                     String currentAppUserName = getCurrentAppUserName(vipId, resvOrders);
                     String currentAppUserPhone = getCurrentAppUserPhone(vipId, resvOrders);
@@ -93,6 +93,7 @@ public class BusinessCustomerAnalysisInfoService {
                     info.setVipPhone(vipPhone);
                     info.setAppUserId(appUserId);
                     info.setVipValueType(vipValueType);
+                    info.setType(vipValueType);
                     info.setAppUserName(appUserName);
                     info.setAppUserPhone(appUserPhone);
                     info.setCurrentAppUserId(currentAppUserId);
@@ -140,7 +141,7 @@ public class BusinessCustomerAnalysisInfoService {
         Optional<ResvOrder> min = getLastResvOrder(resvOrders);
         ResvOrder resvOrder = min.orElse(new ResvOrder());
         String vipPhone = resvOrder.getVipPhone();
-        return Optional.of(vipPhone).orElse(StringUtils.EMPTY);
+        return Optional.ofNullable(vipPhone).orElse(StringUtils.EMPTY);
     }
 
     /**
@@ -156,7 +157,7 @@ public class BusinessCustomerAnalysisInfoService {
         Optional<ResvOrder> min = getLastResvOrder(resvOrders);
         ResvOrder resvOrder = min.orElse(new ResvOrder());
         String vipName = resvOrder.getVipName();
-        return Optional.of(vipName).orElse(StringUtils.EMPTY);
+        return Optional.ofNullable(vipName).orElse(StringUtils.EMPTY);
     }
 
     /**
@@ -176,29 +177,22 @@ public class BusinessCustomerAnalysisInfoService {
 
     /**
      * 营销经理电话
-     * @param vipId
      * @return
      */
-    private String getAppUserPhone(Integer vipId, List<ResvOrder> resvOrders, String resvDate) {
-        if (vipId == null) {
+    private String getAppUserPhone(AppUser appUser) {
+        if (appUser == null) {
             return StringUtils.EMPTY;
         }
-        // 传入月份最后一次订单的营销经理
-        Optional<ResvOrder> min = getCurrentMonthLastResvOrder(resvOrders, resvDate);
-        ResvOrder resvOrder = min.orElse(new ResvOrder());
-        String vipPhone = resvOrder.getVipPhone();
-        return Optional.of(vipPhone).orElse(StringUtils.EMPTY);
+        String appUserPhone = appUser.getAppUserPhone();
+        return Optional.of(appUserPhone).orElse(StringUtils.EMPTY);
     }
 
     /**
      * 营销经理名称
-     * @param vipId
      * @return
      */
-    private String getAppUserName(Integer vipId, List<ResvOrder> resvOrders, String resvDate) {
-        Optional<ResvOrder> resvOrderOptional = getCurrentMonthLastResvOrder(resvOrders, resvDate);
-        ResvOrder resvOrder = resvOrderOptional.orElse(new ResvOrder());
-        String appUserName = resvOrder.getAppUserName();
+    private String getAppUserName(AppUser appUser) {
+        String appUserName = appUser.getAppUserName();
         return Optional.ofNullable(appUserName).orElse(StringUtils.EMPTY);
     }
 
@@ -215,6 +209,9 @@ public class BusinessCustomerAnalysisInfoService {
     }
 
     private String getVipSex(Vip vip) {
+        if (vip == null) {
+            return StringUtils.EMPTY;
+        }
         String vipSex = vip.getVipSex();
         if ("男".equals(vipSex)) {
             return "先生";
