@@ -46,7 +46,7 @@ public class VipConsumeActionTotalService {
         // 撤单桌数
         vipConsumeActionTotal.setCancelTableNo(getCancelOrderTable(resvOrders));
         // 消费总金额，单位：分
-        vipConsumeActionTotal.setTotalConsumeAmount(getConsumerTotalAmount(resvOrders));
+        vipConsumeActionTotal.setTotalConsumeAvg(getConsumerTotalAmount(resvOrders));
         // 桌均消费,单位:分
         vipConsumeActionTotal.setTableConsumeAvg(getConsumerTableAmount(resvOrders));
         // 人均消费,单位:分
@@ -176,7 +176,7 @@ public class VipConsumeActionTotalService {
                 .filter(order -> "3".equals(order.getStatus()))
                 .map(ResvOrder::getPayamount)
                 .mapToInt(payAmount -> {
-                    if (payAmount.length() < 11) {
+                    if (StringUtils.isNotBlank(payAmount) && payAmount.length() < 11) {
                         return Integer.parseInt(payAmount);
                     } else {
                         return 0;

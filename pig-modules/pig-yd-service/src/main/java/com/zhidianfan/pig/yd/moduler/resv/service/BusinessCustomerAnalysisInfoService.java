@@ -7,6 +7,7 @@ import com.zhidianfan.pig.yd.moduler.common.service.IAppUserService;
 import com.zhidianfan.pig.yd.moduler.common.service.IBusinessCustomerAnalysisDetailService;
 import com.zhidianfan.pig.yd.moduler.common.service.IBusinessCustomerAnalysisInfoService;
 import com.zhidianfan.pig.yd.moduler.common.service.IResvOrderService;
+import com.zhidianfan.pig.yd.moduler.resv.constants.CustomerValueConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -77,6 +78,8 @@ public class BusinessCustomerAnalysisInfoService {
                     Vip vip = vipMap.get(vipId);
                     String vipSex = getVipSex(vip);
                     List<ResvOrder> resvOrders = getResvOrder(vipId);
+                    Optional<Vip> optionalVip = Optional.ofNullable(vip);
+                    vip = optionalVip.orElse(new Vip());
                     Integer appUserId = vip.getAppUserId();
                     AppUser appUser = getAppUser(appUserId);
                     String appUserName = getAppUserName(appUser);
@@ -184,7 +187,7 @@ public class BusinessCustomerAnalysisInfoService {
             return StringUtils.EMPTY;
         }
         String appUserPhone = appUser.getAppUserPhone();
-        return Optional.of(appUserPhone).orElse(StringUtils.EMPTY);
+        return Optional.ofNullable(appUserPhone).orElse(StringUtils.EMPTY);
     }
 
     /**
@@ -251,8 +254,14 @@ public class BusinessCustomerAnalysisInfoService {
         return optional.orElse(new ArrayList<>());
     }
 
+    /**
+     * 获取最后一笔订单
+     * @param resvOrders 订单列表
+     * @return 最后一笔订单
+     */
     private Optional<ResvOrder> getLastResvOrder(List<ResvOrder> resvOrders) {
         return resvOrders.stream()
-                .min((o1, o2) -> o1.getUpdatedAt().before(o2.getUpdatedAt()) ? -1 : 1);
+                .filter(order -> order != null && order.getUpdatedAt() != null)
+                .max(Comparator.comparing(ResvOrder::getUpdatedAt));
     }
 }
