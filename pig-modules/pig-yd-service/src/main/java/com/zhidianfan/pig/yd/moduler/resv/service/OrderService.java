@@ -271,21 +271,24 @@ public class OrderService {
         for (OrderTableBo orderTableBo : orderTable) {
             tableIds.add(orderTableBo.getTableId());
         }
-        for (ResvOrderAndroid order : resvOrders) {
+//        for (ResvOrderAndroid order : resvOrders) {
+        for (int i = 0; i < resvOrders.size(); i++)  {
 
             //变更的桌位
-            if(!tableIds.contains(order.getTableId())){
+            if(!tableIds.contains(resvOrders.get(i).getTableId())){
                 //减桌操作(取消订单)
-                order.setStatus(OrderStatus.DEBOOK.code);
+                resvOrders.get(i).setStatus(OrderStatus.DEBOOK.code);
             }else {
                 //减去原始桌位
-                tableIds.remove((Object) order.getTableId());
+                tableIds.remove((Object) resvOrders.get(i).getTableId());
             }
 
             //更新订单
             ResvOrderAndroid update = new ResvOrderAndroid();
             BeanUtils.copyProperties(reserveOrderEditDTO,update);
-            update.setId(order.getId());
+            update.setId(resvOrders.get(i).getId());
+            update.setResvNum(orderTable.get(i).getResvNum().toString());
+
             resvOrderService.updateById(update);
         }
 
