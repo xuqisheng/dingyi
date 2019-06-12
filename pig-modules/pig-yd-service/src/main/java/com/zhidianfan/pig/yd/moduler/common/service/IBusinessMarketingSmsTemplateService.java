@@ -22,4 +22,5 @@ public interface IBusinessMarketingSmsTemplateService extends IService<BusinessM
     BusinessMarketingSmsTemplate insertBirthTemplate(BusinessMarketingSmsTemplateDTO businessMarketingSmsTemplateDTO);
 
     List<BusinessMarketingSmsTemplateDTO> selectTemplateWithVerifyStatus(Integer id);
+
 }

@@ -40,13 +40,15 @@
         b.is_auto_send as isAutoSend,
         b.advance_day_num as advanceDayNum,
         b.send_time as sendTime,
+        b.is_eat as isEat,
+        b.is_enable as isEnable,
         s.content as displayContent,
         case
         s.status
         when 1 then '待审核'
         when 2 then '已驳回'
         when 3 then '已审核'
-        end as status,
+        end as verifyStatus,
         (SELECT
             name
          FROM
@@ -59,9 +61,6 @@
         WHERE
         b.id = s.template_id and
         b.business_id = #{id}
-        and b.is_enable = true
-
-
     </select>
 
 

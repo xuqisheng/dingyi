@@ -167,6 +167,7 @@ public class BusinessMarketingSmsTemplateService {
             SmsMarketing smsMarketing = smsMarketingService.selectOne(new EntityWrapper<SmsMarketing>()
                     .eq("template_id", businessMarketingSmsTemplate.getId()));
 
+            smsMarketing.setContent(content);
             smsMarketing.setVariable(businessMarketingSmsTemplate.getTemplateVariable());
             smsMarketing.setStatus("1");
             smsMarketing.setAuditingAt(new Date());

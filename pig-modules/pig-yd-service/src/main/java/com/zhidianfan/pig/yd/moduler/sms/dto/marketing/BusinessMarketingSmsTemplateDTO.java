@@ -92,7 +92,7 @@ public class BusinessMarketingSmsTemplateDTO {
     /**
      * 审核状态
      */
-    private Integer verifyStatus;
+    private String verifyStatus;
 
 
     /**
