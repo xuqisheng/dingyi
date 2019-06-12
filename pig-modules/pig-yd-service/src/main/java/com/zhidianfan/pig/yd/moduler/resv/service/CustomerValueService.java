@@ -3,11 +3,9 @@ package com.zhidianfan.pig.yd.moduler.resv.service;
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.*;
 import com.zhidianfan.pig.yd.moduler.common.dao.mapper.ResvOrderMapper;
-import com.zhidianfan.pig.yd.moduler.common.service.ICustomerRecordService;
-import com.zhidianfan.pig.yd.moduler.common.service.ICustomerValueListService;
-import com.zhidianfan.pig.yd.moduler.common.service.IVipConsumeActionLast60Service;
-import com.zhidianfan.pig.yd.moduler.common.service.IVipConsumeActionTotalService;
+import com.zhidianfan.pig.yd.moduler.common.service.*;
 import com.zhidianfan.pig.yd.moduler.resv.constants.CustomerValueConstants;
+import com.zhidianfan.pig.yd.moduler.resv.dto.CustomerValueChangeFieldDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,6 +59,9 @@ public class CustomerValueService {
     @Autowired
     private ICustomerRecordService customerRecordMapper;
 
+    @Autowired
+    private INowChangeInfoService nowChangeInfoMapper;
+
     @Transactional(rollbackFor = Exception.class)
     public void getCustomerValueBaseInfo() {
         LocalDateTime startTime = LocalDateTime.now();
@@ -103,11 +104,31 @@ public class CustomerValueService {
         VipConsumeActionTotal vipConsumeActionTotal = vipConsumeActionTotalService.getVipConsumeActionTotal(vip, resvOrders);
         VipConsumeActionLast60 vipConsumeActionLast60 = vipConsumeActionLast60Service.getVipConsumeActionLast60(vip, resvOrdersBy60days);
         List<CustomerRecord> customerRecordList = customerRecordService.getCustomerRecord(vip, resvOrders, customerValueList);
+        NowChangeInfo nowChangeInfo = getProfile(vip.getId());
 
         customerValueListMapper.insertOrUpdate(customerValueList);
         vipConsumeActionTotalMapper.insertOrUpdate(vipConsumeActionTotal);
         vipConsumeActionLast60Mapper.insertOrUpdate(vipConsumeActionLast60);
         customerRecordMapper.insertBatch(customerRecordList);
+        nowChangeInfoMapper.insertOrUpdate(nowChangeInfo);
+    }
+
+    /**
+     * 客户资料完整度
+     * @param vipId  vip_id
+     * @return NowChangeInfo
+     */
+    private NowChangeInfo getProfile(Integer vipId) {
+        String profile = vipService.getProfile(vipId);
+        NowChangeInfo nowChangeInfo = new NowChangeInfo();
+        nowChangeInfo.setVipId(vipId);
+        nowChangeInfo.setValue(profile);
+        nowChangeInfo.setType(CustomerValueChangeFieldDTO.PROFILE);
+        nowChangeInfo.setChangeTime(LocalDateTime.now());
+        nowChangeInfo.setRemark(StringUtils.EMPTY);
+        nowChangeInfo.setCreateTime(LocalDateTime.now());
+        nowChangeInfo.setUpdateTime(LocalDateTime.now());
+        return nowChangeInfo;
     }
 
     /**

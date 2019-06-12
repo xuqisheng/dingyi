@@ -1,7 +1,5 @@
 package com.zhidianfan.pig.yd.moduler.resv.service;
 
-import com.baomidou.mybatisplus.mapper.EntityWrapper;
-import com.baomidou.mybatisplus.mapper.Wrapper;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.ResvOrder;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.Vip;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.VipConsumeActionTotal;
@@ -42,7 +40,7 @@ public class VipConsumeActionTotalService {
         // 消费完成总桌数
         vipConsumeActionTotal.setTotalTableNo(getCustomerTableCount(resvOrders));
         // 消费完成总人数
-        vipConsumeActionTotal.setTotalPersonNo(getConsumerTotalCount(resvOrders));
+        vipConsumeActionTotal.setTotalPersonNo(getCustomerPersonCount(resvOrders));
         // 撤单桌数
         vipConsumeActionTotal.setCancelTableNo(getCancelOrderTable(resvOrders));
         // 消费总金额，单位：分
@@ -77,6 +75,37 @@ public class VipConsumeActionTotalService {
                 .filter(order -> "2".equals(order.getStatus()) || "3".equals(order.getStatus()))
                 .count();
         return (int) count;
+    }
+
+    /**
+     * 消费总人数
+     * @param resvOrders 订单列表
+     * @return 所有该客户已完成/入座的订单中的实际人数之和。（如果没有实际人数，使用就餐人数）
+     */
+    public Integer getCustomerPersonCount(List<ResvOrder> resvOrders) {
+        // 所有该客户已完成/入座的订单中的实际人数之和。（如果没有实际人数，使用就餐人数）
+        OptionalInt optionalPersonCount = resvOrders.stream()
+                .filter(order -> "2".equals(order.getStatus()) || "3".equals(order.getStatus()))
+                .mapToInt(order -> {
+                    String actualNum = order.getActualNum();
+                    int personCount = 0;
+                    try {
+                        personCount = Integer.parseInt(actualNum);
+                    } catch (NumberFormatException ignored) {
+                    }
+                    if (personCount <= 0) {
+                        String resvNum = order.getResvNum();
+                        try {
+                            personCount = Integer.parseInt(resvNum);
+                        } catch (NumberFormatException e) {
+                            personCount = 0;
+                        }
+                    }
+                    return personCount;
+                })
+                .reduce((a, b) -> a + b);
+
+        return optionalPersonCount.orElse(0);
     }
 
     /**
@@ -194,7 +223,7 @@ public class VipConsumeActionTotalService {
      * @param resvOrders 订单列表
      * @return
      */
-    private Integer getConsumerTotalAmount(List<ResvOrder> resvOrders) {
+    public Integer getConsumerTotalAmount(List<ResvOrder> resvOrders) {
         // 将该客户所有订单的消费金额累加
         int sum = resvOrders.stream()
                 .filter(resvOrder -> "3".equals(resvOrder.getStatus()))

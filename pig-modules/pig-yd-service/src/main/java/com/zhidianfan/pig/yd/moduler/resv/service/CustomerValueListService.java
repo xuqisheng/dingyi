@@ -5,6 +5,7 @@ import com.zhidianfan.pig.yd.moduler.common.service.IAppUserService;
 import com.zhidianfan.pig.yd.moduler.resv.constants.CustomerValueConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.velocity.runtime.parser.node.MathUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -37,6 +38,9 @@ public class CustomerValueListService {
     @Autowired
     private IAppUserService appUserMapper;
 
+    @Autowired
+    private VipConsumeActionTotalService vipConsumeActionTotalService;
+
     /**
      * 获取客户价值列表实体对象
      * @param vip vip 对象
@@ -59,7 +63,6 @@ public class CustomerValueListService {
         // 细分价值
         String lossValue = getLossValue(resvOrders, businessId);
         // 自定义分类
-        // todo 使用之前的分类
         String customerClass = vip.getVipClassName();
         customerClass = Optional.ofNullable(customerClass).orElse(StringUtils.EMPTY);
 //        String customerClass = getCustomerClass(resvOrders, businessId);
@@ -186,16 +189,13 @@ public class CustomerValueListService {
      * @return 人均消费金额，单元:分
      */
     public int getPersonAvg(List<ResvOrder> resvOrders) {
-        OptionalDouble optAverage = resvOrders.stream()
-                .filter(order -> "3".equals(order.getStatus()))
-                .map(ResvOrder::getPayamount)
-                .mapToDouble(payAmount -> {
-                    Optional<String> optionalPayAmount = Optional.ofNullable(payAmount);
-                    return Double.valueOf(optionalPayAmount.orElse("0"));
-                })
-                .average();
-        double v = optAverage.orElse(CustomerValueConstants.DEFAULT_CUSTOMER_AVG);
-        return (int) (v * 100);
+        //消费总金额
+        Integer consumerTotalAmount = vipConsumeActionTotalService.getConsumerTotalAmount(resvOrders);
+        // 消费人数
+        Integer customerPersonCount = vipConsumeActionTotalService.getCustomerPersonCount(resvOrders);
+        customerPersonCount = Math.max(customerPersonCount, 1);
+        Number personCountNumber = MathUtils.divide(consumerTotalAmount, customerPersonCount);
+        return personCountNumber.intValue();
     }
 
 

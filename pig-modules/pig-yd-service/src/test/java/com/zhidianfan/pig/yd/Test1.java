@@ -2,6 +2,7 @@ package com.zhidianfan.pig.yd;
 
 import com.zhidianfan.pig.common.util.JsonUtils;
 import com.zhidianfan.pig.yd.moduler.common.constant.ClientId;
+import org.apache.velocity.runtime.parser.node.MathUtils;
 import org.junit.Test;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -14,10 +15,6 @@ import org.springframework.web.client.RestTemplate;
 import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.TemporalAccessor;
-import java.time.temporal.TemporalField;
-import java.time.temporal.TemporalUnit;
 import java.util.*;
 
 /**
@@ -147,6 +144,14 @@ public class Test1 {
 
 
         System.out.println(parseDate);
+    }
+
+    @Test
+    public void test5() {
+        int a = 100;
+        double b = 5.1;
+        Number divide = MathUtils.divide(a, b);
+        System.out.println(divide.intValue());
     }
 
 }

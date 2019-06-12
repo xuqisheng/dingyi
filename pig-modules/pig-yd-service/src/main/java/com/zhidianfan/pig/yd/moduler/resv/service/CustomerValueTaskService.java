@@ -3,8 +3,10 @@ package com.zhidianfan.pig.yd.moduler.resv.service;
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.baomidou.mybatisplus.mapper.Wrapper;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.Business;
+import com.zhidianfan.pig.yd.moduler.common.dao.entity.ConfigHotel;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.CustomerValueTask;
 import com.zhidianfan.pig.yd.moduler.common.service.IBusinessService;
+import com.zhidianfan.pig.yd.moduler.common.service.IConfigHotelService;
 import com.zhidianfan.pig.yd.moduler.common.service.ICustomerValueTaskService;
 import com.zhidianfan.pig.yd.moduler.resv.constants.CustomerValueConstants;
 import lombok.extern.slf4j.Slf4j;
@@ -17,9 +19,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -83,7 +83,7 @@ public class CustomerValueTaskService {
         cleanData();
         try {
             // 查询出所有酒店,写入任务批次表中
-            List<Business> businesses = businessMapper.selectList(new EntityWrapper<>());
+            List<Business> businesses = getBusinessesAll();
             List<CustomerValueTask> valueTaskList = businesses.stream()
                     .map(business -> {
                         // 生成任务信息
@@ -107,6 +107,10 @@ public class CustomerValueTaskService {
         } catch (Exception e) {
             log.error("任务执行发生异常...", e);
         }
+    }
+
+    private List<Business> getBusinessesAll() {
+        return businessMapper.selectList(new EntityWrapper<>());
     }
 
     /**
@@ -136,5 +140,6 @@ public class CustomerValueTaskService {
         String s = format + businessID;
         return Long.valueOf(s);
     }
+
 
 }

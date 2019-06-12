@@ -6,10 +6,7 @@ import com.baomidou.mybatisplus.mapper.Wrapper;
 import com.baomidou.mybatisplus.plugins.Page;
 import com.google.common.collect.Lists;
 import com.zhidianfan.pig.common.util.PageFactory;
-import com.zhidianfan.pig.yd.moduler.common.dao.entity.Business;
-import com.zhidianfan.pig.yd.moduler.common.dao.entity.ResvOrderAndroid;
-import com.zhidianfan.pig.yd.moduler.common.dao.entity.ResvOrderRating;
-import com.zhidianfan.pig.yd.moduler.common.dao.entity.Vip;
+import com.zhidianfan.pig.yd.moduler.common.dao.entity.*;
 import com.zhidianfan.pig.yd.moduler.common.dto.ErrorTip;
 import com.zhidianfan.pig.yd.moduler.common.dto.SuccessTip;
 import com.zhidianfan.pig.yd.moduler.common.dto.Tip;
@@ -77,6 +74,8 @@ public class VipService {
     @Autowired
     private MQSender mqSender;
 
+    @Autowired
+    private IAnniversaryService anniversaryMapper;
 
     /**
      * 根据酒店id与手机号更新或者新增Vip
@@ -625,4 +624,90 @@ public class VipService {
         return iVipService.selectBatchIds(idList);
     }
 
+    /**
+     * 计算客户资料完整度
+     * @param vipId vip id
+     * @return 完整度，15% 的字样
+     */
+    public String getProfile(Integer vipId) {
+        log.info("开始计算客户资料完整度:[{}]", vipId);
+        if (vipId == null) {
+            return StringUtils.EMPTY;
+        }
+
+        // 查询 vip 表
+        Vip vip = iVipService.selectById(vipId);
+        if (vip == null) {
+            log.error("vip 信息不存在,vipId:[{}]", vipId);
+            return StringUtils.EMPTY;
+        }
+
+        // -1 查询不到，不作处理
+        // 查询纪念日表
+        Wrapper<Anniversary> wrapper = new EntityWrapper<>();
+        wrapper.eq("vip_id", vipId);
+        int profileCount = anniversaryMapper.selectCount(wrapper);
+
+        // -1 查询不到不作处理
+        // 计算资料完整度
+        String profileScore = getProfileScore(vip, profileCount);
+        log.info("客户资料完整度，[{}],[{}]", vipId, profileCount);
+        return profileScore;
+
+        // 转换成 String
+        // 返回结果
+    }
+
+    /**
+     * 资料完整度
+     * @param vip vip 信息
+     * @param profileCount 纪念日
+     * @return 85% 字样
+     */
+    private String getProfileScore(Vip vip, int profileCount) {
+        int score = 0;
+        String vipName = vip.getVipName();
+        if (StringUtils.isNotBlank(vipName)) {
+            score += 10;
+        }
+
+        String vipPhone = vip.getVipPhone();
+        if (StringUtils.isNotBlank(vipPhone)) {
+            score += 10;
+        }
+
+        String hobby = vip.getHobby();
+        if (StringUtils.isNotBlank(hobby)) {
+            score += 15;
+        }
+
+        String detest = vip.getDetest();
+        if (StringUtils.isNotBlank(detest)) {
+            score += 15;
+        }
+
+        String tag = vip.getTag();
+        if (StringUtils.isNotBlank(tag)) {
+            score += 10;
+        }
+
+        String vipCompany = vip.getVipCompany();
+        if (StringUtils.isNotBlank(vipCompany)) {
+            score += 10;
+        }
+
+        String vipBirthday = vip.getVipBirthday();
+        String vipBirthdayNl = vip.getVipBirthdayNl();
+        if (StringUtils.isNotBlank(vipBirthday)) {
+            score += 15;
+        } else if (StringUtils.isNotBlank(vipBirthdayNl)) {
+            score += 15;
+        }
+
+        if (profileCount >= 0) {
+            score += 15;
+        }
+
+        return score + "%";
+    }
 }

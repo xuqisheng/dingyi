@@ -11,6 +11,7 @@ import com.zhidianfan.pig.yd.moduler.common.service.INowChangeInfoService;
 import com.zhidianfan.pig.yd.moduler.common.service.IVipService;
 import com.zhidianfan.pig.yd.moduler.resv.dto.CustomerValueChangeFieldDTO;
 import com.zhidianfan.pig.yd.moduler.resv.service.VipConsumeActionTotalService;
+import com.zhidianfan.pig.yd.moduler.resv.service.VipService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.amqp.rabbit.annotation.RabbitHandler;
@@ -36,10 +37,8 @@ public class UpdateCustomerValueDataListener {
     private VipConsumeActionTotalService vipConsumeActionTotalService;
 
     @Autowired
-    private IVipService vipMapper;
+    private VipService vipService;
 
-    @Autowired
-    private IAnniversaryService anniversaryMapper;
 
     @RabbitHandler
     @RabbitListener(queues = QueueName.CUSTOMER_VALUE_QUEUE)
@@ -57,7 +56,7 @@ public class UpdateCustomerValueDataListener {
         } else if (CustomerValueChangeFieldDTO.PROFILE.equals(type)) {
             NowChangeInfo info = new NowChangeInfo();
             info.setVipId(customerValueChangeFieldDTO.getVipId());
-            String profileScore = getProfile(vipId);
+            String profileScore = vipService.getProfile(vipId);
             info.setValue(profileScore);
             info.setType(customerValueChangeFieldDTO.getType());
             info.setChangeTime(LocalDateTime.now());
@@ -71,92 +70,6 @@ public class UpdateCustomerValueDataListener {
         }
     }
 
-    /**
-     * 计算客户资料完整度
-     * @param vipId vip id
-     * @return
-     */
-    private String getProfile(Integer vipId) {
-        log.info("开始计算客户资料完整度:[{}]", vipId);
-        if (vipId == null) {
-            return StringUtils.EMPTY;
-        }
-
-        // 查询 vip 表
-        Vip vip = vipMapper.selectById(vipId);
-        if (vip == null) {
-            log.error("vip 信息不存在,vipId:[{}]", vipId);
-            return StringUtils.EMPTY;
-        }
-
-        // -1 查询不到，不作处理
-        // 查询纪念日表
-        Wrapper<Anniversary> wrapper = new EntityWrapper<>();
-        wrapper.eq("vip_id", vipId);
-        int profileCount = anniversaryMapper.selectCount(wrapper);
-
-        // -1 查询不到不作处理
-        // 计算资料完整度
-        String profileScore = getProfileScore(vip, profileCount);
-        log.info("客户资料完整度，[{}],[{}]", vipId, profileCount);
-        return profileScore;
-
-        // 转换成 String
-        // 返回结果
-    }
-
-    /**
-     * 资料完整度
-     * @param vip vip 信息
-     * @param profileCount 纪念日
-     * @return 85% 字样
-     */
-    private String getProfileScore(Vip vip, int profileCount) {
-        int score = 0;
-        String vipName = vip.getVipName();
-        if (StringUtils.isNotBlank(vipName)) {
-            score += 10;
-        }
-
-        String vipPhone = vip.getVipPhone();
-        if (StringUtils.isNotBlank(vipPhone)) {
-            score += 10;
-        }
-
-        String hobby = vip.getHobby();
-        if (StringUtils.isNotBlank(hobby)) {
-            score += 15;
-        }
-
-        String detest = vip.getDetest();
-        if (StringUtils.isNotBlank(detest)) {
-            score += 15;
-        }
-
-        String tag = vip.getTag();
-        if (StringUtils.isNotBlank(tag)) {
-            score += 10;
-        }
-
-        String vipCompany = vip.getVipCompany();
-        if (StringUtils.isNotBlank(vipCompany)) {
-            score += 10;
-        }
-
-        String vipBirthday = vip.getVipBirthday();
-        String vipBirthdayNl = vip.getVipBirthdayNl();
-        if (StringUtils.isNotBlank(vipBirthday)) {
-            score += 15;
-        } else if (StringUtils.isNotBlank(vipBirthdayNl)) {
-            score += 15;
-        }
-
-        if (profileCount >= 0) {
-            score += 15;
-        }
-
-        return score + "%";
-    }
 
     /**
      * 参数校验
