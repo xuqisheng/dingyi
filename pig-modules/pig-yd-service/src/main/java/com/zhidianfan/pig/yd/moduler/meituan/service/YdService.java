@@ -589,6 +589,7 @@ public class YdService {
 
                     iResvOrderAndroidService.update(resvOrder, new EntityWrapper<ResvOrderAndroid>().eq("batch_no", resvOrderThird1.getBatchNo()));
                     iResvOrderService.update(commonResvOrder, new EntityWrapper<ResvOrder>().eq("batch_no", resvOrderThird1.getBatchNo()));
+                    // todo 顾客取消订单
 
                     List<ResvOrderAndroid> resvOrders = iResvOrderAndroidService.selectList(new EntityWrapper<ResvOrderAndroid>().eq("batch_no", resvOrderThird1.getBatchNo()));
                     if (resvOrders.size() == 0) {

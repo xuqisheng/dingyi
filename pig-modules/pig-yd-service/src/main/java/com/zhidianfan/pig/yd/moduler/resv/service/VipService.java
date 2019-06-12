@@ -2,7 +2,9 @@ package com.zhidianfan.pig.yd.moduler.resv.service;
 
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
+import com.baomidou.mybatisplus.mapper.Wrapper;
 import com.baomidou.mybatisplus.plugins.Page;
+import com.google.common.collect.Lists;
 import com.zhidianfan.pig.common.util.PageFactory;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.Business;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.ResvOrderAndroid;
@@ -15,12 +17,15 @@ import com.zhidianfan.pig.yd.moduler.common.service.*;
 import com.zhidianfan.pig.yd.moduler.resv.bo.VipMealInfoBo;
 import com.zhidianfan.pig.yd.moduler.resv.bo.VipValueBo;
 import com.zhidianfan.pig.yd.moduler.resv.bo.VipValueCountBo;
+import com.zhidianfan.pig.yd.moduler.resv.constants.CustomerValueConstants;
 import com.zhidianfan.pig.yd.moduler.resv.dto.*;
 import com.zhidianfan.pig.yd.moduler.resv.enums.OrderStatus;
+import com.zhidianfan.pig.yd.mq.MQSender;
 import com.zhidianfan.pig.yd.utils.ExcelUtil;
 import com.zhidianfan.pig.yd.utils.Lunar;
 import com.zhidianfan.pig.yd.utils.LunarSolarConverter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.beans.BeanUtils;
@@ -34,6 +39,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.Period;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -64,6 +73,9 @@ public class VipService {
 
     @Resource
     private IResvOrderRatingService iResvOrderRatingService;
+
+    @Autowired
+    private MQSender mqSender;
 
 
     /**
@@ -97,10 +109,38 @@ public class VipService {
             vip.setId(vipInfo.getId());
             vip.setUpdatedAt(new Date());
             b = iVipService.updateById(vip);
+            // todo 添加发送 MQ
+            if (b) {
+                sendMq(vip);
+            }
         }
 
 
         return b;
+    }
+
+    private void sendMq(Vip vip) {
+        try {
+            Integer vipId = vip.getId();
+            if (vipId == null) {
+                log.error("Vip id 为 null, 发送 MQ 不向 RabbitMQ 发送消息");
+                return;
+            }
+            CustomerValueChangeFieldDTO dto = new CustomerValueChangeFieldDTO();
+            int vipIdInt;
+            try {
+                vipIdInt = Math.toIntExact(vipId);
+            } catch (Exception e) {
+                log.error("转为 int 失败，不发送 MQ ");
+                return;
+            }
+            dto.setVipId(vipIdInt);
+            dto.setType(CustomerValueChangeFieldDTO.PROFILE);
+            dto.setValue(CustomerValueChangeFieldDTO.PROFILE);
+            mqSender.sendMQ(dto);
+        } catch (Exception e) {
+            log.error("发送 MQ 发生异常，不影响正常的执行", e);
+        }
     }
 
     /**
@@ -528,6 +568,61 @@ public class VipService {
             return true;
         }
         return false;
+    }
+
+    /**
+     * 根据酒店 id 查询 vip 表的用户信息
+     * @param hotelId 酒店 id
+     * @return 酒店所有 vip 列表
+     */
+    public List<Vip> getVipList(long hotelId) {
+        Wrapper<Vip> wrapper = new EntityWrapper<>();
+        wrapper.eq("business_id", hotelId);
+        List<Vip> vips = iVipService.selectList(wrapper);
+        return vips;
+    }
+
+    /**
+     * 获取年龄
+     *
+     * @param vip vip 信息
+     * @return 不显示的年龄为 -1
+     */
+    public int getAge(Vip vip) {
+        Integer hideBirthdayYear = vip.getHideBirthdayYear();
+        if (hideBirthdayYear == null || hideBirthdayYear == 1) {
+            return CustomerValueConstants.DEFAULT_NON_AGE;
+        }
+        String vipBirthday = vip.getVipBirthday();
+        if (StringUtils.isBlank(vipBirthday)) {
+            return CustomerValueConstants.DEFAULT_NON_AGE;
+        }
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyy-MM-dd");
+        LocalDate localDate;
+        try {
+            localDate = LocalDate.parse(vipBirthday, dateTimeFormatter);
+        } catch (DateTimeParseException e) {
+            log.error("格式转换失败", e);
+            return CustomerValueConstants.DEFAULT_NON_AGE;
+        } catch (RuntimeException e) {
+            log.error("其他运行时的异常", e);
+            return CustomerValueConstants.DEFAULT_NON_AGE;
+        }
+        LocalDate now = LocalDate.now();
+        Period between = Period.between(now, localDate);
+        return between.getYears();
+    }
+
+    /**
+     * 根据主键 id 列表，查询 vip 的信息
+     * @param idList 主键集合
+     * @return Vip 信息列表
+     */
+    public List<Vip> getVipList(List<Integer> idList) {
+        if (CollectionUtils.isEmpty(idList)) {
+            return new ArrayList<>();
+        }
+        return iVipService.selectBatchIds(idList);
     }
 
 }
