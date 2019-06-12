@@ -98,7 +98,7 @@ public class SmsValidateController {
         }
         ResponseEntity<Map> exchange = null;
         try {
-            exchange = restTemplate.exchange("http://server4.zhidianfan.com:9095/message/sendLoginMessage", HttpMethod.POST, httpEntity, Map.class);
+            exchange = restTemplate.exchange("http://sms.zhidianfan.com/message/sendLoginMessage", HttpMethod.POST, httpEntity, Map.class);
         } catch (RestClientException e) {
             log.error("短信发送异常");
             tipCommon.setCode(500);
