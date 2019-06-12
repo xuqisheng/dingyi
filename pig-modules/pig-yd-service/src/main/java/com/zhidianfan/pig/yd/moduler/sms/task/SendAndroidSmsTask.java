@@ -16,6 +16,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Date;
@@ -88,6 +89,7 @@ public class SendAndroidSmsTask {
             //检查是否有营销短信正在发送
             resvTask = resvTaskService.selectOne(new EntityWrapper<ResvTask>().eq("task_name", TaskName.SEND_MARKETING_SMS).orderBy("start_time", false).last("limit 1"));
             log.info("检查短信");
+
             if(resvTask == null || resvTask.getEndTime() != null){
                 log.info("发送短信");
                 Date startTime = new Date();
@@ -114,5 +116,16 @@ public class SendAndroidSmsTask {
         }
 
         return ResponseEntity.ok(SuccessTip.SUCCESS_TIP);
+    }
+
+    @PostMapping(value = "/marketing/sms/send/batch/v2")
+    public ResponseEntity batchSendMarketingSmsV2(@RequestParam("id") Integer id){
+        Wrapper<SmsMarketing> wrapper = new EntityWrapper<SmsMarketing>()
+                .eq("id",id)
+                .eq("status", 3)
+                .eq("client", 1);
+        SmsMarketing smsMarketing = marketingService.selectOne(wrapper);
+        SuccessTip successTip = smsMarketingService.sendMarketingSmsV2(smsMarketing);
+        return ResponseEntity.ok(successTip);
     }
 }

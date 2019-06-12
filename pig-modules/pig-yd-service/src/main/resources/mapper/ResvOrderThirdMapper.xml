@@ -25,6 +25,10 @@
         <result column="open_id" property="openId"/>
         <result column="created_at" property="createdAt"/>
         <result column="updated_at" property="updatedAt"/>
+        <result column="is_send" property="isSend"/>
+        <result column="app_user_name" property="appUserName"/>
+        <result column="app_user_phone" property="appUserPhone"/>
+        <result column="app_user_code" property="appUserCode"/>
     </resultMap>
 
     <resultMap id="ResvOrderThirdBO" type="com.zhidianfan.pig.yd.moduler.resv.bo.ResvOrderThirdBO">

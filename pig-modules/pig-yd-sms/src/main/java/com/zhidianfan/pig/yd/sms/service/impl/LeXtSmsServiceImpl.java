@@ -81,6 +81,7 @@ public class LeXtSmsServiceImpl implements LeXtSmsService {
             return smsSendResDTO;
         }
 
+
         msg = msg.replace("【易订】", "");
         msg = msg.replace("【", "[");
         msg = msg.replace("】", "]");
@@ -183,4 +184,26 @@ public class LeXtSmsServiceImpl implements LeXtSmsService {
         baseSmsLogService.updateById(baseSmsLog);
         return smsSendResDTO;
     }
+
+    /**
+     * 不会出现乐信通发送,方法为空
+     * @param phone
+     * @param msg
+     * @param type
+     * @param smsId
+     * @param sendtime
+     * @return
+     */
+    @Override
+    public SmsSendResDTO sendMsgV2(String phone, String msg, String type, long smsId, String sendtime) {
+
+        SmsSendResDTO smsSendResDTO = new SmsSendResDTO();
+        smsSendResDTO.setOperator(2);
+        smsSendResDTO.setCode("500");
+        smsSendResDTO.setErrorMsg("乐信通不需要发送");
+        smsSendResDTO.setStatus("FAIL");
+        return smsSendResDTO;
+    }
+
+
 }

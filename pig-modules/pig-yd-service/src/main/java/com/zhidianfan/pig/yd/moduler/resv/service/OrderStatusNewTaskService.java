@@ -4,6 +4,7 @@ import com.zhidianfan.pig.yd.moduler.common.service.IResvMeetingOrderService;
 import com.zhidianfan.pig.yd.moduler.common.service.IResvOrderAndroidService;
 import com.zhidianfan.pig.yd.moduler.common.service.IResvOrderLogsService;
 import com.zhidianfan.pig.yd.moduler.common.service.IResvOrderService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
  * @Description:
  */
 @Service
+@Slf4j
 public class OrderStatusNewTaskService {
 
 
@@ -49,6 +51,7 @@ public class OrderStatusNewTaskService {
     @Async
     public void updateOrder(Integer intervalNum) {
 
+
         //插入Order日志 1-->2
         iResvOrderLogsService.insertOrderStatus1TO2(intervalNum);
         //更新订单 1-->2
@@ -61,6 +64,7 @@ public class OrderStatusNewTaskService {
         iResvOrderLogsService.insertOrderStatus2TO3(intervalNum);
         //更新订单 2-->3
         iResvOrderService.updateOrderStatus2TO3(intervalNum);
+
 
     }
 

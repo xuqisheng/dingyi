@@ -121,6 +121,7 @@ public class WeChatUtils {
      * @return accessToken
      */
     public static AccessToken getAccessToken(Integer type, String code) {
+        //内部accessToken
         if (type.equals(1)) {
             if (accessToken == null || accessToken.getRefresh()) {
                 accessToken = getToken(getTokenUrl());
@@ -131,14 +132,12 @@ public class WeChatUtils {
                 accessToken = getToken(getTokenUrl());
 
             return accessToken;
-        } else {
-            //此token生效时间较短 重新生成一次30天的token数据
-            AccessToken token = getToken(getUserTokenUrl(code));
-            if (token != null && StringUtils.isNotEmpty(token.getRefreshToken()))
-                return getToken(getRefreshUserInfoUrl(token.getRefreshToken()));
-
-            return null;
+        } else if (type.equals(0)) {                //第一次获取用户token
+            return getToken(getUserTokenUrl(code));
+        } else if (type.equals(2)) {                //再次获取用户token
+            return getToken(getRefreshUserInfoUrl(code));
         }
+        return null;
     }
 
     /**

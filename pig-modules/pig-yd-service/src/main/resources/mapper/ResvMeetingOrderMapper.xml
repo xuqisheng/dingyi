@@ -88,7 +88,8 @@
         <result column="print_time" property="printTime" />
         <result column="service_items" property="serviceItems" />
         <result column="confirm_remark" property="confirmRemark" />
-        <result column="dbr_name" property="dbrName"/>
+        <result column="tg_is_sync" property="tgIsSync" />
+        <result column="tg_order_no" property="tgOrderNo"/>
     </resultMap>
     <sql id="baseColumn">
         rmo.id,
@@ -221,12 +222,12 @@
 
     <update id="updateMeetingOrderStatus2TO3">
 
-        UPDATE resv_meeting_order SET `status` = 3,updated_at=now() WHERE `status`=2 AND resv_date &lt;= DATE_SUB(CURDATE(),INTERVAL ${intervalNum} DAY);
+        UPDATE resv_meeting_order SET `status` = 3,updated_at=now() WHERE `status`=2 AND resv_date &lt;= DATE_SUB(CURDATE(),INTERVAL ${intervalNum} DAY)
     </update>
 
     <update id="updateMeetingOrderStatus1TO6">
 
-        UPDATE resv_meeting_order SET `status` = 6,updated_at=now() WHERE `status`=1 AND resv_date &lt;= DATE_SUB(CURDATE(),INTERVAL ${intervalNum} DAY);
+        UPDATE resv_meeting_order SET `status` = 6,updated_at=now() WHERE `status`=1 AND resv_date &lt;= DATE_SUB(CURDATE(),INTERVAL ${intervalNum} DAY)
     </update>
 
 </mapper>

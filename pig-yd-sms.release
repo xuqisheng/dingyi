@@ -1,0 +1,16 @@
+# 请参考 https://help.aliyun.com/document_detail/59293.html 了解更多关于release文件的编写方式 
+
+# 构建源码语言类型
+code.language=oracle-jdk1.8
+
+# 构建打包使用的打包文件
+build.output=pig-modules/pig-yd-sms/target/pig-yd-sms.jar
+
+
+# docker构建所用的Dockerfile的路径
+docker.file=pigydsms-YXDockerfile
+
+# Docker镜像构建之后push的仓库地址
+docker.repo=registry.cn-hangzhou.aliyuncs.com/zhidianfan/pig-yd-sms
+
+docker.tag=0.0.3-${ENV_TESTPACKAGE_LABEL}

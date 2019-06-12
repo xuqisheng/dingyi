@@ -10,12 +10,12 @@ import org.springframework.stereotype.Controller;
  *  前端控制器
  * </p>
  *
- * @author 周贝贝
- * @since 2019-03-25
+ * @author huzp
+ * @since 2019-05-16
  */
 @Controller
-@RequestMapping("/smsValidate")
-public class SmsValidateController {
+@RequestMapping("/smsMarketingBatch")
+public class SmsMarketingBatchController {
 
 }
 

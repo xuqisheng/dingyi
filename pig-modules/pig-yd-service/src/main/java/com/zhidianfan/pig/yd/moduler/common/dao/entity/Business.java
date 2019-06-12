@@ -340,6 +340,12 @@ public class Business extends Model<Business> {
     @TableField("is_pc_push")
     private Integer isPcPush;
 
+    /**
+     * 西软酒店code
+     */
+    @TableField("branch_code")
+    private String branchCode;
+
 
 
     public Integer getId() {
@@ -1014,6 +1020,14 @@ public class Business extends Model<Business> {
         this.isPcPush = isPcPush;
     }
 
+    public String getBranchCode() {
+        return branchCode;
+    }
+
+    public void setBranchCode(String branchCode) {
+        this.branchCode = branchCode;
+    }
+
     @Override
     protected Serializable pkVal() {
         return this.id;
@@ -1103,6 +1117,7 @@ public class Business extends Model<Business> {
         ", latitude=" + latitude +
         ", logoPic=" + logoPic +
         ", tableTag=" + tableTag +
+        ", branchCode=" + branchCode +
         "}";
     }
 }
