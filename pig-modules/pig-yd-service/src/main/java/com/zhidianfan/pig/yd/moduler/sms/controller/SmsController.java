@@ -505,6 +505,20 @@ public class SmsController {
 
 
     /**
+     * 查询生日短信自动发送配置
+     */
+    @ApiOperation("查询自动发送生日短信发送配置")
+    @GetMapping(value = "/getBirthTemplate")
+    public ResponseEntity getBirthTemplate(@RequestParam("id") Integer id) {
+
+
+        List<BusinessMarketingSmsTemplate> businessMarketingSmsTemplates = ibusinessMarketingSmsTemplateService.selectList(new EntityWrapper<BusinessMarketingSmsTemplate>()
+                .eq("business_id", id));
+
+        return ResponseEntity.ok(businessMarketingSmsTemplates);
+    }
+
+    /**
      * 新增自动发送生日短信发送,提交审核
      * business_marketing_sms_template
      */
