@@ -90,6 +90,14 @@ public class BusinessMarketingSmsTemplate extends Model<BusinessMarketingSmsTemp
     @TableField("send_time")
     private String sendTime;
 
+    /**
+     * 短信条数
+     */
+    @TableField("num")
+    private Integer num;
+
+    @TableField("is_eat")
+    private Integer isEat;
 
 
 
@@ -205,6 +213,23 @@ public class BusinessMarketingSmsTemplate extends Model<BusinessMarketingSmsTemp
         this.sendTime = sendTime;
     }
 
+    public Integer getIsEat() {
+        return isEat;
+    }
+
+    public void setIsEat(Integer isEat) {
+        this.isEat = isEat;
+    }
+
+
+    public Integer getNum() {
+        return num;
+    }
+
+    public void setNum(Integer num) {
+        this.num = num;
+    }
+
     @Override
     protected Serializable pkVal() {
         return this.id;
@@ -228,6 +253,8 @@ public class BusinessMarketingSmsTemplate extends Model<BusinessMarketingSmsTemp
                 ", anniversaryObj='" + anniversaryObj + '\'' +
                 ", advanceDayNum=" + advanceDayNum +
                 ", sendTime=" + sendTime +
+                ", num=" + num +
+                ", isEat=" + isEat +
                 '}';
     }
 }

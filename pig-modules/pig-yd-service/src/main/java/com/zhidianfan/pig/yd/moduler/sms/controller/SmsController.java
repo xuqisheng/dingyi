@@ -16,7 +16,9 @@ import com.zhidianfan.pig.yd.moduler.sms.bo.sms.SmsResultBO;
 import com.zhidianfan.pig.yd.moduler.sms.dto.SMSDTO;
 import com.zhidianfan.pig.yd.moduler.sms.dto.SuccessSms;
 import com.zhidianfan.pig.yd.moduler.sms.dto.business.BusinessRechargeDTO;
+import com.zhidianfan.pig.yd.moduler.sms.dto.marketing.BusinessMarketingSmsTemplateDTO;
 import com.zhidianfan.pig.yd.moduler.sms.dto.sms.*;
+import com.zhidianfan.pig.yd.moduler.sms.service.BusinessMarketingSmsTemplateService;
 import com.zhidianfan.pig.yd.moduler.sms.service.BusinessSMSService;
 import com.zhidianfan.pig.yd.moduler.sms.service.SmsMarketingService;
 import com.zhidianfan.pig.yd.moduler.sms.service.SmsService;
@@ -89,7 +91,7 @@ public class SmsController {
      * 营销短信模板数据接口
      */
     @Autowired
-    private IBusinessMarketingSmsTemplateService businessMarketingSmsTemplateService;
+    private IBusinessMarketingSmsTemplateService ibusinessMarketingSmsTemplateService;
 
     @Resource
     private ISmsTypeService iSmsTypeService;
@@ -109,6 +111,9 @@ public class SmsController {
 
     @Autowired
     private SmsMarketingService marketingService;
+
+    @Autowired
+    private BusinessMarketingSmsTemplateService businessMarketingSmsTemplateService;
 
 
     /**
@@ -182,7 +187,7 @@ public class SmsController {
         BusinessMarketingSmsTemplate businessMarketingSmsTemplate = null;
         boolean flag = true;
         if (templateDTO.getId() != null && templateDTO.getId() != 0) {//模板已经存在
-            businessMarketingSmsTemplate = businessMarketingSmsTemplateService.selectOne(
+            businessMarketingSmsTemplate = ibusinessMarketingSmsTemplateService.selectOne(
                     new EntityWrapper<BusinessMarketingSmsTemplate>()
                             .eq("id", templateDTO.getId())
                             .eq("business_id", templateDTO.getBusinessId()));
@@ -200,7 +205,7 @@ public class SmsController {
         businessMarketingSmsTemplate.setTemplateTitle(templateDTO.getTemplateTitle());
         businessMarketingSmsTemplate.setTemplateContent(templateDTO.getTemplateContent());
         businessMarketingSmsTemplate.setTemplateVariable(templateDTO.getTemplateVariable());
-        boolean b = businessMarketingSmsTemplateService.insertOrUpdate(businessMarketingSmsTemplate);
+        boolean b = ibusinessMarketingSmsTemplateService.insertOrUpdate(businessMarketingSmsTemplate);
         Tip tip = b ? new SuccessTip(200, flag ? "更新成功" : "添加成功") : new ErrorTip(400, flag ? "更新失败" : "添加失败");
         JSONObject result = JSONObject.parseObject(JSON.toJSONString(tip));
         result.put("id", businessMarketingSmsTemplate.getId());
@@ -217,7 +222,7 @@ public class SmsController {
      */
     @PostMapping("/template/delete")
     public ResponseEntity deleteTemplate(Integer businessId, Integer templateId) {
-        boolean delete = businessMarketingSmsTemplateService.delete(new EntityWrapper<BusinessMarketingSmsTemplate>().eq("business_id", businessId).eq("id", templateId));
+        boolean delete = ibusinessMarketingSmsTemplateService.delete(new EntityWrapper<BusinessMarketingSmsTemplate>().eq("business_id", businessId).eq("id", templateId));
         logger.info("删除:" + delete);
         Tip tip = delete ? new SuccessTip(200, "删除成功") : new ErrorTip(400, "删除失败");
         return ResponseEntity.ok(tip);
@@ -241,7 +246,7 @@ public class SmsController {
         if (StringUtils.isNotBlank(keyword)) {
             wrapper.like("template_content", keyword);
         }
-        Page<BusinessMarketingSmsTemplate> page = businessMarketingSmsTemplateService.selectPage(
+        Page<BusinessMarketingSmsTemplate> page = ibusinessMarketingSmsTemplateService.selectPage(
                 new PageFactory<BusinessMarketingSmsTemplate>().defaultPage(),
                 wrapper
         );
@@ -260,7 +265,7 @@ public class SmsController {
      */
     @GetMapping("/template/num")
     public ResponseEntity queryTemplateNum(Integer businessId) {
-        int count = businessMarketingSmsTemplateService.selectCount(
+        int count = ibusinessMarketingSmsTemplateService.selectCount(
                 new EntityWrapper<BusinessMarketingSmsTemplate>()
                         .eq("business_id", businessId)
         );
@@ -357,7 +362,7 @@ public class SmsController {
     @PostMapping("/marketing/send")
     @Transactional
     public ResponseEntity sendMarketingSms(@Valid MarketingSendDTO marketingSendDTO) {
-        BusinessMarketingSmsTemplate businessMarketingSmsTemplate = businessMarketingSmsTemplateService.selectOne(
+        BusinessMarketingSmsTemplate businessMarketingSmsTemplate = ibusinessMarketingSmsTemplateService.selectOne(
                 new EntityWrapper<BusinessMarketingSmsTemplate>().eq("business_id", marketingSendDTO.getBusinessId())
                         .eq("id", marketingSendDTO.getTemplateId())
                         .eq("is_enable", 1)
@@ -403,27 +408,27 @@ public class SmsController {
 
         marketingService.calcTargetPhone(smsMarketing);
         BusinessSms businessSms = businessSmsService.selectOne(new EntityWrapper<BusinessSms>().eq("business_id", smsMarketing.getBusinessId()));
-        if(businessSms.getCurrentSmsNum()<smsMarketing.getSmsNum()){
+        if (businessSms.getCurrentSmsNum() < smsMarketing.getSmsNum()) {
             return ResponseEntity.ok(ErrorTip.ERROR_TIP);
         }
-        businessSms.setCurrentSmsNum(businessSms.getCurrentSmsNum()-smsMarketing.getSmsNum());
+        businessSms.setCurrentSmsNum(businessSms.getCurrentSmsNum() - smsMarketing.getSmsNum());
         businessSmsService.updateById(businessSms);
         boolean result = smsMarketingService.insert(smsMarketing);
-        if(!result){
+        if (!result) {
             TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
             return ResponseEntity.ok(ErrorTip.ERROR_TIP);
         }
 
         //模板使用数+1
-        businessMarketingSmsTemplateService.addUseNum(marketingSendDTO.getTemplateId());
+        ibusinessMarketingSmsTemplateService.addUseNum(marketingSendDTO.getTemplateId());
 
 
         Tip tip = result ? new SuccessTip(200, "success") : new ErrorTip(400, "failed");
 
         //审核发送给刘健
         String phone = "13065883920";
-        String msg = String.format("叮叮，%s酒店有营销短信待审核，请及时处理。登录查看详情   manager.zhidianfan.com" , business.getBusinessName()) ;
-        smsFeign.sendNormalMsg(phone,msg);
+        String msg = String.format("叮叮，%s酒店有营销短信待审核，请及时处理。登录查看详情   manager.zhidianfan.com", business.getBusinessName());
+        smsFeign.sendNormalMsg(phone, msg);
 
         return ResponseEntity.ok(tip);
     }
@@ -497,5 +502,33 @@ public class SmsController {
         }
         return ResponseEntity.ok(result ? SuccessTip.SUCCESS_TIP : ErrorTip.ERROR_TIP);
     }
+
+
+    /**
+     * 新增自动发送生日短信发送,提交审核
+     * business_marketing_sms_template
+     */
+    @ApiOperation("新增自动发送生日短信发送")
+    @PostMapping(value = "/insertBirthTemplate")
+    public ResponseEntity insertBirthTemplate(BusinessMarketingSmsTemplateDTO businessMarketingSmsTemplateDTO) {
+
+
+        boolean b1 = businessMarketingSmsTemplateService.insertBirthTemplate(businessMarketingSmsTemplateDTO);
+
+        return ResponseEntity.ok(b1 ? SuccessTip.SUCCESS_TIP : ErrorTip.ERROR_TIP);
+    }
+
+
+    @ApiOperation("修改自动发送生日短信发送")
+    @PostMapping(value = "/editBirthTemplate")
+    public ResponseEntity editBirthTemplate(BusinessMarketingSmsTemplateDTO businessMarketingSmsTemplateDTO) {
+
+
+        boolean b1 = businessMarketingSmsTemplateService.editBirthTemplate(businessMarketingSmsTemplateDTO);
+
+        return ResponseEntity.ok(b1 ? SuccessTip.SUCCESS_TIP : ErrorTip.ERROR_TIP);
+    }
+
+
 
 }

@@ -17,6 +17,8 @@
         <result column="anniversary_obj" property="anniversaryObj" />
         <result column="advance_day_num" property="advanceDayNum" />
         <result column="send_time" property="sendTime" />
+        <result column="num" property="num" />
+        <result column="is_eat" property="isEat" />
     </resultMap>
     <update id="UpdateAddUseNum">
 
