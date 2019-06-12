@@ -512,8 +512,8 @@ public class SmsController {
     public ResponseEntity getBirthTemplate(@RequestParam("id") Integer id) {
 
 
-        List<BusinessMarketingSmsTemplate> businessMarketingSmsTemplates = ibusinessMarketingSmsTemplateService.selectList(new EntityWrapper<BusinessMarketingSmsTemplate>()
-                .eq("business_id", id));
+        List<BusinessMarketingSmsTemplateDTO> businessMarketingSmsTemplates
+                = businessMarketingSmsTemplateService.selectTemplateWithVerifyStatus(id);
 
         return ResponseEntity.ok(businessMarketingSmsTemplates);
     }

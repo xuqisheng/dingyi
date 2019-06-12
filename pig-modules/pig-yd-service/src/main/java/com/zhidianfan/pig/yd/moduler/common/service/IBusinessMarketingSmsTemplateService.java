@@ -4,6 +4,8 @@ import com.zhidianfan.pig.yd.moduler.common.dao.entity.BusinessMarketingSmsTempl
 import com.baomidou.mybatisplus.service.IService;
 import com.zhidianfan.pig.yd.moduler.sms.dto.marketing.BusinessMarketingSmsTemplateDTO;
 
+import java.util.List;
+
 /**
  * <p>
  *  服务类
@@ -19,4 +21,5 @@ public interface IBusinessMarketingSmsTemplateService extends IService<BusinessM
 
     BusinessMarketingSmsTemplate insertBirthTemplate(BusinessMarketingSmsTemplateDTO businessMarketingSmsTemplateDTO);
 
+    List<BusinessMarketingSmsTemplateDTO> selectTemplateWithVerifyStatus(Integer id);
 }

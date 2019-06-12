@@ -198,4 +198,15 @@ public class BusinessMarketingSmsTemplateService {
     }
 
 
+    /**
+     *
+     * @param id
+     * @return
+     */
+    public List<BusinessMarketingSmsTemplateDTO> selectTemplateWithVerifyStatus(Integer id) {
+
+        List<BusinessMarketingSmsTemplateDTO> businessMarketingSmsTemplateDTOS = ibusinessMarketingSmsTemplateService.selectTemplateWithVerifyStatus(id);
+
+        return businessMarketingSmsTemplateDTOS;
+    }
 }

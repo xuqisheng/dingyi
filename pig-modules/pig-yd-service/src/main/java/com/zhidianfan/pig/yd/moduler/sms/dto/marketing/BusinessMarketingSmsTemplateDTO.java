@@ -89,4 +89,14 @@ public class BusinessMarketingSmsTemplateDTO {
     @NotNull
     private Integer isEat;
 
+    /**
+     * 审核状态
+     */
+    private Integer verifyStatus;
+
+
+    /**
+     * 展示的内容
+     */
+    private String  displayContent;
 }

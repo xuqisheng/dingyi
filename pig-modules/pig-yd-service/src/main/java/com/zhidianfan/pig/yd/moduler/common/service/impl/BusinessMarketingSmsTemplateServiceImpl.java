@@ -10,6 +10,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * <p>
@@ -41,5 +42,12 @@ public class BusinessMarketingSmsTemplateServiceImpl extends ServiceImpl<Busines
 
         baseMapper.insert(businessMarketingSmsTemplate);
         return businessMarketingSmsTemplate;
+    }
+
+    @Override
+    public List<BusinessMarketingSmsTemplateDTO> selectTemplateWithVerifyStatus(Integer id) {
+        List<BusinessMarketingSmsTemplateDTO> businessMarketingSmsTemplateDTOS =  baseMapper.selectTemplateWithVerifyStatus(id);
+
+        return businessMarketingSmsTemplateDTOS;
     }
 }
