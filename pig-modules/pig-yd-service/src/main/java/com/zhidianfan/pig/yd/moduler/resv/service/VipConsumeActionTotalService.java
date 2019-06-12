@@ -177,7 +177,8 @@ public class VipConsumeActionTotalService {
                 .map(ResvOrder::getPayamount)
                 .mapToInt(payAmount -> {
                     if (StringUtils.isNotBlank(payAmount) && payAmount.length() < 11) {
-                        return Integer.parseInt(payAmount);
+                        double v = Double.parseDouble(payAmount) * 100;
+                        return (int)v;
                     } else {
                         return 0;
                     }

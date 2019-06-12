@@ -609,7 +609,7 @@ public class VipService {
             return CustomerValueConstants.DEFAULT_NON_AGE;
         }
         LocalDate now = LocalDate.now();
-        Period between = Period.between(now, localDate);
+        Period between = Period.between(localDate, now);
         return between.getYears();
     }
 

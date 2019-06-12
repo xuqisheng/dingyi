@@ -173,7 +173,8 @@ public class CustomerValueListService {
                 .filter(payAmount -> StringUtils.isNotBlank(payAmount) && payAmount.length() < 11)
                 .mapToInt(payAmount -> {
                     Optional<String> optionalPayAmount = Optional.of(payAmount);
-                    return Integer.valueOf(optionalPayAmount.orElse("0")) * 100;
+                    double v = Double.valueOf(optionalPayAmount.orElse("0")) * 100;
+                    return (int)v;
                 })
                 .sum();
     }
@@ -190,7 +191,7 @@ public class CustomerValueListService {
                 .map(ResvOrder::getPayamount)
                 .mapToDouble(payAmount -> {
                     Optional<String> optionalPayAmount = Optional.ofNullable(payAmount);
-                    return Integer.valueOf(optionalPayAmount.orElse("0"));
+                    return Double.valueOf(optionalPayAmount.orElse("0"));
                 })
                 .average();
         double v = optAverage.orElse(CustomerValueConstants.DEFAULT_CUSTOMER_AVG);
