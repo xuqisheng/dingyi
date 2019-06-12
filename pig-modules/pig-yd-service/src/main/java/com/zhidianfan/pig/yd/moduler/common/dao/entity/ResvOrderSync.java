@@ -26,8 +26,8 @@ public class ResvOrderSync extends Model<ResvOrderSync> {
     /**
      * 订单号
      */
-    @TableField("resv_order")
-    private String resvOrder;
+    @TableField("batch_no")
+    private String batchNo;
     /**
      * 是否同步 0 不同步 1同步
      */
@@ -52,12 +52,12 @@ public class ResvOrderSync extends Model<ResvOrderSync> {
         this.id = id;
     }
 
-    public String getResvOrder() {
-        return resvOrder;
+    public String getBatchNo() {
+        return batchNo;
     }
 
-    public void setResvOrder(String resvOrder) {
-        this.resvOrder = resvOrder;
+    public void setBatchNo(String batchNo) {
+        this.batchNo = batchNo;
     }
 
     public Integer getIsSync() {
@@ -101,7 +101,7 @@ public class ResvOrderSync extends Model<ResvOrderSync> {
     public String toString() {
         return "ResvOrderSync{" +
         "id=" + id +
-        ", resvOrder=" + resvOrder +
+        ", batchNo=" + batchNo +
         ", isSync=" + isSync +
         ", thirdOrderNo=" + thirdOrderNo +
         ", createTime=" + createTime +

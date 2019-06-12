@@ -28,9 +28,9 @@ public class OverTimeOrderThread implements Runnable{
     @Override
     public void run() {
 
-        log.info("统计酒店:{}",businessList.size());
+        log.info("统计酒店数量:{}",businessList.size());
 
-        this.overTimeOrderService.updateOverTimeOrderAndPushMessage(businessList);
+        this.overTimeOrderService.countOverTimeOrderAndPushMessage(businessList);
 
     }
 }

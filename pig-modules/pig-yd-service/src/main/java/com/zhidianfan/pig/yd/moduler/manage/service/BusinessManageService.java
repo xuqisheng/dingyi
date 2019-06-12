@@ -17,6 +17,7 @@ import com.zhidianfan.pig.yd.moduler.resv.dto.VipValueDTO;
 import com.zhidianfan.pig.yd.moduler.resv.service.BusinessEmployeeService;
 import com.zhidianfan.pig.yd.moduler.resv.service.BusinessService;
 import com.zhidianfan.pig.yd.moduler.sms.service.rmi.SmsFeign;
+import com.zhidianfan.pig.yd.utils.PasswordCheckUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -212,6 +213,9 @@ public class BusinessManageService {
             if(updateStatus){
                 if(isApply && "1".equals(String.valueOf(businessDTO.getStatus()))){
                     try {
+                        if(!PasswordCheckUtils.checkSimplePassword(businessDTO.getLoginPassword())){
+                            return new SuccessTip(4001,"密码过于简单!");
+                        }
                         putBaseInfo(businessDTO);
                     }catch (Exception e){
                         e.printStackTrace();
@@ -264,6 +268,9 @@ public class BusinessManageService {
                 }
                 if("1".equals(businessDTO.getStatus())){
                     try {
+                        if(!PasswordCheckUtils.checkSimplePassword(businessDTO.getLoginPassword())){
+                            return new SuccessTip(4001,"密码过于简单!");
+                        }
                         putBaseInfo(businessDTO);
                     }catch (Exception e){
                         e.printStackTrace();
