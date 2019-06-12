@@ -169,10 +169,10 @@ public class TableController {
 
 
     @GetMapping("/hotMap")
-    public ResponseEntity<Map<String, Object>> getTableHotMap(Integer businessId, Integer tableAreaId) {
-        if (businessId == null || tableAreaId == null) {
-            LOGGER.info("getTableHotMap:请求参数为空 businessId:" + businessId + "     tableAreaId:" + tableAreaId);
-            return ResponseEntity.ok().build();
+    public ResponseEntity<Map<String, Object>> getTableHotMap(Integer businessId) {
+        if (businessId == null) {
+            LOGGER.info("getTableHotMap:请求参数为空 businessId:" + businessId);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
         Integer hotMapSwitch = iTableService.businessHotMapSwitch(businessId);
         if (Integer.valueOf(0).equals(hotMapSwitch)) {
@@ -182,7 +182,7 @@ public class TableController {
 
         List<TableAreaImageDO> tableAreaImages = iTableService.queryTableAreaImage(businessId);
         if (CollectionUtils.isEmpty(tableAreaImages)) {
-            LOGGER.info("酒店没有配置该区域地图   businessId:" + businessId + "     tableAreaId:" + tableAreaId);
+            LOGGER.info("酒店没有配置该区域地图   businessId:" + businessId);
             return ResponseEntity.ok().build();
         }
         List<TableHotMapVO> resultVO = Lists.newArrayList();
@@ -191,7 +191,7 @@ public class TableController {
             tableHotMap.setImageUrl(tableAreaImage.getImageUrl());
             tableHotMap.setBusinessId(tableAreaImage.getBusinessId());
             tableHotMap.setTableAreaId(tableAreaImage.getTableAreaId());
-            tableHotMap.setTableImages(iTableService.queryTableImage(tableAreaId, businessId));
+            tableHotMap.setTableImages(iTableService.queryTableImage(tableAreaImage.getTableAreaId(), businessId));
             resultVO.add(tableHotMap);
         }
         LOGGER.debug(businessId + "请求热点图结果:" + JSONObject.toJSONString(resultVO));
