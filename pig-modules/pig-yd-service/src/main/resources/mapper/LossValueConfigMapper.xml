@@ -6,7 +6,6 @@
     <resultMap id="BaseResultMap" type="com.zhidianfan.pig.yd.moduler.common.dao.entity.LossValueConfig">
         <id column="id" property="id" />
         <result column="hotel_id" property="hotelId" />
-        <result column="config_item" property="configItem" />
         <result column="value_name" property="valueName" />
         <result column="customer_person_avg_start" property="customerPersonAvgStart" />
         <result column="customer_person_avg_end" property="customerPersonAvgEnd" />

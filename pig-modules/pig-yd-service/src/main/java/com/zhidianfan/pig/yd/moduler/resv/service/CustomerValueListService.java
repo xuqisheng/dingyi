@@ -9,7 +9,10 @@ import org.apache.velocity.runtime.parser.node.MathUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.*;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -30,7 +33,7 @@ public class CustomerValueListService {
     private VipService vipService;
 
     @Autowired
-    private FirstValueConfigService firstValueConfigService;
+    private ConfigHotelService configHotelService;
 
     @Autowired
     private LossValueConfigService lossValueConfigService;
@@ -43,7 +46,8 @@ public class CustomerValueListService {
 
     /**
      * 获取客户价值列表实体对象
-     * @param vip vip 对象
+     *
+     * @param vip        vip 对象
      * @param resvOrders 订单列表
      * @return CustomerValueList
      */
@@ -53,7 +57,7 @@ public class CustomerValueListService {
         int customerCount = getCustomerCount(resvOrders);
         // 总消费金额
         double customerAmount = getCustomerAmount(resvOrders);
-        int customerAmountInt = (int) (customerAmount * 100);
+        int customerAmountInt = (int) Math.round(customerAmount * 100);
         // 人均消费金额
         int personAvg = getPersonAvg(resvOrders);
         // 最近就餐时间
@@ -65,7 +69,6 @@ public class CustomerValueListService {
         // 自定义分类
         String customerClass = vip.getVipClassName();
         customerClass = Optional.ofNullable(customerClass).orElse(StringUtils.EMPTY);
-//        String customerClass = getCustomerClass(resvOrders, businessId);
 
         Integer appUserId = vip.getAppUserId();
         Optional<Integer> optionalAppUserId = Optional.ofNullable(appUserId);
@@ -97,6 +100,7 @@ public class CustomerValueListService {
 
     /**
      * 获取手机号
+     *
      * @param vip vip 信息
      * @return "" - 无
      */
@@ -110,6 +114,7 @@ public class CustomerValueListService {
 
     /**
      * 获取用户名称
+     *
      * @param vip vip 信息
      * @return "" - 无
      */
@@ -123,6 +128,7 @@ public class CustomerValueListService {
 
     /**
      * 获取 vip 性别，男 - 先生，女 - 女士
+     *
      * @param vip vip 信息
      * @return "" - 无性别
      */
@@ -132,10 +138,10 @@ public class CustomerValueListService {
             return StringUtils.EMPTY;
         }
         if ("男".equals(vipSex)) {
-            return   "先生";
+            return "先生";
         }
         if ("女".equals(vipSex)) {
-            return   "女士";
+            return "女士";
         }
         return vipSex;
     }
@@ -150,11 +156,13 @@ public class CustomerValueListService {
 
     /**
      * 消费次数
+     *
      * @param resvOrders 订单列表
      * @return 0-无
      */
     public int getCustomerCount(List<ResvOrder> resvOrders) {
         List<ResvOrder> collect = resvOrders.stream()
+                .filter(order -> "2".equals(order.getStatus()) || "3".equals(order.getStatus()))
                 .collect(collectingAndThen(toCollection(
                         () -> new TreeSet<>(comparing(ResvOrder::getBatchNo))), ArrayList::new)
                 );
@@ -177,7 +185,7 @@ public class CustomerValueListService {
                 .mapToInt(payAmount -> {
                     Optional<String> optionalPayAmount = Optional.of(payAmount);
                     double v = Double.valueOf(optionalPayAmount.orElse("0")) * 100;
-                    return (int)v;
+                    return (int) v;
                 })
                 .sum();
     }
@@ -195,12 +203,13 @@ public class CustomerValueListService {
         Integer customerPersonCount = vipConsumeActionTotalService.getCustomerPersonCount(resvOrders);
         customerPersonCount = Math.max(customerPersonCount, 1);
         Number personCountNumber = MathUtils.divide(consumerTotalAmount, customerPersonCount);
-        return personCountNumber.intValue();
+        return Math.round(personCountNumber.floatValue());
     }
 
 
     /**
-     *  最后一次就餐时间
+     * 最后一次就餐时间
+     *
      * @param resvOrders 订单列表
      * @return 2000-1-1 0:0:0 表示坎
      */
@@ -218,35 +227,63 @@ public class CustomerValueListService {
     }
 
     /**
+     * 沉睡与唤醒之间
+     */
+    private static final String ACTIVE_SLEEP_BETWEEN_K = "active_sleep_between";
+    /**
+     * 沉睡与流失之间
+     */
+    private static final String SLEEP_LOSS_BETWEEN_K = "sleep_loss_between";
+    /**
+     * 细分价值中的时间周期
+     */
+    private static final String VALUE_CATEGORY_CYCLE_K = "value_category_cycle";
+    /**
+     * 黑名单
+     */
+    private static final String BLACK_LIST_ORDER_NUM_K = "black_list_order_num";
+
+
+    /**
      * 用户一级价值
      *
-     * @param resvOrders   订单列表
-     * @param hotelId 酒店 id
+     * @param resvOrders 订单列表
+     * @param hotelId    酒店 id
      * @return 0-未配置,1-意向客户，2-活跃客户，3-沉睡客户，4-流失客户
      */
     private int getFirstValue(List<ResvOrder> resvOrders, Integer hotelId) {
         /* 意向客户 未消费客户
-        * 活跃客户 30天内，有消费的客户
-        * 沉睡客户 30天内未消费，且在30-60天内有消费行为
-        * 流失客户 60天内未消费，但有历史消费行为
-        */
+         * 活跃客户 30天内，有消费的客户
+         * 沉睡客户 30天内未消费，且在30-60天内有消费行为
+         * 流失客户 60天内未消费，但有历史消费行为
+         */
 
         // 获取每个酒店自己的配置
-        FirstValueConfig config = firstValueConfigService.getConfig(hotelId);
-        if (config == null) {
+        Map<String, String> hotelConfig = configHotelService.getConfig(hotelId);
+//        FirstValueConfig config = (FirstValueConfig) hotelConfig;
+        if (hotelConfig == null) {
             log.error("hotelId:{}, 查询不到一级价值的配置-----", hotelId);
             return -1;
         }
-        Integer startValue = config.getStartValue();
-        Integer endValue = config.getEndValue();
+        String activeSleepBetween = hotelConfig.get(ACTIVE_SLEEP_BETWEEN_K);
+        String sleepLossBetween = hotelConfig.get(SLEEP_LOSS_BETWEEN_K);
+        int activeSleep;
+        int sleepLoss;
+        try {
+            activeSleep = Integer.parseInt(activeSleepBetween);
+            sleepLoss = Integer.parseInt(sleepLossBetween);
+        } catch (NumberFormatException e) {
+            log.error("-------配置出错，请检查配置 businessId:[{}]-------------", hotelId);
+            return -1;
+        }
         if (resvOrders.isEmpty()) {
             //意向客户 未消费客户
             return CustomerValueConstants.INTENTION_CUSTOMER;
         }
         List<LocalDateTime> activeCustomerList = getPayTimeStream(resvOrders)
                 .filter(localDateTime -> {
-                    Period period = Period.between(localDateTime.toLocalDate(), LocalDate.now());
-                    return period.getDays() <= startValue;
+                    Duration duration = Duration.between(localDateTime, LocalDateTime.now());
+                    return duration.toDays() <= activeSleep;
                 })
                 .collect(Collectors.toList());
         if (!activeCustomerList.isEmpty()) {
@@ -255,8 +292,8 @@ public class CustomerValueListService {
 
         List<LocalDateTime> sleepCustomerList = getPayTimeStream(resvOrders)
                 .filter(localDateTime -> {
-                    Period period = Period.between(localDateTime.toLocalDate(), LocalDate.now());
-                    return period.getDays() > startValue && period.getDays() <= endValue;
+                    Duration duration = Duration.between(localDateTime, LocalDateTime.now());
+                    return duration.toDays() > activeSleep && duration.toDays() <= sleepLoss;
                 })
                 .collect(Collectors.toList());
         if (!sleepCustomerList.isEmpty()) {
@@ -280,8 +317,8 @@ public class CustomerValueListService {
     /**
      * 细分价值
      *
-     * @param resvOrders   用户id
-     * @param hotelId 酒店id
+     * @param resvOrders 用户id
+     * @param hotelId    酒店id
      * @return 1-4 的取值
      */
     private String getLossValue(List<ResvOrder> resvOrders, Integer hotelId) {
@@ -298,18 +335,119 @@ public class CustomerValueListService {
             // 单位:分
             Integer customerPersonAvgStart = lossValueConfig.getCustomerPersonAvgStart();
             Integer customerPersonAvgEnd = lossValueConfig.getCustomerPersonAvgEnd();
+
             Integer customerTotalStart = lossValueConfig.getCustomerTotalStart();
             Integer customerTotalEnd = lossValueConfig.getCustomerTotalEnd();
+
             Integer customerCountStart = lossValueConfig.getCustomerCountStart();
             Integer customerCountEnd = lossValueConfig.getCustomerCountEnd();
 
-            if (personAvg >= customerPersonAvgStart && personAvg <= customerPersonAvgEnd
-                    && customerAmount >= customerTotalStart && customerAmount <= customerTotalEnd
-                    && customerCount >= customerCountStart && customerCount <= customerCountEnd) {
+            // 人均消费
+            boolean customerPersonAvConfig = getCustomerPersonAvgConfig(customerPersonAvgStart, customerPersonAvgEnd, personAvg);
+            // 消费总金额
+            boolean customerTotalConfig = getCustomerTotalConfig(customerTotalStart, customerTotalEnd, customerAmount);
+            // 消费次数
+            boolean customerCountConfig = getCustomerCountConfig(customerCountStart, customerCountEnd, customerCount);
+
+            if (customerPersonAvConfig && customerTotalConfig && customerCountConfig) {
                 return valueName;
             }
         }
         return StringUtils.EMPTY;
+    }
+
+    private boolean getCustomerPersonAvgConfig(Integer customerPersonAvgStart, Integer customerPersonAvgEnd, int personAvg) {
+        int flag = 0;
+        if ( customerPersonAvgStart > 0) {
+            flag = 1;
+        }
+        if (customerPersonAvgEnd > 0) {
+            flag += 2;
+        }
+
+        if (flag == 0) {
+            // 两个都没有值
+            return true;
+        } else if (flag == 1) {
+            // 配置了起始值，没有配置结束值
+            if (personAvg >= customerPersonAvgStart) {
+                return true;
+            }
+        } else if (flag == 2) {
+            // 配置了结束值，没有配置起始值
+            if (personAvg <= customerPersonAvgEnd) {
+                return true;
+            }
+        } else {
+            // 两个都有配置值
+            if (personAvg >= customerPersonAvgStart && personAvg <= customerPersonAvgEnd) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean getCustomerTotalConfig(Integer customerTotalStart, Integer customerTotalEnd, double customerAmount) {
+        int flag = 0;
+        if (customerTotalStart > 0) {
+            flag = 1;
+        }
+        if (customerTotalEnd > 0) {
+            flag += 2;
+        }
+
+        if (flag == 0) {
+            // 两个都没有值
+            return true;
+        } else if (flag == 1) {
+            // 配置了起始值，没有配置结束值
+            if (customerAmount >= customerTotalStart) {
+                return true;
+            }
+        } else if (flag == 2) {
+            // 配置了结束值，没有配置起始值
+            if (customerAmount <= customerTotalEnd) {
+                return true;
+            }
+        } else {
+            // 两个都没有配置值
+            if (customerAmount >= customerTotalStart && customerAmount <= customerTotalEnd) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean getCustomerCountConfig(Integer customerCountStart, Integer customerCountEnd, int customerCount) {
+        int flag = 0;
+        if (customerCountStart > 0) {
+            flag = 1;
+        }
+        if (customerCountEnd > 0) {
+            flag += 2;
+        }
+
+        if (flag == 0) {
+            // 两个都没有配置值
+            return true;
+        } else if (flag == 1) {
+            // 配置了起始值，没有配置结束值
+            if (customerCount >= customerCountStart) {
+                return true;
+            }
+        } else if (flag == 2) {
+            // 配置了结束值，没有配置起始值
+            if (customerCount <= customerCountEnd) {
+                return true;
+            }
+        } else {
+
+            // 两个都有值
+            if (customerCount >= customerCountStart && customerCount <= customerCountEnd) {
+                return true;
+            }
+        }
+        return false;
     }
 
 
@@ -332,6 +470,7 @@ public class CustomerValueListService {
 
     /**
      * 自定义类别
+     *
      * @param resvOrders 订单列表
      * @param businessId 酒店列表
      * @return 自定义类别的名称

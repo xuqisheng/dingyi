@@ -626,19 +626,18 @@ public class VipService {
 
     /**
      * 计算客户资料完整度
-     * @param vipId vip id
+     * @param vip vip 信息
      * @return 完整度，15% 的字样
      */
-    public String getProfile(Integer vipId) {
-        log.info("开始计算客户资料完整度:[{}]", vipId);
-        if (vipId == null) {
+    public String getProfile(Vip vip) {
+        // 查询 vip 表
+        if (vip == null) {
+            log.error("vip 信息不存在");
             return StringUtils.EMPTY;
         }
-
-        // 查询 vip 表
-        Vip vip = iVipService.selectById(vipId);
-        if (vip == null) {
-            log.error("vip 信息不存在,vipId:[{}]", vipId);
+        Integer vipId = vip.getId();
+        log.info("开始计算客户资料完整度:[{}]", vipId);
+        if (vipId == null) {
             return StringUtils.EMPTY;
         }
 

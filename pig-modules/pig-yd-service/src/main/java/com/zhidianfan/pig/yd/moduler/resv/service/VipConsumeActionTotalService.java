@@ -7,11 +7,18 @@ import com.zhidianfan.pig.yd.moduler.common.service.IVipConsumeActionTotalServic
 import com.zhidianfan.pig.yd.moduler.resv.constants.CustomerValueConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.velocity.runtime.parser.node.MathUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.*;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 import static java.util.stream.Collectors.groupingBy;
@@ -136,48 +143,50 @@ public class VipConsumeActionTotalService {
         return cancelOrderList.size();
     }
     /**
-     * 消费频次
+     * 消费频次 = 消费总次数/（当前月-首次消费月份）
      *
      * @param resvOrders 订单列表
      * @return 0-无
      */
-    private Integer getConsumerFrequency(List<ResvOrder> resvOrders) {
-        // 消费总次数/（当前月-首次消费月份）
+    private Float getConsumerFrequency(List<ResvOrder> resvOrders) {
         int customerSize = resvOrders.size();
         Optional<Date> date = getFirstCustomerMonth(resvOrders);
         Optional<Integer> optional = date.map(date1 -> {
             Instant instant = date1.toInstant();
             LocalDateTime localDateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
             LocalDate firstDate = localDateTime.toLocalDate();
-            Period period = Period.between(firstDate, LocalDate.now());
-            return period.getMonths();
+            long month = firstDate.until(LocalDate.now(), ChronoUnit.MONTHS);
+            return (int)month;
         });
         Integer month = optional.orElse(1);
-        int m = month == 0 ? 1 : month;
-        return customerSize / m;
+        month = Math.max(month, 1);
+        Number divide = MathUtils.divide(customerSize, month);
+
+        BigDecimal bigDecimal = new BigDecimal(divide.doubleValue()).setScale(1, RoundingMode.HALF_UP);
+        return bigDecimal.floatValue();
     }
 
     private Optional<Date> getFirstCustomerMonth(List<ResvOrder> resvOrders) {
         return resvOrders.stream()
                 .filter(order -> "3".equals(order.getStatus()))
-                .min((o1, o2) -> o1.getUpdatedAt().before(o2.getUpdatedAt()) ? 1 : -1)
+                .min(Comparator.comparing(ResvOrder::getUpdatedAt))
                 .map(ResvOrder::getUpdatedAt);
     }
 
     /**
-     * 首次消费时间
+     * 首次消费时间, 客户第一笔入座/消费的日期
      *
      * @param resvOrders 订单列表
      * @return 2000-1-1 0：0：0 - 无
      */
     private LocalDateTime getFirstConsumerTime(List<ResvOrder> resvOrders) {
-        int customerSize = resvOrders.size();
-        Optional<Date> date = getFirstCustomerMonth(resvOrders);
-        Optional<LocalDateTime> localDate = date.map(date1 -> {
-            Instant instant = date1.toInstant();
-            return LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
-        });
-        return localDate.orElse(CustomerValueConstants.DEFAULT_FIRST_TIME);
+        Optional<Date> min = resvOrders.stream()
+                .filter(resvOrder -> "2".equals(resvOrder.getStatus()) || "3".equals(resvOrder.getStatus()))
+                .map(ResvOrder::getUpdatedAt)
+                .filter(Objects::nonNull)
+                .min(Comparator.naturalOrder());
+        Optional<LocalDateTime> optional = min.map(date -> LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault()));
+        return optional.orElse(CustomerValueConstants.DEFAULT_START_TIME);
     }
 
     /**
@@ -200,21 +209,13 @@ public class VipConsumeActionTotalService {
      * @return
      */
     private Integer getConsumerTableAmount(List<ResvOrder> resvOrders) {
-        // 将该客户所有订单的消费金额累加。
-        int sum = resvOrders.stream()
-                .filter(order -> "3".equals(order.getStatus()))
-                .map(ResvOrder::getPayamount)
-                .mapToInt(payAmount -> {
-                    if (StringUtils.isNotBlank(payAmount) && payAmount.length() < 11) {
-                        double v = Double.parseDouble(payAmount) * 100;
-                        return (int)v;
-                    } else {
-                        return 0;
-                    }
-                })
-                .sum();
-
-        return sum;
+        // 总消费金额
+        Integer consumerTotalAmount = getConsumerTotalAmount(resvOrders);
+        // 桌数
+        Integer customerCount = getCustomerTableCount(resvOrders);
+        customerCount = Math.max(customerCount, 1);
+        Number divide = MathUtils.divide(consumerTotalAmount, customerCount);
+        return Math.round(divide.floatValue());
     }
 
     /**
@@ -254,7 +255,7 @@ public class VipConsumeActionTotalService {
         // 最近一笔已入座/完成的订单距离系统的时间
         Optional<Date> min = resvOrders.stream()
                 .filter(resvOrder -> "2".equals(resvOrder.getStatus()) || "3".equals(resvOrder.getStatus()))
-                .map(ResvOrder::getUpdatedAt)
+                .map(ResvOrder::getResvDate)
                 .filter(Objects::nonNull)
                 .max(Comparator.naturalOrder());
         Optional<LocalDateTime> optional = min.map(date -> LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault()));

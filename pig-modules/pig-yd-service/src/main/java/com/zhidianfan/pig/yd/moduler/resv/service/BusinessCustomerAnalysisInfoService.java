@@ -7,7 +7,6 @@ import com.zhidianfan.pig.yd.moduler.common.service.IAppUserService;
 import com.zhidianfan.pig.yd.moduler.common.service.IBusinessCustomerAnalysisDetailService;
 import com.zhidianfan.pig.yd.moduler.common.service.IBusinessCustomerAnalysisInfoService;
 import com.zhidianfan.pig.yd.moduler.common.service.IResvOrderService;
-import com.zhidianfan.pig.yd.moduler.resv.constants.CustomerValueConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -112,7 +111,7 @@ public class BusinessCustomerAnalysisInfoService {
         businessCustomerAnalysisInfoMapper.insertBatch(customerAnalysisInfoList);
     }
 
-    private AppUser getAppUser(Integer appUserId) {
+    public AppUser getAppUser(Integer appUserId) {
         if (appUserId == null) {
             return new AppUser();
         }

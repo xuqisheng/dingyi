@@ -142,7 +142,7 @@ public class CustomerValueInitService {
 
 
     private static final String VALUE_NAME_1 = "vip";
-    private static final Integer CUSTOMER_COUNT_END_1 = 2;
+    private static final Integer CUSTOMER_COUNT_START_1 = 2;
     private static final String VALUE_NAME_2 = "svip";
     private static final Integer CUSTOMER_COUNT_END_2 = 4;
     // 单位：分
@@ -166,10 +166,8 @@ public class CustomerValueInitService {
             log.info("-------------初始化指定酒店：[{}]-------------", businessId);
             Business business = getBusinessesById(businessId);
             List<Business> businessList = Collections.singletonList(business);
-            getLossValueConfigList(businessList, 2);
-            List<Business> businesses = Collections.singletonList(business);
-            List<ConfigHotel> configHotels = getConfigHotels(businesses, 4);
-            configHotelMapper.insertBatch(configHotels);
+            List<LossValueConfig> lossValueConfigList = getLossValueConfigList(businessList, 2);
+            lossValueConfigMapper.insertBatch(lossValueConfigList);
         }
     }
 
@@ -177,7 +175,7 @@ public class CustomerValueInitService {
     private List<LossValueConfig> getLossValueConfigList(List<Business> businesses, int size) {
         List<LossValueConfig> lossValueConfigList = new ArrayList<>(size);
         for (Business business : businesses) {
-            LossValueConfig lossValueConfig1 = getLossValueConfig(business, VALUE_NAME_1, CUSTOMER_COUNT_END_1);
+            LossValueConfig lossValueConfig1 = getLossValueConfig(business, VALUE_NAME_1, CUSTOMER_COUNT_START_1);
             LossValueConfig lossValueConfig2 = getLossValueConfig(business, VALUE_NAME_2, CUSTOMER_COUNT_END_2, CUSTOMER_TOTAL_START);
             lossValueConfigList.add(lossValueConfig1);
             lossValueConfigList.add(lossValueConfig2);
@@ -185,21 +183,25 @@ public class CustomerValueInitService {
         return lossValueConfigList;
     }
 
-    private LossValueConfig getLossValueConfig(Business business, String valueName, Integer customerCountEnd) {
-        return getLossValueConfig(business, valueName, customerCountEnd, 0);
+    private LossValueConfig getLossValueConfig(Business business, String valueName, Integer customerCountStart) {
+        return getLossValueConfig(business, valueName, customerCountStart, -1);
     }
 
-    private LossValueConfig getLossValueConfig(Business business, String valueName, Integer customerCountEnd, Integer customerTotalStart) {
+    private LossValueConfig getLossValueConfig(Business business, String valueName, Integer customerCountStart, Integer customerTotalEnd) {
         LossValueConfig config = new LossValueConfig();
         config.setHotelId(business.getId());
         config.setValueName(valueName);
         config.setCustomerPersonAvgStart(-1);
         config.setCustomerPersonAvgEnd(-1);
-        config.setCustomerTotalStart(customerTotalStart);
-        config.setCustomerTotalEnd(-1);
-        config.setCustomerCountStart(-1);
-        config.setCustomerCountEnd(customerCountEnd);
-        config.setSort(0);
+        config.setCustomerTotalStart(-1);
+        config.setCustomerTotalEnd(customerTotalEnd);
+        config.setCustomerCountStart(customerCountStart);
+        config.setCustomerCountEnd(-1);
+        if (valueName.equals(VALUE_NAME_1)) {
+            config.setSort(1);
+        } else {
+            config.setSort(2);
+        }
         config.setFlag(1);
         config.setCreateTime(LocalDateTime.now());
         config.setUpdateTime(LocalDateTime.now());

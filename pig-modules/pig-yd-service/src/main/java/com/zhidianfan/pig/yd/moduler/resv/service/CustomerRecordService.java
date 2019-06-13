@@ -1,12 +1,12 @@
 package com.zhidianfan.pig.yd.moduler.resv.service;
 
+import com.baomidou.mybatisplus.mapper.EntityWrapper;
+import com.baomidou.mybatisplus.mapper.Wrapper;
 import com.google.common.collect.Lists;
-import com.zhidianfan.pig.yd.moduler.common.dao.entity.CustomerRecord;
-import com.zhidianfan.pig.yd.moduler.common.dao.entity.CustomerValueList;
-import com.zhidianfan.pig.yd.moduler.common.dao.entity.ResvOrder;
-import com.zhidianfan.pig.yd.moduler.common.dao.entity.Vip;
+import com.zhidianfan.pig.yd.moduler.common.dao.entity.*;
 import com.zhidianfan.pig.yd.moduler.common.service.ICustomerRecordService;
-import com.zhidianfan.pig.yd.moduler.common.service.ICustomerValueListService;
+import com.zhidianfan.pig.yd.moduler.common.service.IGuestCustomerVipMappingService;
+import com.zhidianfan.pig.yd.moduler.common.service.IMasterCustomerVipMappingService;
 import com.zhidianfan.pig.yd.moduler.resv.constants.CustomerValueConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -31,13 +32,17 @@ import java.util.stream.Collectors;
 public class CustomerRecordService {
 
     @Autowired
-    private ICustomerValueListService customerValueListMapper;
+    private IMasterCustomerVipMappingService iMasterCustomerVipMappingService;
+
+    @Autowired
+    private IGuestCustomerVipMappingService iGuestCustomerVipMappingService;
+
 
     public List<CustomerRecord> getCustomerRecord(Vip vip, List<ResvOrder> resvOrders, CustomerValueList customerValueList) {
         List<CustomerRecord> recordList = Lists.newArrayList();
         List<CustomerRecord> customerRecords = reserveOrderCustomer(vip, resvOrders);
         List<CustomerRecord> customerRecords1 = reserveOrderESC(vip, resvOrders);
-        List<CustomerRecord> customerRecords2 = manOrder(resvOrders);
+        List<CustomerRecord> customerRecords2 = manOrder(vip, resvOrders);
         List<CustomerRecord> customerRecords3 = guestOrder(vip, resvOrders);
         CustomerRecord valueChangeRecord = valueChange(vip, customerValueList);
         CustomerRecord userChangeRecord = appUserChange(vip, customerValueList);
@@ -46,8 +51,12 @@ public class CustomerRecordService {
         recordList.addAll(customerRecords1);
         recordList.addAll(customerRecords2);
         recordList.addAll(customerRecords3);
-        recordList.add(valueChangeRecord);
-        recordList.add(userChangeRecord);
+        if (valueChangeRecord != null) {
+            recordList.add(valueChangeRecord);
+        }
+        if (userChangeRecord != null) {
+            recordList.add(userChangeRecord);
+        }
 
         return recordList;
     }
@@ -132,24 +141,28 @@ public class CustomerRecordService {
     /**
      * 主客订单
      */
-    private List<CustomerRecord> manOrder(List<ResvOrder> resvOrders) {
-        // 买单的人，但不是预订的人
-        List<CustomerRecord> recordList = resvOrders.stream()
-                .filter(order -> {
-                    Integer vipId = order.getVipId();
-                    if (vipId == null) {
-                        return false;
-                    }
-                    Integer manVipId = order.getManVipId();
-                    if (manVipId == null) {
-                        return false;
-                    }
-                    return !vipId.equals(manVipId);
-                })
+    private List<CustomerRecord> manOrder(Vip vip, List<ResvOrder> resvOrders) {
+        if (vip == null) {
+            log.error("vip 信息为空");
+            return Lists.newArrayList();
+        }
+        Integer vipId = vip.getId();
+        Integer businessId = vip.getBusinessId();
+        Wrapper<MasterCustomerVipMapping> wrapper = new EntityWrapper<>();
+        wrapper.eq("business_id", businessId);
+        wrapper.eq("master_customer_id", vipId);
+        MasterCustomerVipMapping masterCustomerVipMapping = iMasterCustomerVipMappingService.selectOne(wrapper);
+        if (masterCustomerVipMapping == null) {
+            return Lists.newArrayList();
+        }
+        String batchNo = masterCustomerVipMapping.getBatchNo();
+        List<CustomerRecord> collect = resvOrders.stream()
+                .filter(order -> order.getBatchNo().equals(batchNo))
                 .map(order -> setRecordOrder(order, CustomerValueConstants.RECORD_TYPE_MAN))
                 .collect(Collectors.toList());
+
         // 主客订单列表
-        return recordList;
+        return collect;
     }
 
     /**
@@ -157,6 +170,9 @@ public class CustomerRecordService {
      */
     private List<CustomerRecord> guestOrder(Vip vip, List<ResvOrder> otherResvOrders) {
         // 以宾客的形式，出现在了其他人的订单中
+        Wrapper<GuestCustomerVipMapping> wrapper = new EntityWrapper<>();
+//        wrapper.in("")
+        iGuestCustomerVipMappingService.selectList(wrapper);
         Integer id = vip.getId();
         List<CustomerRecord> orderList = otherResvOrders.stream()
                 .filter(order -> {
@@ -248,39 +264,60 @@ public class CustomerRecordService {
         return vipValueId;
     }
 
+    @Autowired
+    private ICustomerRecordService customerRecordMapper;
+
+    @Autowired
+    private BusinessCustomerAnalysisInfoService businessCustomerAnalysisInfoService;
+
     /**
      * 营销经理变更
      */
     private CustomerRecord appUserChange(Vip vip, CustomerValueList customerValueList) {
-//        Integer appUserId = customerValueList.getAppUserId();
-        Integer appUserId = 1;
-        Integer changeAppUserId = getAppUserId(vip);
+        Integer appUserId = getAppUserId(vip);
+        CustomerRecord customerRecord = getCustomerRecord(vip.getId());
+        Integer changeAppUserId = customerRecord.getAppUserId();
+
         if (!appUserId.equals(changeAppUserId)) {
-            CustomerRecord record = new CustomerRecord();
-            record.setVipId(customerValueList.getVipId());
-            record.setLogType(CustomerValueConstants.RECORD_TYPE_APP_USER_CHANGE);
-            record.setLogTime(LocalDateTime.now());
-            record.setResvOrder("");
-            record.setResvDate(LocalDateTime.now());
-            record.setMealTypeId(0);
-            record.setMealTypeName("");
-            record.setConsumeAmount(0);
-            record.setPersonNo(0);
-            record.setTableId(0);
-            record.setTableName("");
-            record.setVipName("");
-            record.setVipPhone("");
-            record.setAppUserName("");
-            record.setAppUserId(0);
-            record.setOperationLog("");
-            record.setCreateUserId(0L);
-            record.setCreateTime(LocalDateTime.now());
-            record.setUpdateUserId(0L);
-            record.setUpdateTime(LocalDateTime.now());
-            return record;
+            AppUser appUser = businessCustomerAnalysisInfoService.getAppUser(appUserId);
+            return setCustomerRecord(customerValueList, appUserId, appUser);
         }
 
         return null;
+    }
+
+    private CustomerRecord setCustomerRecord(CustomerValueList customerValueList, Integer appUserId, AppUser appUser) {
+        CustomerRecord record = new CustomerRecord();
+        record.setVipId(customerValueList.getVipId());
+        record.setLogType(CustomerValueConstants.RECORD_TYPE_APP_USER_CHANGE);
+        record.setLogTime(LocalDateTime.now());
+        record.setResvOrder("");
+        record.setResvDate(LocalDateTime.now());
+        record.setMealTypeId(0);
+        record.setMealTypeName("");
+        record.setConsumeAmount(0);
+        record.setPersonNo(0);
+        record.setTableId(0);
+        record.setTableName("");
+        record.setVipName("");
+        record.setVipPhone("");
+        record.setAppUserName(appUser.getAppUserName());
+        record.setAppUserId(appUserId);
+        record.setOperationLog("");
+        record.setCreateUserId(0L);
+        record.setCreateTime(LocalDateTime.now());
+        record.setUpdateUserId(0L);
+        record.setUpdateTime(LocalDateTime.now());
+        return record;
+    }
+
+    private CustomerRecord getCustomerRecord(Integer vipId) {
+        Wrapper<CustomerRecord> wrapper = new EntityWrapper<>();
+        wrapper.eq("vip_id", vipId);
+        List<CustomerRecord> customerRecords = customerRecordMapper.selectList(wrapper);
+        Optional<CustomerRecord> max = customerRecords.stream()
+                .max(Comparator.comparing(CustomerRecord::getUpdateTime));
+        return max.orElse(new CustomerRecord());
     }
 
     /**

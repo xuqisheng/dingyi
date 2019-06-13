@@ -3,23 +3,24 @@ package com.zhidianfan.pig.yd.moduler.resv.service;
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.baomidou.mybatisplus.mapper.Wrapper;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.Business;
-import com.zhidianfan.pig.yd.moduler.common.dao.entity.ConfigHotel;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.CustomerValueTask;
 import com.zhidianfan.pig.yd.moduler.common.service.IBusinessService;
-import com.zhidianfan.pig.yd.moduler.common.service.IConfigHotelService;
 import com.zhidianfan.pig.yd.moduler.common.service.ICustomerValueTaskService;
 import com.zhidianfan.pig.yd.moduler.resv.constants.CustomerValueConstants;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -58,19 +59,21 @@ public class CustomerValueTaskService {
      * @param flag             任务执行标记,0-未开始,1-执行中,2-执行成功,3-执行异常
      * @param exceptionMessage 异常信息
      */
+    @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
     public void updateTaskStatus(Long taskId, Integer flag, LocalDateTime startTime, LocalDateTime endTime, String exceptionMessage) {
         CustomerValueTask task = new CustomerValueTask();
         task.setId(taskId);
         task.setStartTime(startTime);
         task.setEndTime(endTime);
         task.setFlag(flag);
+
         Duration duration = Duration.between(startTime, endTime);
         long seconds = duration.getSeconds();
-        task.setSpendTime((int) seconds);
-        task.setFlag(CustomerValueConstants.EXECUTE_SUCCESS);
+        int spendTime = (int) Math.max(seconds, -1);
+
+        task.setSpendTime(spendTime);
         task.setRemark(exceptionMessage);
         task.setUpdateTime(LocalDateTime.now());
-        task.setId(taskId);
 
         customerValueTaskMapper.updateById(task);
     }

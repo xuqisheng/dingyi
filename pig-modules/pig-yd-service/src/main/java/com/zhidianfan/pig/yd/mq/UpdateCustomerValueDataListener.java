@@ -39,6 +39,9 @@ public class UpdateCustomerValueDataListener {
     @Autowired
     private VipService vipService;
 
+    @Autowired
+    private IVipService iVipService;
+
 
     @RabbitHandler
     @RabbitListener(queues = QueueName.CUSTOMER_VALUE_QUEUE)
@@ -56,7 +59,8 @@ public class UpdateCustomerValueDataListener {
         } else if (CustomerValueChangeFieldDTO.PROFILE.equals(type)) {
             NowChangeInfo info = new NowChangeInfo();
             info.setVipId(customerValueChangeFieldDTO.getVipId());
-            String profileScore = vipService.getProfile(vipId);
+            Vip vip = iVipService.selectById(vipId);
+            String profileScore = vipService.getProfile(vip);
             info.setValue(profileScore);
             info.setType(customerValueChangeFieldDTO.getType());
             info.setChangeTime(LocalDateTime.now());

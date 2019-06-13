@@ -51,7 +51,7 @@ public class EntityGenerator {
         dsc.setDriverName("com.mysql.jdbc.Driver");
         dsc.setUsername("root");
         dsc.setPassword("123456");
-        dsc.setUrl("jdbc:mysql://localhost:3306/resv_sys?useSSL=false");
+        dsc.setUrl("jdbc:mysql://192.168.3.202:3306/resv_sys?useSSL=false");
 
 //        dsc.setUsername("resv_seller");
 //        dsc.setPassword("resv_seller_246837915");
@@ -62,7 +62,7 @@ public class EntityGenerator {
         StrategyConfig strategy = new StrategyConfig();
         //strategy.setTablePrefix(new String[]{"_"});// 此处可以修改为您的表前缀
         strategy.setNaming(NamingStrategy.underline_to_camel);// 表名生成策略
-        strategy.setInclude(new String[]{"loss_value_config"});
+        strategy.setInclude(new String[]{"guest_customer_vip_mapping"});
         mpg.setStrategy(strategy);
 
         // 包配置
