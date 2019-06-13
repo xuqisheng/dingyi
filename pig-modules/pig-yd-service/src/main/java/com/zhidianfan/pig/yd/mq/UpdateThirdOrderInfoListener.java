@@ -48,7 +48,7 @@ public class UpdateThirdOrderInfoListener {
     public void onMessage(String orderNoString) {
 
         try {
-            log.info("\n\n\n\n\n\n\n\n\n\n\n\n第三方订单自动接单开始 :{} \n\n\n\n\n\n\n\n\n\n\n\n", orderNoString);
+            log.info("第三方订单自动接单开始 :{} ", orderNoString);
             //等自动接单动作完成
             Thread.sleep(1000);
             ydService.updateOrderAndVipInfo(orderNoString);
@@ -56,11 +56,28 @@ public class UpdateThirdOrderInfoListener {
             //自动接单只接单桌订单
             ResvOrderAndroid resvOrderAndroid = iResvOrderAndroidService.selectOne(new EntityWrapper<ResvOrderAndroid>()
                     .eq("third_order_no", orderNoString));
+
+            //查询是否自动发送短信发送
+
+
             PushMes(resvOrderAndroid);
         } catch (Exception e) {
-            log.info("自动接单失败：\n{}", e.getMessage());
+            log.info("自动接单失败：{}", e.getMessage());
         }
     }
+
+
+    /**
+     * 查询是否要发送短信
+     */
+    private void sendMes() {
+
+
+
+
+
+    }
+
 
 
     private void PushMes(ResvOrderAndroid resvOrderAndroid) {
