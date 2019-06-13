@@ -118,9 +118,6 @@ public class AgentManageService {
                 boolean updateStatus = agentService.updateById(agent);
                 if(updateStatus){
                     if(isApply && "1".equals(String.valueOf(agentDTO.getStatus()))){
-                        if(!PasswordCheckUtils.checkSimplePassword(agentDTO.getPassword())){
-                            return new SuccessTip(4001,"密码过于简单!");
-                        }
                         UserDTO userDTO = new UserDTO();
                         userDTO.setClientId(sysDictFeign.getDict("agent","user_type"));
                         userDTO.setUsername(agentDTO.getUsername());
@@ -153,6 +150,9 @@ public class AgentManageService {
      * @return
      */
     public Tip putAgent(AgentDTO agentDTO){
+        if(!PasswordCheckUtils.checkSimplePassword(agentDTO.getPassword())){
+            return new SuccessTip(4001,"密码过于简单!");
+        }
         Agent agent = new Agent();
         BeanUtils.copyProperties(agentDTO,agent);
         agent.setCreatedAt(new Date());

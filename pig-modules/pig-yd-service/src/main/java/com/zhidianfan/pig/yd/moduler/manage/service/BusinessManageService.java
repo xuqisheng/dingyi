@@ -213,9 +213,6 @@ public class BusinessManageService {
             if(updateStatus){
                 if(isApply && "1".equals(String.valueOf(businessDTO.getStatus()))){
                     try {
-                        if(!PasswordCheckUtils.checkSimplePassword(businessDTO.getLoginPassword())){
-                            return new SuccessTip(4001,"密码过于简单!");
-                        }
                         putBaseInfo(businessDTO);
                     }catch (Exception e){
                         e.printStackTrace();
@@ -243,6 +240,9 @@ public class BusinessManageService {
      */
     @Transactional
     public Tip putApplyAgent(BusinessDTO businessDTO) {
+        if(!PasswordCheckUtils.checkSimplePassword(businessDTO.getLoginPassword())){
+            return new SuccessTip(4001,"密码过于简单!");
+        }
         SuccessTip successTip;
         Business business = new Business();
         BeanUtils.copyProperties(businessDTO,business);
@@ -268,9 +268,6 @@ public class BusinessManageService {
                 }
                 if("1".equals(businessDTO.getStatus())){
                     try {
-                        if(!PasswordCheckUtils.checkSimplePassword(businessDTO.getLoginPassword())){
-                            return new SuccessTip(4001,"密码过于简单!");
-                        }
                         putBaseInfo(businessDTO);
                     }catch (Exception e){
                         e.printStackTrace();
