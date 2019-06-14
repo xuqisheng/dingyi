@@ -74,10 +74,10 @@ public class SmsNumRemindService {
 
 
         // 1.查询该酒店短信提醒设置
-        SmsNumRemind smsNumRemind = iSmsNumRemindService.selectOne(new EntityWrapper<SmsNumRemind>()
+        SmsNumRemind  smsNumRemind = iSmsNumRemindService.selectOne(new EntityWrapper<SmsNumRemind>()
                 .eq("business_id", businessId)
                 .eq("client_type", clientType)
-                .eq("remindType", remindType));
+                .eq("remind_type", remindType));
 
 
         // 1.1 若为空,则初始化
