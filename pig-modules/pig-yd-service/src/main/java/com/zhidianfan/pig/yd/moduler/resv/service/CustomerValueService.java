@@ -64,7 +64,7 @@ public class CustomerValueService {
     @Autowired
     private INowChangeInfoService nowChangeInfoMapper;
 
-//    @Async
+    //    @Async
 //    @Transactional(rollbackFor = Exception.class)
     public void getCustomerValueBaseInfo() {
         LocalDateTime startTime = LocalDateTime.now();
@@ -80,9 +80,11 @@ public class CustomerValueService {
         log.info("任务开始，taskId：{}, 开始时间：{}", taskId, DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(startTime));
         // 任务执行标记,0-未开始,1-执行中,2-执行成功,3-执行异常
         customerValueTaskService.updateTaskStatus(taskId, CustomerValueConstants.EXECUTING, startTime, CustomerValueConstants.DEFAULT_END_TIME, StringUtils.EMPTY);
+        int i = 0;
         for (Vip vip : vips) {
             try {
                 execute(vip);
+                log.info("当前执行进度,酒店：{},{}/{}", hotelId, (i++), vips.size());
             } catch (Exception e) {
                 customerValueTaskService.updateTaskStatus(taskId, CustomerValueConstants.EXECUTE_EXCEPTION, startTime, LocalDateTime.now(), StringUtils.EMPTY);
                 log.error("任务发生异常，taskId: {}, 异常时间:{}", taskId, DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(LocalDateTime.now()), e);
@@ -106,6 +108,7 @@ public class CustomerValueService {
 
     /**
      * 执行任务的过程
+     *
      * @param vip vip 信息
      */
     public void execute(Vip vip) {
@@ -149,7 +152,8 @@ public class CustomerValueService {
 
     /**
      * 客户资料完整度
-     * @param vip  vip 信息
+     *
+     * @param vip vip 信息
      * @return NowChangeInfo
      */
     private NowChangeInfo getProfile(Vip vip) {
@@ -187,6 +191,7 @@ public class CustomerValueService {
 
     /**
      * vip 用户的所有订单
+     *
      * @param vipId vip 主键
      * @return 所有的订单列表
      */

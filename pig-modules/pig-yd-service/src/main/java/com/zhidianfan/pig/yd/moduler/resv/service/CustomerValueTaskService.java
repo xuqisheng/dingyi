@@ -45,6 +45,7 @@ public class CustomerValueTaskService {
     public CustomerValueTask getCustomerValueTask() {
         EntityWrapper<CustomerValueTask> wrapper = new EntityWrapper<>();
         wrapper.eq("flag", 0);
+
         List<CustomerValueTask> customerValueTasks = customerValueTaskMapper.selectList(wrapper);
         Optional<CustomerValueTask> optionalCustomerValueTask = customerValueTasks.stream()
                 .max(Comparator.comparing(CustomerValueTask::getSort)
