@@ -111,7 +111,6 @@ public class AddOrderService {
 
         //生成创建日期
         Date date = new Date();
-        int count;
 
         //占用桌位
         StringBuilder sb = new StringBuilder();

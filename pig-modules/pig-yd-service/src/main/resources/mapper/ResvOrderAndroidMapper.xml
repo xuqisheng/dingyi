@@ -76,6 +76,7 @@
         <result column="unorder_reason_id" property="unorderReasonId" />
         <result column="android_user_id" property="androidUserId" />
         <result column="android_user_name" property="androidUserName" />
+        <result column="device_type" property="deviceType" />
     </resultMap>
 
     <resultMap id="getMessageOrderResultMap" type="com.zhidianfan.pig.yd.moduler.resv.bo.MessageOrderBO">

@@ -405,7 +405,7 @@ public class YdService {
                         .eq("status", '1'));
 
                 for (Business business1 : businessList) {
-                    if (business1.getIsPcPush() == 1) {
+                    if (business1.getIsPcPush()!=null   && business1.getIsPcPush() == 1) {
                         jgPush.setType("WEB");
                         jgPush.setBusinessId(String.valueOf(business1.getId()));
                         log.info("pc版推送:{}", business1.getId());
