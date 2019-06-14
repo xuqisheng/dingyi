@@ -416,8 +416,8 @@ public class YdService {
                 e.printStackTrace();
             }
         } else {
-            data.put("code", 30003);
-            data.put("message", "缺少订单参数");
+            data.put("code", 40002);
+            data.put("message", "订单已经存在");
             basicBO.setData(null);
             basicBO.setError(data);
         }
