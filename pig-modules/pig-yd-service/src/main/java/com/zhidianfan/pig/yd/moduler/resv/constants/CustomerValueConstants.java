@@ -11,6 +11,7 @@ public abstract class CustomerValueConstants {
 
     public static final int DEFAULT_NON_AGE = -1;
     public static final LocalDateTime DEFAULT_START_TIME = LocalDateTime.of(2000, 1, 1, 0, 0, 0);
+    public static final LocalDateTime DEFAULT_END_TIME = DEFAULT_START_TIME;
     public static final LocalDateTime DEFAULT_FIRST_TIME = DEFAULT_START_TIME;
     public static final int DEFAULT_CUSTOMER_AVG = 0;
     public static final int DEFAULT_SPEND_TIME = -1;

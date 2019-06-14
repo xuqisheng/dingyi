@@ -1,21 +1,22 @@
 package com.zhidianfan.pig.yd.moduler.common.dao.entity;
 
-import com.baomidou.mybatisplus.activerecord.Model;
+import java.time.LocalDateTime;
+import java.util.Date;
 import com.baomidou.mybatisplus.annotations.TableField;
+import com.baomidou.mybatisplus.activerecord.Model;
 import com.baomidou.mybatisplus.annotations.TableId;
 import com.baomidou.mybatisplus.annotations.TableName;
 import com.baomidou.mybatisplus.enums.IdType;
 
 import java.io.Serializable;
-import java.util.Date;
 
 /**
  * <p>
  * 细分价值配置表
  * </p>
  *
- * @author 施杰灵
- * @since 2019-05-23
+ * @author 
+ * @since 2019-06-12
  */
 @TableName("loss_value_config")
 public class LossValueConfig extends Model<LossValueConfig> {
@@ -73,9 +74,9 @@ public class LossValueConfig extends Model<LossValueConfig> {
      */
     private Integer flag;
     @TableField("create_time")
-    private Date createTime;
+    private LocalDateTime createTime;
     @TableField("update_time")
-    private Date updateTime;
+    private LocalDateTime updateTime;
     @TableField("update_user_id")
     private Long updateUserId;
 
@@ -168,19 +169,19 @@ public class LossValueConfig extends Model<LossValueConfig> {
         this.flag = flag;
     }
 
-    public Date getCreateTime() {
+    public LocalDateTime getCreateTime() {
         return createTime;
     }
 
-    public void setCreateTime(Date createTime) {
+    public void setCreateTime(LocalDateTime createTime) {
         this.createTime = createTime;
     }
 
-    public Date getUpdateTime() {
+    public LocalDateTime getUpdateTime() {
         return updateTime;
     }
 
-    public void setUpdateTime(Date updateTime) {
+    public void setUpdateTime(LocalDateTime updateTime) {
         this.updateTime = updateTime;
     }
 

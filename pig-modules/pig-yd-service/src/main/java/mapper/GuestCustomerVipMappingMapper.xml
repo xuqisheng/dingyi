@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhidianfan.pig.yd.moduler.common.dao.mapper.GuestCustomerVipMappingMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zhidianfan.pig.yd.moduler.common.dao.entity.GuestCustomerVipMapping">
+        <id column="id" property="id" />
+        <result column="business_id" property="businessId" />
+        <result column="guest_customer_id" property="guestCustomerId" />
+        <result column="batch_no" property="batchNo" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+        <result column="property_id" property="propertyId" />
+        <result column="property_name" property="propertyName" />
+    </resultMap>
+
+</mapper>
