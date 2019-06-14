@@ -149,7 +149,8 @@ public class VipConsumeActionTotalService {
      * @return 0-无
      */
     private Float getConsumerFrequency(List<ResvOrder> resvOrders) {
-        int customerSize = resvOrders.size();
+        int customerSize = customerValueListService.getCustomerCount(resvOrders);
+
         Optional<Date> date = getFirstCustomerMonth(resvOrders);
         Optional<Integer> optional = date.map(date1 -> {
             Instant instant = date1.toInstant();

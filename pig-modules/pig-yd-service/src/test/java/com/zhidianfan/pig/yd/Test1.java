@@ -353,4 +353,10 @@ public class Test1 {
         return false;
     }
 
+    @Test
+    public void test11() {
+        Integer a = null;
+        Integer b = 1;
+        System.out.println(b.equals(a));
+    }
 }

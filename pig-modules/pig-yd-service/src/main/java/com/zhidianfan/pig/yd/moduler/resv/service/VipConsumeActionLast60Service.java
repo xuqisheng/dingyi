@@ -100,7 +100,7 @@ public class VipConsumeActionLast60Service {
                     try {
                         personCount = Integer.parseInt(actualNum);
                     } catch (NumberFormatException e) {
-                        log.warn("用餐人数类型由 String -> int 转换失败,取预订人数:[{}]", e);
+                        log.warn("用餐人数类型由 String -> int 转换失败,取预订人数");
                     }
                     if (personCount <= 0) {
                         String resvNum = order.getResvNum();
@@ -176,18 +176,8 @@ public class VipConsumeActionLast60Service {
     private Integer getTableConsumeAvg60(List<ResvOrder> resvOrdersBy60day) {
         // 总消费金额/对应批次号的订单之和。（仅指已入座/完成的订单）
         int consumerSum = getTotalConsumeAmount60(resvOrdersBy60day);
-        long count = resvOrdersBy60day.stream()
-                .filter(order -> "2".equals(order.getStatus()) || "3".equals(order.getStatus()))
-                .filter(order -> {
-                    String payamount = order.getPayamount();
-                    if (StringUtils.isNotBlank(payamount)) {
-                        if (NumberUtils.isCreatable(payamount)) {
-                            return true;
-                        }
-                    }
-                    return false;
-                }).count();
-        long countOrder =  Math.max(count, 1);
+        Integer totalTableNo = getTotalTableNo60(resvOrdersBy60day);
+        long countOrder =  Math.max(totalTableNo, 1);
         Number divide = MathUtils.divide(consumerSum, countOrder);
         return Math.round(divide.floatValue());
     }

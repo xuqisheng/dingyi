@@ -63,7 +63,7 @@ public class CustomerValueService {
     @Autowired
     private INowChangeInfoService nowChangeInfoMapper;
 
-    @Async
+//    @Async
     @Transactional(rollbackFor = Exception.class)
     public void getCustomerValueBaseInfo() {
         LocalDateTime startTime = LocalDateTime.now();
@@ -82,7 +82,7 @@ public class CustomerValueService {
             try {
                 execute(vip);
             } catch (Exception e) {
-                customerValueTaskService.updateTaskStatus(taskId, CustomerValueConstants.EXECUTE_EXCEPTION, startTime, LocalDateTime.now(), e.getMessage());
+                customerValueTaskService.updateTaskStatus(taskId, CustomerValueConstants.EXECUTE_EXCEPTION, startTime, LocalDateTime.now(), StringUtils.EMPTY);
                 log.error("任务发生异常，taskId: {}, 异常时间:{}", taskId, DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(LocalDateTime.now()), e);
                 throw e;
             }
@@ -125,7 +125,7 @@ public class CustomerValueService {
         if (vip == null) {
             return null;
         }
-        String profile = vipService.getProfile(vip);
+        int profile = vipService.getProfile(vip);
         Integer vipId = vip.getId();
         NowChangeInfo nowChangeInfo = new NowChangeInfo();
         nowChangeInfo.setVipId(vipId);

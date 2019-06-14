@@ -629,16 +629,16 @@ public class VipService {
      * @param vip vip 信息
      * @return 完整度，15% 的字样
      */
-    public String getProfile(Vip vip) {
+    public int getProfile(Vip vip) {
         // 查询 vip 表
         if (vip == null) {
             log.error("vip 信息不存在");
-            return StringUtils.EMPTY;
+            return 0;
         }
         Integer vipId = vip.getId();
         log.info("开始计算客户资料完整度:[{}]", vipId);
         if (vipId == null) {
-            return StringUtils.EMPTY;
+            return 0;
         }
 
         // -1 查询不到，不作处理
@@ -649,7 +649,7 @@ public class VipService {
 
         // -1 查询不到不作处理
         // 计算资料完整度
-        String profileScore = getProfileScore(vip, profileCount);
+        int profileScore = getProfileScore(vip, profileCount);
         log.info("客户资料完整度，[{}],[{}]", vipId, profileCount);
         return profileScore;
 
@@ -663,7 +663,7 @@ public class VipService {
      * @param profileCount 纪念日
      * @return 85% 字样
      */
-    private String getProfileScore(Vip vip, int profileCount) {
+    private int getProfileScore(Vip vip, int profileCount) {
         int score = 0;
         String vipName = vip.getVipName();
         if (StringUtils.isNotBlank(vipName)) {
@@ -707,6 +707,6 @@ public class VipService {
             score += 15;
         }
 
-        return score + "%";
+        return score;
     }
 }

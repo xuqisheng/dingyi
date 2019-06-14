@@ -177,9 +177,8 @@ public class CustomerValueListService {
      * @return 消费总金额，单位:分
      */
     private int getCustomerAmount(List<ResvOrder> resvOrders) {
-        String payStatus = "3";
         return resvOrders.stream()
-                .filter((order) -> order.getStatus().equals(payStatus))
+                .filter((order) -> "3".equals(order.getStatus()))
                 .map(ResvOrder::getPayamount)
                 .filter(payAmount -> StringUtils.isNotBlank(payAmount) && payAmount.length() < 11)
                 .mapToInt(payAmount -> {
@@ -217,7 +216,8 @@ public class CustomerValueListService {
         // 最近一笔已入座/完成的订单
         Optional<LocalDateTime> optionalLocalDateTime = resvOrders.stream()
                 .filter(order -> "2".equals(order.getStatus()) || "3".equals(order.getStatus()))
-                .map(ResvOrder::getUpdatedAt)
+                .map(ResvOrder::getResvDate)
+                .filter(Objects::nonNull)
                 .max(Comparator.naturalOrder())
                 .map(date -> {
                     Instant instant = date.toInstant();
@@ -332,6 +332,7 @@ public class CustomerValueListService {
         int customerCount = getCustomerCount(resvOrders);
         for (LossValueConfig lossValueConfig : lossValueConfigList) {
             String valueName = lossValueConfig.getValueName();
+            Long id = lossValueConfig.getId();
             // 单位:分
             Integer customerPersonAvgStart = lossValueConfig.getCustomerPersonAvgStart();
             Integer customerPersonAvgEnd = lossValueConfig.getCustomerPersonAvgEnd();
@@ -350,7 +351,7 @@ public class CustomerValueListService {
             boolean customerCountConfig = getCustomerCountConfig(customerCountStart, customerCountEnd, customerCount);
 
             if (customerPersonAvConfig && customerTotalConfig && customerCountConfig) {
-                return valueName;
+                return id + "";
             }
         }
         return StringUtils.EMPTY;

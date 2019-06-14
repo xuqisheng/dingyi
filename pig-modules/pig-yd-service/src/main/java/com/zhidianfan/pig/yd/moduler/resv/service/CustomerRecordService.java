@@ -17,10 +17,7 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -170,23 +167,24 @@ public class CustomerRecordService {
      */
     private List<CustomerRecord> guestOrder(Vip vip, List<ResvOrder> otherResvOrders) {
         // 以宾客的形式，出现在了其他人的订单中
+        Integer vipId = vip.getId();
         Wrapper<GuestCustomerVipMapping> wrapper = new EntityWrapper<>();
-//        wrapper.in("")
-        iGuestCustomerVipMappingService.selectList(wrapper);
-        Integer id = vip.getId();
-        List<CustomerRecord> orderList = otherResvOrders.stream()
-                .filter(order -> {
-                    Integer guestVip = order.getGuestVip();
-                    return guestVip != null;
-                })
-                .filter(order -> {
-                    Integer guestVip = order.getGuestVip();
-                    return id.equals(guestVip);
-                })
-                .map(order -> setRecordOrder(order, CustomerValueConstants.RECORD_TYPE_GUEST))
-                .collect(Collectors.toList());
-        // 宾客列表
-        return orderList;
+        wrapper.eq("guest_customer_id", vipId);
+        List<GuestCustomerVipMapping> guestCustomerVipMappings = iGuestCustomerVipMappingService.selectList(wrapper);
+
+        List<CustomerRecord> recordList = new ArrayList<>();
+        for (GuestCustomerVipMapping guestCustomerVipMapping : guestCustomerVipMappings) {
+            Integer guestCustomerId = guestCustomerVipMapping.getGuestCustomerId();
+            for (ResvOrder otherResvOrder : otherResvOrders) {
+                Integer vipId1 = otherResvOrder.getVipId();
+                if (guestCustomerId.equals(vipId1)) {
+                    CustomerRecord record = setRecordOrder(otherResvOrder, CustomerValueConstants.RECORD_TYPE_GUEST);
+                    recordList.add(record);
+                }
+            }
+        }
+
+        return recordList;
     }
 
     /**
@@ -194,10 +192,23 @@ public class CustomerRecordService {
      */
     private CustomerRecord valueChange(Vip vip, CustomerValueList customerValueList) {
         // 1-意向客户，2-活跃客户，3-沉睡客户，4-流失客户
+        String customerValue = getCustomerValue(vip);
         Integer firstClassValue = customerValueList.getFirstClassValue();
-//        Integer firstClassValue = 1;
-        Integer customerValue = getCustomerValue(vip);
-        if (!firstClassValue.equals(customerValue)) {
+        String value = getFirstClassValueStr(firstClassValue);
+
+        customerValue = customerValue == null ? "": customerValue;
+        value = value == null ? "" : value;
+
+        // 沉睡客户，沉睡用户，只匹配前面两个字是否一样
+        String customerValueNameS = "";
+        if (StringUtils.isNotBlank(customerValue) && customerValue.length() >= 2) {
+            customerValueNameS = customerValue.substring(0, 2);
+        }
+        String lastValue = "";
+        if (StringUtils.isNotBlank(value) && value.length() >= 2) {
+            lastValue = value.substring(0, 2);
+        }
+        if (!customerValueNameS.equals(lastValue)) {
             CustomerRecord record = new CustomerRecord();
             record.setVipId(customerValueList.getVipId());
             record.setLogType(CustomerValueConstants.RECORD_TYPE_VALUE_CHANGE);
@@ -214,9 +225,9 @@ public class CustomerRecordService {
             record.setVipPhone("");
             record.setAppUserName("");
             record.setAppUserId(0);
-            String value = getFirstClassValueStr(firstClassValue);
+//            String value = getFirstClassValueStr(firstClassValue);
             String customerValueName = getCustomerValueName(vip);
-            record.setOperationLog("由" + value + "变更为" + customerValueName);
+            record.setOperationLog("由" + customerValueName + "变更为" + value);
             record.setCreateUserId(CustomerValueConstants.DEFAULT_USER_ID);
             record.setCreateTime(LocalDateTime.now());
             record.setUpdateUserId(CustomerValueConstants.DEFAULT_USER_ID);
@@ -257,11 +268,11 @@ public class CustomerRecordService {
      * @param vip 客户信息
      * @return
      */
-    private Integer getCustomerValue(Vip vip) {
+    private String getCustomerValue(Vip vip) {
         Integer vipValueId = vip.getVipValueId();
         String vipName = vip.getVipName();
 
-        return vipValueId;
+        return vipName;
     }
 
     @Autowired
@@ -275,6 +286,10 @@ public class CustomerRecordService {
      */
     private CustomerRecord appUserChange(Vip vip, CustomerValueList customerValueList) {
         Integer appUserId = getAppUserId(vip);
+        if (appUserId < 1) {
+            return null;
+        }
+
         CustomerRecord customerRecord = getCustomerRecord(vip.getId());
         Integer changeAppUserId = customerRecord.getAppUserId();
 

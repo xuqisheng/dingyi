@@ -187,14 +187,14 @@ public class CustomerValueInitService {
         return getLossValueConfig(business, valueName, customerCountStart, -1);
     }
 
-    private LossValueConfig getLossValueConfig(Business business, String valueName, Integer customerCountStart, Integer customerTotalEnd) {
+    private LossValueConfig getLossValueConfig(Business business, String valueName, Integer customerCountStart, Integer customerTotalStart) {
         LossValueConfig config = new LossValueConfig();
         config.setHotelId(business.getId());
         config.setValueName(valueName);
         config.setCustomerPersonAvgStart(-1);
         config.setCustomerPersonAvgEnd(-1);
-        config.setCustomerTotalStart(-1);
-        config.setCustomerTotalEnd(customerTotalEnd);
+        config.setCustomerTotalStart(customerTotalStart);
+        config.setCustomerTotalEnd(-1);
         config.setCustomerCountStart(customerCountStart);
         config.setCustomerCountEnd(-1);
         if (valueName.equals(VALUE_NAME_1)) {

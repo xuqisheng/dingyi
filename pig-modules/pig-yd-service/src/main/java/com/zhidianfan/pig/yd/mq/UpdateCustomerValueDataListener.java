@@ -60,7 +60,7 @@ public class UpdateCustomerValueDataListener {
             NowChangeInfo info = new NowChangeInfo();
             info.setVipId(customerValueChangeFieldDTO.getVipId());
             Vip vip = iVipService.selectById(vipId);
-            String profileScore = vipService.getProfile(vip);
+            int profileScore = vipService.getProfile(vip);
             info.setValue(profileScore);
             info.setType(customerValueChangeFieldDTO.getType());
             info.setChangeTime(LocalDateTime.now());
