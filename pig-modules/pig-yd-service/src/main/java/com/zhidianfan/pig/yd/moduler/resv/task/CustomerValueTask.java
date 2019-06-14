@@ -34,7 +34,7 @@ public class CustomerValueTask {
 
     private Boolean flag = Boolean.FALSE;
 
-    @Scheduled(cron = "0 0 11 * * ?")
+    @Scheduled(cron = "0 0 23 * * ?")
     public void task() {
         log.info("生成任务,时间:[{}]", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(LocalDateTime.now()));
         customerValueTaskService.addCustomerList();
