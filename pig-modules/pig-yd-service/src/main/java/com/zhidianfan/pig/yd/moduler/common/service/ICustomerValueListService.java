@@ -1,0 +1,16 @@
+package com.zhidianfan.pig.yd.moduler.common.service;
+
+import com.zhidianfan.pig.yd.moduler.common.dao.entity.CustomerValueList;
+import com.baomidou.mybatisplus.service.IService;
+
+/**
+ * <p>
+ * 客户价值列表页信息表 服务类
+ * </p>
+ *
+ * @author sjl
+ * @since 2019-05-24
+ */
+public interface ICustomerValueListService extends IService<CustomerValueList> {
+
+}
