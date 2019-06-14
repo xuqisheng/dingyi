@@ -23,6 +23,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
@@ -38,7 +39,11 @@ public class Test1 {
 
     @Test
     public void test3(){
-        
+        AtomicInteger count = new AtomicInteger(0);
+        count.addAndGet(1);
+        int i = count.addAndGet(1);
+        System.out.println(i);
+
     }
 
     @Test

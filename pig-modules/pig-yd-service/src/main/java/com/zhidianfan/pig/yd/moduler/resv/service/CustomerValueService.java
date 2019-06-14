@@ -19,6 +19,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author sjl
@@ -80,16 +82,22 @@ public class CustomerValueService {
         log.info("任务开始，taskId：{}, 开始时间：{}", taskId, DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(startTime));
         // 任务执行标记,0-未开始,1-执行中,2-执行成功,3-执行异常
         customerValueTaskService.updateTaskStatus(taskId, CustomerValueConstants.EXECUTING, startTime, CustomerValueConstants.DEFAULT_END_TIME, StringUtils.EMPTY);
-        int i = 0;
-        for (Vip vip : vips) {
-            try {
-                execute(vip);
-                log.info("当前执行进度,酒店：{},{}/{}", hotelId, (i++), vips.size());
-            } catch (Exception e) {
-                customerValueTaskService.updateTaskStatus(taskId, CustomerValueConstants.EXECUTE_EXCEPTION, startTime, LocalDateTime.now(), StringUtils.EMPTY);
-                log.error("任务发生异常，taskId: {}, 异常时间:{}", taskId, DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(LocalDateTime.now()), e);
-            }
-        }
+
+        AtomicInteger count = new AtomicInteger(0);
+
+        Optional.ofNullable(vips)
+                .ifPresent(vips1 -> {
+                    vips1.parallelStream()
+                            .forEach(vip -> {
+                                try {
+                                    execute(vip);
+                                    log.info("当前执行进度,酒店：{},{}/{}", hotelId, count.addAndGet(1), vips.size());
+                                } catch (Exception e) {
+                                    customerValueTaskService.updateTaskStatus(taskId, CustomerValueConstants.EXECUTE_EXCEPTION, startTime, LocalDateTime.now(), StringUtils.EMPTY);
+                                    log.error("任务发生异常，taskId: {}, 异常时间:{}", taskId, DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(LocalDateTime.now()), e);
+                                }
+                            });
+                });
 
         LocalDateTime endTime = LocalDateTime.now();
         customerValueTaskService.updateTaskStatus(taskId, CustomerValueConstants.EXECUTE_SUCCESS, startTime, endTime, StringUtils.EMPTY);
@@ -112,36 +120,26 @@ public class CustomerValueService {
      * @param vip vip 信息
      */
     public void execute(Vip vip) {
-        log.info("插入 vip:[{}]", vip.getId());
         List<ResvOrder> resvOrders = getResvOrders(vip.getId());
         List<ResvOrder> resvOrdersBy60days = getResvOrdersBy60day(vip.getId());
 
         CustomerValueList customerValueList = customerValueListService.getCustomerValueList(vip, resvOrders);
-        log.info("客户价值列表内容：[{}]", customerValueList);
 
         VipConsumeActionTotal vipConsumeActionTotal = vipConsumeActionTotalService.getVipConsumeActionTotal(vip, resvOrders);
-        log.info("客户总体消费行为：[{}]", vipConsumeActionTotal);
 
         VipConsumeActionLast60 vipConsumeActionLast60 = vipConsumeActionLast60Service.getVipConsumeActionLast60(vip, resvOrdersBy60days);
-        log.info("客户最近 60 天消费行为：[{}]", vipConsumeActionLast60);
 
         List<CustomerRecord> customerRecordList = customerRecordService.getCustomerRecord(vip, resvOrders, customerValueList);
-        log.info("客户记录:[{}]", customerRecordList);
 
         NowChangeInfo nowChangeInfo = getProfile(vip);
-        log.info("客户资料完整度:[{}]", nowChangeInfo);
 
         customerValueListMapper.insertOrUpdate(customerValueList);
-        log.info("插入客户价值 [{}] 完成", customerRecordList);
 
         vipConsumeActionTotalMapper.insertOrUpdate(vipConsumeActionTotal);
-        log.info("客户总体消费行为 [{}] 插入完成", vipConsumeActionTotal);
 
         vipConsumeActionLast60Mapper.insertOrUpdate(vipConsumeActionLast60);
-        log.info("客户最近 60 天消费行为 [{}] 插入完成", vipConsumeActionLast60);
 
         customerRecordMapper.insertBatch(customerRecordList);
-        log.info("客户记录 [{}] 插入完成", customerRecordList);
 
         if (nowChangeInfo != null) {
             nowChangeInfoMapper.insertOrUpdate(nowChangeInfo);
