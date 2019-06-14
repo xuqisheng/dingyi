@@ -307,6 +307,7 @@ public class CustomerValueListService {
         return resvOrders.stream()
                 .filter(order -> "2".equals(order.getStatus()) || "3".equals(order.getStatus()))
                 .map(ResvOrder::getUpdatedAt)
+                .filter(Objects::nonNull)
                 .map(date -> {
                     Instant instant = date.toInstant();
                     return LocalDateTime.ofInstant(instant, ZoneId.systemDefault());

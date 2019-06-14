@@ -65,7 +65,7 @@ public class CustomerValueService {
     private INowChangeInfoService nowChangeInfoMapper;
 
 //    @Async
-    @Transactional(rollbackFor = Exception.class)
+//    @Transactional(rollbackFor = Exception.class)
     public void getCustomerValueBaseInfo() {
         LocalDateTime startTime = LocalDateTime.now();
         CustomerValueTask customerValueTask = customerValueTaskService.getCustomerValueTask();
@@ -110,22 +110,42 @@ public class CustomerValueService {
      * @param vip vip 信息
      */
     public void execute(Vip vip) {
+        log.info("插入 vip:[{}]", vip.getId());
         List<ResvOrder> resvOrders = getResvOrders(vip.getId());
         List<ResvOrder> resvOrdersBy60days = getResvOrdersBy60day(vip.getId());
 
         CustomerValueList customerValueList = customerValueListService.getCustomerValueList(vip, resvOrders);
+        log.info("客户价值列表内容：[{}]", customerValueList);
+
         VipConsumeActionTotal vipConsumeActionTotal = vipConsumeActionTotalService.getVipConsumeActionTotal(vip, resvOrders);
+        log.info("客户总体消费行为：[{}]", vipConsumeActionTotal);
+
         VipConsumeActionLast60 vipConsumeActionLast60 = vipConsumeActionLast60Service.getVipConsumeActionLast60(vip, resvOrdersBy60days);
+        log.info("客户最近 60 天消费行为：[{}]", vipConsumeActionLast60);
+
         List<CustomerRecord> customerRecordList = customerRecordService.getCustomerRecord(vip, resvOrders, customerValueList);
+        log.info("客户记录:[{}]", customerRecordList);
+
         NowChangeInfo nowChangeInfo = getProfile(vip);
+        log.info("客户资料完整度:[{}]", nowChangeInfo);
 
         customerValueListMapper.insertOrUpdate(customerValueList);
+        log.info("插入客户价值 [{}] 完成", customerRecordList);
+
         vipConsumeActionTotalMapper.insertOrUpdate(vipConsumeActionTotal);
+        log.info("客户总体消费行为 [{}] 插入完成", vipConsumeActionTotal);
+
         vipConsumeActionLast60Mapper.insertOrUpdate(vipConsumeActionLast60);
+        log.info("客户最近 60 天消费行为 [{}] 插入完成", vipConsumeActionLast60);
+
         customerRecordMapper.insertBatch(customerRecordList);
+        log.info("客户记录 [{}] 插入完成", customerRecordList);
+
         if (nowChangeInfo != null) {
             nowChangeInfoMapper.insertOrUpdate(nowChangeInfo);
+            log.info("客户资料完整度 [{}] 插入完成", nowChangeInfo);
         }
+        log.info("插入 vip:[{}] 完成", vip.getId());
     }
 
     /**

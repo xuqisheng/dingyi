@@ -87,7 +87,7 @@ public class CustomerRecordService {
         }
         record.setResvDate(resvDate);
         record.setMealTypeId(order.getMealTypeId());
-        record.setMealTypeName(order.getMealTypeName());
+        record.setMealTypeName(order.getMealTypeName().trim());
         String payamount = order.getPayamount();
         if (StringUtils.isNotBlank(payamount)) {
             double v = Double.parseDouble(payamount);
