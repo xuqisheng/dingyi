@@ -287,8 +287,20 @@ public class YdService {
         resvOrderThird.setVipSex(meituanOrderDTO.getGender() == 10 ? "女士" : "先生");
 
         JSONObject data = new JSONObject();
-        //插入第三方订单
-        boolean success = resvOrderThirdService.insert(resvOrderThird);
+
+
+        //只插入一次
+        boolean success  =false;
+        int count = resvOrderThirdService.selectCount(new EntityWrapper<ResvOrderThird>()
+                .eq("third_order_no", meituanOrderDTO.getOrderSerializedId()));
+
+        log.info("第三方订单单号的订单数: {}", count);
+
+        if (count ==  0) {
+            //插入第三方订单
+            success = resvOrderThirdService.insert(resvOrderThird);
+        }
+
         Business business = businessService.selectOne(new EntityWrapper<Business>().eq("id", resvOrderThird.getBusinessId()));
 
         if (success) {
