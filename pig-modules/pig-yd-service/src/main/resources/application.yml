@@ -156,12 +156,12 @@ spring:
     #  使用高性能数据源
     type: com.zaxxer.hikari.HikariDataSource
     driver-class-name: com.mysql.jdbc.Driver
-#    username: root
-#    password: 123456
-#    url: jdbc:mysql://192.168.3.202:3306/resv_sys?useSSL=false&autoReconnect=true&useUnicode=true&characterEncoding=utf8
-    username: pigyiding
-    password: s7iiVjNGl2F9
-    url: jdbc:mysql://rm-bp1l550ay024yxoojo.mysql.rds.aliyuncs.com/resv_sys?useSSL=false&autoReconnect=true&useUnicode=true&characterEncoding=utf8
+    username: root
+    password: 123456
+    url: jdbc:mysql://192.168.3.202:3306/resv_sys?useSSL=false&autoReconnect=true&useUnicode=true&characterEncoding=utf8
+#    username: pigyiding
+#    password: s7iiVjNGl2F9
+#    url: jdbc:mysql://rm-bp1l550ay024yxoojo.mysql.rds.aliyuncs.com/resv_sys?useSSL=false&autoReconnect=true&useUnicode=true&characterEncoding=utf8
     hikari:
       minimum-idle: 1
       maximum-pool-size: 5
