@@ -47,7 +47,7 @@ public class CustomerValueTask {
         LocalTime startTime1 = LocalTime.of(23, 0, 0);
         LocalTime startTime2 = LocalTime.of(8, 0, 0);
         LocalTime nowTime = LocalTime.now();
-        if (nowTime.isAfter(startTime1) && nowTime.isBefore(startTime2)) {
+        if (nowTime.isAfter(startTime1) || nowTime.isBefore(startTime2)) {
             log.info("开始执行客户价值定时任务，跑客户价值相关数据");
             customerValueService.getCustomerValueBaseInfo();
 //            flag = Boolean.FALSE;
