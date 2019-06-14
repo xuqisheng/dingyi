@@ -1,5 +1,6 @@
 package com.zhidianfan.pig.yd.moduler.resv.service;
 
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.Business;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.BusinessSms;
@@ -44,8 +45,10 @@ public class SmsNumRemindService {
      * @param clientType  客户端id  1. 安卓电话机 2. 小程序
      * @return 是否提醒
      */
-    public boolean getRemind(Integer businessId , Integer clientType) {
+    public JSONObject getRemind(Integer businessId , Integer clientType) {
 
+
+        JSONObject jsonObject  = new JSONObject();
 
         // 0.查询该 酒店现在短信数量
         BusinessSms businessSms = businessSmsService.selectOne(new EntityWrapper<BusinessSms>()
@@ -58,7 +61,8 @@ public class SmsNumRemindService {
 
         //如果当前短信数量大于 50 就不需要提醒
         if (currentSmsNum >= 50){
-            return false;
+            jsonObject.put("remind",false);
+            return jsonObject;
         }else if (currentSmsNum >= 20){
             // 50 到20 第一档提醒
             remindType  = 1;
@@ -73,7 +77,7 @@ public class SmsNumRemindService {
         SmsNumRemind smsNumRemind = iSmsNumRemindService.selectOne(new EntityWrapper<SmsNumRemind>()
                 .eq("business_id", businessId)
                 .eq("client_type", clientType)
-                .eq("client_type", remindType));
+                .eq("remindType", remindType));
 
 
         // 1.1 若为空,则初始化
@@ -88,16 +92,19 @@ public class SmsNumRemindService {
         }
 
 
-
         // 提醒次数设置为0
         if (smsNumRemind.getRemindNum() != 0){
 
             smsNumRemind.setRemindNum(0);
             iSmsNumRemindService.updateById(smsNumRemind);
 
-            return true;
+            jsonObject.put("remind",true);
+            jsonObject.put("remindType",1);
+            return jsonObject;
         }else {
-            return false;
+            jsonObject.put("remind",false);
+
+            return jsonObject;
         }
 
         // 充值的时候,还要去重置这张表里的对应的酒店数据 提醒次数设置为1
