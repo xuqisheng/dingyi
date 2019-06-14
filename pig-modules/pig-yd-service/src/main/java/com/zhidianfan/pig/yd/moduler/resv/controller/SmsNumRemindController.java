@@ -40,7 +40,7 @@ public class SmsNumRemindController {
 
         boolean b1 = smsNumRemindService.getRemind(businessId ,clientType);
 
-        return ResponseEntity.ok(b1 ? SuccessTip.SUCCESS_TIP : ErrorTip.ERROR_TIP);
+        return ResponseEntity.ok(b1);
     }
 
 

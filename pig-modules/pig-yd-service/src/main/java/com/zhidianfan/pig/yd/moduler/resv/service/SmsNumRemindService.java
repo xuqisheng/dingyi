@@ -46,7 +46,6 @@ public class SmsNumRemindService {
      */
     public boolean getRemind(Integer businessId , Integer clientType) {
 
-        // ANDROIDPHONE.code
 
         // 0.查询该 酒店现在短信数量
         BusinessSms businessSms = businessSmsService.selectOne(new EntityWrapper<BusinessSms>()
