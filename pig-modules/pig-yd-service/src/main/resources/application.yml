@@ -180,7 +180,7 @@ spring:
     password: pig
 
 yd:
-  task: true  #定时任务
+  task: false  #定时任务
   xms:
     times: 90
 
