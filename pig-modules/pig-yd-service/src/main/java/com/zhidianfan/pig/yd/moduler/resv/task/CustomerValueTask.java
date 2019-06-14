@@ -32,13 +32,13 @@ public class CustomerValueTask {
     @Autowired
     private CustomerValueTaskService customerValueTaskService;
 
-    private Boolean flag = Boolean.FALSE;
+//    private Boolean flag = Boolean.FALSE;
 
-    @Scheduled(cron = "0 0 11 * * ?")
+    @Scheduled(cron = "0 30 22 * * ?")
     public void task() {
         log.info("生成任务,时间:[{}]", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(LocalDateTime.now()));
         customerValueTaskService.addCustomerList();
-        flag = Boolean.TRUE;
+//        flag = Boolean.TRUE;
         log.info("任务结束，时间[{}]", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(LocalDateTime.now()));
     }
 
@@ -47,10 +47,10 @@ public class CustomerValueTask {
         LocalTime startTime1 = LocalTime.of(23, 0, 0);
         LocalTime startTime2 = LocalTime.of(8, 0, 0);
         LocalTime nowTime = LocalTime.now();
-        if (nowTime.isAfter(startTime1) && nowTime.isBefore(startTime2) && flag) {
+        if (nowTime.isAfter(startTime1) && nowTime.isBefore(startTime2)) {
             log.info("开始执行客户价值定时任务，跑客户价值相关数据");
             customerValueService.getCustomerValueBaseInfo();
-            flag = Boolean.FALSE;
+//            flag = Boolean.FALSE;
         }
     }
 
