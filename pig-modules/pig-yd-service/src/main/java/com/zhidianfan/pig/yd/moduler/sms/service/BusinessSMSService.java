@@ -59,6 +59,13 @@ public class BusinessSMSService {
     @Autowired
     private IBusinessSmsService businessSmsService;
 
+
+    /**
+     * 酒店短信提醒记录接口
+     */
+    @Autowired
+    private ISmsNumRemindService iSmsNumRemindService;
+
     /**
      * 查询酒店短信配置
      *
@@ -74,22 +81,22 @@ public class BusinessSMSService {
         try {
             BusinessSMSInfoBO businessSMSInfoBO = new BusinessSMSInfoBO();
 //            酒店配置信息，与各种type关联
-            BusinessSmsSetting businessSMSSettingsResult = businessSmsSettingService.selectOne(new EntityWrapper<BusinessSmsSetting>().eq("business_id",businessId).eq("type",type));
+            BusinessSmsSetting businessSMSSettingsResult = businessSmsSettingService.selectOne(new EntityWrapper<BusinessSmsSetting>().eq("business_id", businessId).eq("type", type));
 //            短信与订单类型关联信息 resv_order_type=1为普通预订等等 例如这家酒店的订单类别为普通预定的预定订单之后是否发送短信,取消订单之后是发发送短信
-            BusinessSmsRole businessSMSRoleResult = businessSmsRoleService.selectOne(new EntityWrapper<BusinessSmsRole>().eq("business_id",businessId).eq("resv_order_type_id",resvOrderTypeId));
+            BusinessSmsRole businessSMSRoleResult = businessSmsRoleService.selectOne(new EntityWrapper<BusinessSmsRole>().eq("business_id", businessId).eq("resv_order_type_id", resvOrderTypeId));
 //           酒店现有短信信息 现有短信数，阈值等等
-            BusinessSms businessSMSResult = businessSMSService.selectOne(new EntityWrapper<BusinessSms>().eq("business_id",businessId));
-            if (businessSMSSettingsResult == null){
+            BusinessSms businessSMSResult = businessSMSService.selectOne(new EntityWrapper<BusinessSms>().eq("business_id", businessId));
+            if (businessSMSSettingsResult == null) {
                 LOGGER.error("请求酒店短信设置信息 接收参数错误, 酒店id 或 type 参数无效!");
                 businessSMSInfoDTO.setCode(-102);
                 businessSMSInfoDTO.setMessage("请求酒店短信设置信息 接收参数错误, 酒店id 或 type 参数无效!");
                 return businessSMSInfoDTO;
-            } else if (businessSMSRoleResult == null){
+            } else if (businessSMSRoleResult == null) {
                 LOGGER.error("请求酒店短信设置信息 接收参数错误, 酒店id 或 resvOrderTypeId 参数无效!");
                 businessSMSInfoDTO.setCode(-103);
                 businessSMSInfoDTO.setMessage("请求酒店短信设置信息 接收参数错误, 酒店id 或 resvOrderTypeId 参数无效!");
                 return businessSMSInfoDTO;
-            } else if (businessSMSResult == null){
+            } else if (businessSMSResult == null) {
                 LOGGER.error("请求酒店短信设置信息 接收参数错误, 酒店id 参数无效!");
                 businessSMSInfoDTO.setCode(-104);
                 businessSMSInfoDTO.setMessage("请求酒店短信设置信息 接收参数错误, 酒店id 参数无效!");
@@ -101,7 +108,7 @@ public class BusinessSMSService {
                 BeanCopierUtil.copyProperties(businessSMSInfoBO, businessSMSInfoDTO);
                 return businessSMSInfoDTO;
             }
-        } catch (Exception e){
+        } catch (Exception e) {
             LOGGER.error("请求酒店短信设置信息 内部错误, 错误信息为 {}", e.getMessage());
             businessSMSInfoDTO.setCode(-100);
             businessSMSInfoDTO.setMessage("请求酒店短信设置信息 内部错误, 错误信息为 {}");
@@ -123,16 +130,16 @@ public class BusinessSMSService {
         try {
             BusinessSMSInfoBO businessSMSInfoBO = new BusinessSMSInfoBO();
             BusinessSmsSetting businessSMSSettingsResult = businessSmsSettingService.selectOne(new EntityWrapper<BusinessSmsSetting>()
-                    .eq("business_id",businessId)
-                    .eq("type",type));
+                    .eq("business_id", businessId)
+                    .eq("type", type));
             BusinessSms businessSMSResult = businessSMSService.selectOne(new EntityWrapper<BusinessSms>()
-                    .eq("business_id",businessId));
-            if (businessSMSSettingsResult == null){
+                    .eq("business_id", businessId));
+            if (businessSMSSettingsResult == null) {
                 LOGGER.error("请求 酒店宴会短信设置信息 接收参数错误, 酒店id 或 type 参数无效!");
                 businessSMSInfoDTO.setCode(-102);
                 businessSMSInfoDTO.setMessage("请求酒店短信设置信息 接收参数错误, 酒店id 或 type 参数无效!");
                 return businessSMSInfoDTO;
-            } else if (businessSMSResult == null){
+            } else if (businessSMSResult == null) {
                 LOGGER.error("请求 酒店宴会短信设置信息 接收参数错误, 酒店id 参数无效!");
                 businessSMSInfoDTO.setCode(-104);
                 businessSMSInfoDTO.setMessage("请求酒店短信设置信息 接收参数错误, 酒店id 参数无效!");
@@ -143,7 +150,7 @@ public class BusinessSMSService {
                 BeanCopierUtil.copyProperties(businessSMSInfoBO, businessSMSInfoDTO);
                 return businessSMSInfoDTO;
             }
-        } catch (Exception e){
+        } catch (Exception e) {
             LOGGER.error("请求酒店宴会短信设置信息 内部错误, 错误信息为 {}", e.getMessage());
             businessSMSInfoDTO.setCode(-100);
             businessSMSInfoDTO.setMessage("请求酒店短信设置信息 内部错误, 错误信息为 {}");
@@ -154,38 +161,40 @@ public class BusinessSMSService {
 
     /**
      * 短信支付宝支付
+     *
      * @param businessRechargeDTO
      * @return
      */
-     public String smsRechargeAliPay(HttpServletRequest request,BusinessRechargeDTO businessRechargeDTO){
+    public String smsRechargeAliPay(HttpServletRequest request, BusinessRechargeDTO businessRechargeDTO) {
 
-         //生成支付参数
-         SmsType smsType = iSmsTypeService.selectById(businessRechargeDTO.getSmsTypeId());
-         if(smsType==null){
-             throw new RuntimeException("短信充值类型id错误");
-         }
-         SimpleDateFormat dateFormater = new SimpleDateFormat("yyMMdd");
-         String business = String.format("%04d", businessRechargeDTO.getBusinessId());
-         String orderNum = dateFormater.format(new Date()) + business + String.valueOf((int) (Math.random() * 9000 + 1000));
-         String description = "短信每条平均" + smsType.getAveragePrice() + "元";
-         String requestText = AlipayUtil.setRequestParam(orderNum, smsType.getSmsTypeName(), smsType.getPayamount().toString(), description);
+        //生成支付参数
+        SmsType smsType = iSmsTypeService.selectById(businessRechargeDTO.getSmsTypeId());
+        if (smsType == null) {
+            throw new RuntimeException("短信充值类型id错误");
+        }
+        SimpleDateFormat dateFormater = new SimpleDateFormat("yyMMdd");
+        String business = String.format("%04d", businessRechargeDTO.getBusinessId());
+        String orderNum = dateFormater.format(new Date()) + business + String.valueOf((int) (Math.random() * 9000 + 1000));
+        String description = "短信每条平均" + smsType.getAveragePrice() + "元";
+        String requestText = AlipayUtil.setRequestParam(orderNum, smsType.getSmsTypeName(), smsType.getPayamount().toString(), description);
 
-         // 创建订单
-         HashMap<String, String> orderInfo = new HashMap<>();
-         orderInfo.put("orderNum", orderNum);
-         orderInfo.put("name", smsType.getSmsTypeName());
-         orderInfo.put("pay", smsType.getPayamount().toString());
-         orderInfo.put("description", description);
-         orderInfo.put("id", businessRechargeDTO.getBusinessId().toString());
-         orderInfo.put("type", businessRechargeDTO.getSmsTypeId().toString());
-         iBusinessSmsRechargeLogService.insertRechargeLog(orderInfo);
+        // 创建订单
+        HashMap<String, String> orderInfo = new HashMap<>();
+        orderInfo.put("orderNum", orderNum);
+        orderInfo.put("name", smsType.getSmsTypeName());
+        orderInfo.put("pay", smsType.getPayamount().toString());
+        orderInfo.put("description", description);
+        orderInfo.put("id", businessRechargeDTO.getBusinessId().toString());
+        orderInfo.put("type", businessRechargeDTO.getSmsTypeId().toString());
+        iBusinessSmsRechargeLogService.insertRechargeLog(orderInfo);
 
         return requestText;
-     }
+    }
 
 
     /**
      * 支付宝回调操作
+     *
      * @param request
      * @throws Exception
      */
@@ -199,11 +208,11 @@ public class BusinessSMSService {
                         || data.get("trade_status").equals("TRADE_FINISHED")) {
                     String ordernum = data.get("out_trade_no");
                     //支付成功
-                    BusinessSmsRechargeLog condition=new BusinessSmsRechargeLog();
+                    BusinessSmsRechargeLog condition = new BusinessSmsRechargeLog();
                     condition.setIspay("0");
                     condition.setOrderNo(ordernum);
                     BusinessSmsRechargeLog update = businessSmsRechargeLogService.selectOne(new EntityWrapper<>(condition));
-                    if(update==null){
+                    if (update == null) {
                         log.error("【支付宝回调】订单不存在或已被删除");
                         return false;
                     }
@@ -217,17 +226,24 @@ public class BusinessSMSService {
                     BusinessSms businessIdSms = new BusinessSms();
                     businessIdSms.setBusinessId(update.getBusinessId());
                     BusinessSms businessSms = businessSmsService.selectOne(new EntityWrapper<>(businessIdSms));
-                    if(businessSms==null){
-                        log.error("【支付宝回调】已充值成功数量增加失败 ",ordernum);
+                    if (businessSms == null) {
+                        log.error("【支付宝回调】已充值成功数量增加失败 ", ordernum);
                         return false;
                     }
                     businessSms.setCurrentSmsNum(update.getSmsNum());
                     businessSms.setUpdatedAt(new Date());
                     businessSmsService.updateById(businessSms);
+
+                    //充值完成之后更新这个酒店的短信提醒记录
+                    log.info("更新该酒店的短信提醒记录表");
+                    SmsNumRemind smsNumRemind = new SmsNumRemind();
+                    smsNumRemind.setRemindNum(1);
+                    iSmsNumRemindService.update(smsNumRemind, new EntityWrapper<SmsNumRemind>().eq("business_id", businessSms.getBusinessId()));
+
                     return true;
                 }
             } catch (Exception e) {
-                log.info("【支付宝回调】错误信息", JSON.toJSONString(data),e.getMessage());
+                log.info("【支付宝回调】错误信息", JSON.toJSONString(data), e.getMessage());
                 throw new RuntimeException("【支付宝回调】充值失败！");
             }
         } else {
@@ -235,9 +251,6 @@ public class BusinessSMSService {
         }
         return false;
     }
-
-
-
 
 
 }
