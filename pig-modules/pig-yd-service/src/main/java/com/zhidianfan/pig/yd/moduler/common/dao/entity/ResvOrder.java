@@ -271,6 +271,18 @@ public class ResvOrder extends Model<ResvOrder> {
     @TableField("android_user_name")
     private String androidUserName;
 
+    /**
+     * 主客
+     */
+    @TableField("man_vip_id")
+    private Integer manVipId;
+
+    /**
+     * 宾客
+     */
+    @TableField("guest_vip_id")
+    private Integer guestVipId;
+
     @Override
     public String toString() {
         return new ToStringBuilder(this)
@@ -346,6 +358,8 @@ public class ResvOrder extends Model<ResvOrder> {
                 .append("unorderReasonId",unorderReasonId)
                 .append("androidUserId",androidUserId)
                 .append("androidUserName",androidUserName)
+                .append("manVipId", manVipId)
+                .append("guestVipId",guestVipId)
                 .toString();
     }
 
@@ -924,6 +938,22 @@ public class ResvOrder extends Model<ResvOrder> {
 
     public void setAndroidUserName(String androidUserName) {
         this.androidUserName = androidUserName;
+    }
+
+    public Integer getManVipId() {
+        return manVipId;
+    }
+
+    public void setManVip(Integer manName) {
+        this.manVipId = manVipId;
+    }
+
+    public Integer getGuestVip() {
+        return guestVipId;
+    }
+
+    public void setGuestVipId(Integer guestName) {
+        this.guestVipId = guestVipId;
     }
 
     /**
