@@ -305,7 +305,7 @@ public class CustomerValueListService {
 
     private Stream<LocalDateTime> getPayTimeStream(List<ResvOrder> resvOrders) {
         return resvOrders.stream()
-                .filter(order -> "3".equals(order.getStatus()))
+                .filter(order -> "2".equals(order.getStatus()) || "3".equals(order.getStatus()))
                 .map(ResvOrder::getUpdatedAt)
                 .map(date -> {
                     Instant instant = date.toInstant();
