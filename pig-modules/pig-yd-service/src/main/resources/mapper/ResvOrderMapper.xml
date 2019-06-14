@@ -187,5 +187,15 @@
 
     </update>
 
+    <select id="selectOverTimeOrder" resultType="integer">
+        select 	count(1)
+        from resv_order
+        where business_id = #{id}
+        and resv_date = #{time}
+        and `status` = #{status}
+        and CONCAT(resv_date," ",dest_time) &lt; NOW()
+        and dest_time != ""
+    </select>
+
 
 </mapper>

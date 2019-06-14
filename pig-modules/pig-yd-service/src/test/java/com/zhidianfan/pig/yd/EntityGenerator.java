@@ -29,13 +29,13 @@ public class EntityGenerator {
 
         // 全局配置
         GlobalConfig gc = new GlobalConfig();
-        gc.setOutputDir("/Users/mac/Documents/work/yiding/pig/pig-modules/pig-yd-service/src/main/java");//这里写你自己的java目录
+        gc.setOutputDir("/Users/qiuqixiao/git/pig/pig-modules/pig-yd-service/src/main/java");//这里写你自己的java目录
         gc.setFileOverride(true);//是否覆盖  防止执行后把写的代码都干掉。还是自己手动删除后再执行吧
         gc.setActiveRecord(true);
         gc.setEnableCache(false);// XML 二级缓存
         gc.setBaseResultMap(true);// XML ResultMap
         gc.setBaseColumnList(false);// XML columList
-        gc.setAuthor("");
+        gc.setAuthor("qqx");
         mpg.setGlobalConfig(gc);
 
         // 数据源配置
@@ -51,7 +51,7 @@ public class EntityGenerator {
         dsc.setDriverName("com.mysql.jdbc.Driver");
         dsc.setUsername("root");
         dsc.setPassword("123456");
-        dsc.setUrl("jdbc:mysql://192.168.3.202:3306/resv_sys?useSSL=false");
+        dsc.setUrl("jdbc:mysql://localhost:3306/resv_sys?useSSL=false");
 
 //        dsc.setUsername("resv_seller");
 //        dsc.setPassword("resv_seller_246837915");
@@ -62,7 +62,7 @@ public class EntityGenerator {
         StrategyConfig strategy = new StrategyConfig();
         //strategy.setTablePrefix(new String[]{"_"});// 此处可以修改为您的表前缀
         strategy.setNaming(NamingStrategy.underline_to_camel);// 表名生成策略
-        strategy.setInclude(new String[]{"guest_customer_vip_mapping"});
+        strategy.setInclude(new String[]{"business_weixin"});
         mpg.setStrategy(strategy);
 
         // 包配置

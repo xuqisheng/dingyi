@@ -158,8 +158,8 @@ yd:
     sprdid: 1012808
     #    产品编号 会员营销短信
     yxsprdid: 1012812
-#    nodejs推送服务器
-
+  # dev与测试环境 短信配置成功或者失败
+  flag: success
 ### 开发环境 ###
 
 ---
@@ -286,7 +286,7 @@ yd:
   xms:
     times: 90
   sms:
-    url: http://sms.zhidianfan.com/message/callback
+    url: http://mw.zhidianfan.com:9095/message/callback
 
 eureka:
   environment: ${spring.profiles}

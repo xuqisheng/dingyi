@@ -42,9 +42,9 @@ public class TianGangController {
     }
 
     @PostMapping(value = "/create/order1")
-    public ResponseEntity createTianGangOrder1(TGOrderCreateDTO tgOrderCreateDTO) throws ParseException {
+    public ResponseEntity createTianGangOrder1() throws ParseException {
 
-        tianGangService.createTianGangOrder(tgOrderCreateDTO);
+        tianGangService.tianGangTask();
 
         return ResponseEntity.ok("ok");
     }

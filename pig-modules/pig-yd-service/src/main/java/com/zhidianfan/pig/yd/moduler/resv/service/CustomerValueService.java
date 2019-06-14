@@ -1,6 +1,7 @@
 package com.zhidianfan.pig.yd.moduler.resv.service;
 
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
+import com.baomidou.mybatisplus.mapper.Wrapper;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.*;
 import com.zhidianfan.pig.yd.moduler.common.dao.mapper.ResvOrderMapper;
 import com.zhidianfan.pig.yd.moduler.common.service.*;
@@ -67,10 +68,11 @@ public class CustomerValueService {
     @Transactional(rollbackFor = Exception.class)
     public void getCustomerValueBaseInfo() {
         LocalDateTime startTime = LocalDateTime.now();
-         CustomerValueTask customerValueTask = customerValueTaskService.getCustomerValueTask();
+        CustomerValueTask customerValueTask = customerValueTaskService.getCustomerValueTask();
         log.info("获取到的任务编号：{}", customerValueTask.getId());
         // 1. 从任务表中取出酒店 id
         Long hotelId = customerValueTask.getHotelId();
+        cleanData(hotelId);
         // 1.1 查询属于该酒店的所有客户
         List<Vip> vips = vipService.getVipList(hotelId);
 
@@ -91,6 +93,16 @@ public class CustomerValueService {
         LocalDateTime endTime = LocalDateTime.now();
         customerValueTaskService.updateTaskStatus(taskId, CustomerValueConstants.EXECUTE_SUCCESS, startTime, endTime, StringUtils.EMPTY);
         log.info("任务结束，taskId: {}, 结束时间:{}", taskId, DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(endTime));
+    }
+
+    // 清除脏数据
+    private void cleanData(Long hotelId) {
+        if (hotelId == null) {
+            return;
+        }
+        Wrapper<CustomerValueList> wrapper = new EntityWrapper<>();
+        wrapper.eq("hotel_id", hotelId);
+        customerValueListMapper.delete(wrapper);
     }
 
     /**

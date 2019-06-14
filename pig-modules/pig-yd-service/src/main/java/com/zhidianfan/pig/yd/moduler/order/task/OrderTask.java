@@ -339,7 +339,10 @@ public class OrderTask {
                             return;
                         }
 
+                        //非当天当前餐次可能把退订重新状态改成预定的
+                        ResvOrder resvOrder = resvOrderService.selectById(order.getId());
                         if (
+                                !StringUtils.equals(resvOrder.getStatus(),"4") &&
                                 !StringUtils.equals(order.getStatus(), "4")
                                         && StringUtils.equals(currentDate, orderDate)
                                         && order.getMealTypeId().equals(mealType.getId())
@@ -356,8 +359,8 @@ public class OrderTask {
                                 log.info("checkOrder:{}", order);
                                 log.info("=================checkOrder 订单修改为入座 end===================");
                             }
-                        } else if (!StringUtils.equals(order.getStatus(), "4")) {
-                            order.setStatus("1");
+                        } else if (!StringUtils.equals(order.getStatus(), "4") && !StringUtils.equals(resvOrder.getStatus(),"4")) {
+                                order.setStatus("1");
                         }
                         resvOrderService.updateById(order);
                     });

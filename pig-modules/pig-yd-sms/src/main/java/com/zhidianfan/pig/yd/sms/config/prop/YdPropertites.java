@@ -18,6 +18,10 @@ public class YdPropertites {
     @Value("${spring.profiles.active}")
     private String active;
 
+    @Value("${yd.flag}")
+    private String flag;
+
+
     private SmsPropertites sms;
 
     public SmsPropertites getSms() {
@@ -65,5 +69,11 @@ public class YdPropertites {
         this.active = active;
     }
 
+    public String getFlag() {
+        return flag;
+    }
 
+    public void setFlag(String flag) {
+        this.flag = flag;
+    }
 }

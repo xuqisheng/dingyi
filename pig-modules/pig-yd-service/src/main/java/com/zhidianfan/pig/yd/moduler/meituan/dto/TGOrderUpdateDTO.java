@@ -24,7 +24,7 @@ public class TGOrderUpdateDTO {
     /**
      * 客人性别， 1 = 女， 2 = 男
      */
-    private String customerGender;
+    private Integer customerGender;
 
     /**
      * 下单人的手机号

@@ -24,12 +24,17 @@ public class TGOrderCreateDTO {
     /**
      * 客人性别， 1 = 女， 2 = 男
      */
-    private String customerGender;
+    private Integer customerGender;
 
     /**
      * 下单人的手机号
      */
     private String ownerPhone;
+
+    /**
+     * 西软定义的天港各个酒店的code
+     */
+    private String branchCode;
 
     /**
      * 餐饮类型，1 = 宴会， 2 = 中餐
@@ -70,5 +75,10 @@ public class TGOrderCreateDTO {
      * 客户人数
      */
     private Integer customerAmount;
+
+    /**
+     * 桌号
+     */
+    private String tableNumber;
 
 }

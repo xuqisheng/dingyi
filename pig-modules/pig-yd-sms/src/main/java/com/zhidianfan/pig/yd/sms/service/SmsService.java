@@ -20,4 +20,6 @@ public interface SmsService {
     SmsSendResDTO sendMsg(String phone, String msg, String type, long smsId);
 
 
+    SmsSendResDTO sendMsgV2(String phone, String msg, String type, long smsId, String sendtime);
+
 }
