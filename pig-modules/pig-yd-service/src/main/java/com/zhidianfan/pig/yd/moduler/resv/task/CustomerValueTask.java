@@ -62,10 +62,9 @@ public class CustomerValueTask {
     public void customerValue2() {
         LocalTime startTime1 = LocalTime.of(23, 0, 0);
         LocalTime startTime2 = LocalTime.of(8, 0, 0);
-        LocalTime nowTime = LocalTime.now();
-        if (nowTime.isAfter(startTime1) || nowTime.isBefore(startTime2)) {
+        if (LocalTime.now().isAfter(startTime1) || LocalTime.now().isBefore(startTime2)) {
             LocalDate localDate = LocalDate.now();
-            if (nowTime.isBefore(startTime2)) {
+            if (LocalTime.now().isBefore(startTime2)) {
                 //批次减一天
                 localDate = localDate.minusDays(1);
             }
@@ -88,12 +87,12 @@ public class CustomerValueTask {
                         List<Long> collect = customerValueTasks.parallelStream()
                                 .map(customerValueTask -> CompletableFuture.supplyAsync(() -> {
                                     log.info("{}开始被处理，剩余{}家待处理", customerValueTask.getHotelId(), count);
-                                    if (nowTime.isAfter(startTime1) || nowTime.isBefore(startTime2)) {
+                                    if (LocalTime.now().isAfter(startTime1) || LocalTime.now().isBefore(startTime2)) {
                                         customerValueService.getCustomerValueBaseInfo2(customerValueTask);
                                         count.addAndGet(-1);
                                         log.info("{}处理结束，剩余{}家待处理", customerValueTask.getHotelId(), count);
                                     } else {
-                                        while (!(nowTime.isAfter(startTime1) || nowTime.isBefore(startTime2))) {
+                                        while (!(LocalTime.now().isAfter(startTime1) || LocalTime.now().isBefore(startTime2))) {
                                             log.info("非客户价值计算时间暂停执行======");
                                             try {
                                                 TimeUnit.MINUTES.sleep(10);
