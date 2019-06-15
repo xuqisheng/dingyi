@@ -9,6 +9,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.velocity.runtime.parser.node.MathUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -75,6 +76,9 @@ public class VipConsumeActionLast60Service {
      */
     private Integer getTotalOrderNo60(List<ResvOrder> resvOrdersBy60days) {
         // 按批次号，累加该客户的订单（只要一个批次号内有一个桌位入座/完成即可）
+        if (CollectionUtils.isEmpty(resvOrdersBy60days)){
+            return 0;
+        }
         int size = resvOrdersBy60days.stream()
                 .filter(order -> "2".equals(order.getStatus()) || "3".equals(order.getStatus()))
                 .collect(groupingBy(ResvOrder::getBatchNo))
@@ -90,6 +94,9 @@ public class VipConsumeActionLast60Service {
      * @return 0-无
      */
     private Integer getTotalTableNo60(List<ResvOrder> resvOrdersBy60day) {
+        if (CollectionUtils.isEmpty(resvOrdersBy60day)){
+            return 0;
+        }
         // 所有该客户已完成/入座的订单数量
         long count = resvOrdersBy60day.stream()
                 .filter(order -> "2".equals(order.getStatus()) || "3".equals(order.getStatus()))
@@ -104,6 +111,11 @@ public class VipConsumeActionLast60Service {
      * @return 0-无
      */
     public Integer getTotalPersonNo60(List<ResvOrder> resvOrdersBy60day) {
+
+        if (CollectionUtils.isEmpty(resvOrdersBy60day)){
+            return 0;
+        }
+
         // 所有该客户已完成/入座的订单中的实际人数之和。（如果没有实际人数，使用就餐人数）
         int sum = resvOrdersBy60day.stream()
                 // 订单状态:已经入座，已完成
