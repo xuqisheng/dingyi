@@ -13,6 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -77,6 +78,9 @@ public class CustomerRecordService {
      * @param resvOrders 订单列表
      */
     private List<CustomerRecord> reserveOrderCustomer(Vip vip, List<ResvOrder> resvOrders) {
+        if (CollectionUtils.isEmpty(resvOrders)){
+            return new ArrayList<>();
+        }
         List<CustomerRecord> recordList = resvOrders.stream()
                 .filter(order -> "2".equals(order.getStatus()) || "3".equals(order.getStatus()))
                 .map(order -> setRecordOrder(order, CustomerValueConstants.RECORD_TYPE_CUSTOMER))
@@ -142,6 +146,9 @@ public class CustomerRecordService {
      * @param resvOrders 预订订单
      */
     private List<CustomerRecord> reserveOrderESC(Vip vip, List<ResvOrder> resvOrders) {
+        if (CollectionUtils.isEmpty(resvOrders)){
+            return new ArrayList<>();
+        }
         List<CustomerRecord> recordList = resvOrders.stream()
                 .filter(order -> "4".equals(order.getStatus()))
                 .map(order -> setRecordOrder(order, CustomerValueConstants.RECORD_TYPE_ESC))
@@ -154,7 +161,7 @@ public class CustomerRecordService {
      * 主客订单
      */
     private List<CustomerRecord> manOrder(Vip vip, List<ResvOrder> resvOrders) {
-        if (vip == null) {
+        if (vip == null||CollectionUtils.isEmpty(resvOrders)) {
             log.error("vip 信息为空");
             return Lists.newArrayList();
         }
@@ -181,6 +188,7 @@ public class CustomerRecordService {
      * 宾客订单
      */
     private List<CustomerRecord> guestOrder(Vip vip, List<ResvOrder> otherResvOrders) {
+
         // 以宾客的形式，出现在了其他人的订单中
         Integer vipId = vip.getId();
         Wrapper<GuestCustomerVipMapping> wrapper = new EntityWrapper<>();
