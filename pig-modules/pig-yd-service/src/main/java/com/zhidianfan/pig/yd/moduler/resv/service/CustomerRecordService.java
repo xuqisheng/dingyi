@@ -83,8 +83,8 @@ public class CustomerRecordService {
             return;
         }
         Wrapper<CustomerRecord> wrapper = new EntityWrapper<>();
-        LocalTime startTime = LocalTime.of(23, 59, 59);
-        LocalTime endTime = LocalTime.of(0, 0, 0);
+        LocalTime startTime = LocalTime.of(0, 0, 0);
+        LocalTime endTime = LocalTime.of(23, 59, 59);
         LocalDate nowDate = LocalDate.now();
         LocalDateTime startDateTime = LocalDateTime.of(nowDate, startTime);
         LocalDateTime endDateTime = LocalDateTime.of(nowDate, endTime);
