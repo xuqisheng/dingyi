@@ -55,6 +55,22 @@ public class CustomerValueTaskService {
     }
 
     /**
+     * 按照排序顺序，获取需要跑批的任务
+     *
+     * @param planTime 批次时间
+     * @return
+     */
+    public List<CustomerValueTask> getCustomerValuesValueTask(LocalDate planTime) {
+        EntityWrapper<CustomerValueTask> wrapper = new EntityWrapper<>();
+        wrapper.eq("plan_time", planTime);
+        wrapper.eq("flag", 0);
+        wrapper.orderBy("sort", false);
+
+        List<CustomerValueTask> customerValueTasks = customerValueTaskMapper.selectList(wrapper);
+        return customerValueTasks;
+    }
+
+    /**
      * 更新任务的状态
      *
      * @param flag             任务执行标记,0-未开始,1-执行中,2-执行成功,3-执行异常

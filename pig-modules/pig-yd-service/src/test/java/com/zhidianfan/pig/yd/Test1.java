@@ -23,8 +23,10 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @Author sherry
@@ -38,7 +40,59 @@ public class Test1 {
     private String url = "http://47.99.14.92:9999/auth/oauth/token";
 
     @Test
-    public void test3(){
+    public void test43() {
+        int nThreads = 500;
+        Stream<Integer> limit = Stream.iterate(0, n -> n + 2)
+                .limit(200);
+        ExecutorService executorService = new ThreadPoolExecutor(nThreads, nThreads,
+                0L, TimeUnit.MILLISECONDS,
+                new LinkedBlockingQueue<Runnable>());
+
+        LocalDateTime start = LocalDateTime.now();
+//        String property = System.getProperty("java.util.concurrent.ForkJoinPool.common.parallelism");
+//        System.out.println(property);
+        System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism","100");
+        List<Integer> collect = limit.parallel().map(count -> CompletableFuture.supplyAsync(() -> {
+            try {
+                System.out.println("等待开始");
+                TimeUnit.SECONDS.sleep(2);
+                System.out.println("等待结束一个");
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            return count;
+        }, executorService))
+                .map(CompletableFuture::join)
+                .collect(Collectors.toList());
+
+        LocalDateTime end = LocalDateTime.now();
+        System.out.println("执行结束,耗时："+(Duration.between(start,end).getSeconds()+"秒"));
+
+        executorService.shutdown();
+
+
+    }
+
+    @Test
+    public void test42() {
+        LocalDate localDate = LocalDate.now();
+        System.out.println(localDate);
+        localDate = localDate.minusDays(1);
+        System.out.println(localDate);
+    }
+
+    @Test
+    public void test41() {
+        LocalTime startTime1 = LocalTime.of(23, 0, 0);
+        LocalTime startTime2 = LocalTime.of(8, 0, 0);
+        LocalTime nowTime = LocalTime.now();
+        boolean f1 = nowTime.isAfter(startTime1) || nowTime.isBefore(startTime2);
+        System.out.println(f1);
+
+    }
+
+    @Test
+    public void test3() {
         AtomicInteger count = new AtomicInteger(0);
         count.addAndGet(1);
         int i = count.addAndGet(1);
@@ -138,9 +192,9 @@ public class Test1 {
 
     @Test
     public void test() {
-        Date date = new Date(2019-1900, 4, 20);
-        Date date1 = new Date(2019-1900, 4, 23);
-        Date date2 = new Date(2019-1900, 4, 31);
+        Date date = new Date(2019 - 1900, 4, 20);
+        Date date1 = new Date(2019 - 1900, 4, 23);
+        Date date2 = new Date(2019 - 1900, 4, 31);
         List<Date> dateList = Arrays.asList(date, date1, date2);
         Date date3 = dateList.stream()
                 .max(Comparator.naturalOrder())
@@ -169,7 +223,7 @@ public class Test1 {
 
     @Test
     public void test6() {
-        List<ConfigHotel> configHotelList = new ArrayList<ConfigHotel>(){
+        List<ConfigHotel> configHotelList = new ArrayList<ConfigHotel>() {
             {
                 add(getConfigHotel(1138795410346000385L, "active_sleep_between", "30"));
                 add(getConfigHotel(1138795410354388994L, "sleep_loss_between", "60"));
@@ -239,9 +293,10 @@ public class Test1 {
 
     @Test
     public void test10() {
-        Integer customerPersonAvgStart = 2,  customerPersonAvgEnd = -1,  personAvg = 5;
-        Integer customerTotalStart = null,  customerTotalEnd = null; double customerAmount = -1;
-        Integer customerCountStart = null,  customerCountEnd = null, customerCount = 0;
+        Integer customerPersonAvgStart = 2, customerPersonAvgEnd = -1, personAvg = 5;
+        Integer customerTotalStart = null, customerTotalEnd = null;
+        double customerAmount = -1;
+        Integer customerCountStart = null, customerCountEnd = null, customerCount = 0;
 
         boolean b = lossValue(customerPersonAvgStart, customerPersonAvgEnd, personAvg,
                 customerTotalStart, customerTotalEnd, customerAmount,
@@ -266,7 +321,7 @@ public class Test1 {
 
     private boolean getCustomerPersonAvgConfig(Integer customerPersonAvgStart, Integer customerPersonAvgEnd, int personAvg) {
         int flag = 0;
-        if ( customerPersonAvgStart > 0) {
+        if (customerPersonAvgStart > 0) {
             flag = 1;
         }
         if (customerPersonAvgEnd > 0) {

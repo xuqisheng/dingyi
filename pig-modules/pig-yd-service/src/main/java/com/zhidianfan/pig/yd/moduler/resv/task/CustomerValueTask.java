@@ -14,11 +14,17 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 /**
  * @author sjl
  * 2019-06-14 19:21
- */@Slf4j
+ */
+@Slf4j
 @Component
 @ConditionalOnProperty(name = "yd.task", havingValue = "true")
 public class CustomerValueTask {
@@ -32,9 +38,8 @@ public class CustomerValueTask {
     @Autowired
     private CustomerValueTaskService customerValueTaskService;
 
-//    private Boolean flag = Boolean.FALSE;
 
-    @Scheduled(cron = "0 30 22 * * ?")
+    @Scheduled(cron = "0 30 20 * * ?")
     public void task() {
         log.info("生成任务,时间:[{}]", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(LocalDateTime.now()));
         customerValueTaskService.addCustomerList();
@@ -42,7 +47,7 @@ public class CustomerValueTask {
         log.info("任务结束，时间[{}]", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(LocalDateTime.now()));
     }
 
-    @Scheduled(fixedDelay = 1000)
+    //    @Scheduled(fixedDelay = 1000)
     public void customerValue() {
         LocalTime startTime1 = LocalTime.of(23, 0, 0);
         LocalTime startTime2 = LocalTime.of(8, 0, 0);
@@ -50,7 +55,53 @@ public class CustomerValueTask {
         if (nowTime.isAfter(startTime1) && nowTime.isBefore(startTime2)) {
             log.info("开始执行客户价值定时任务，跑客户价值相关数据");
             customerValueService.getCustomerValueBaseInfo();
-//            flag = Boolean.FALSE;
+        }
+    }
+
+    @Scheduled(fixedDelay = 10_000)
+    public void customerValue2() {
+        LocalTime startTime1 = LocalTime.of(22, 0, 0);
+        LocalTime startTime2 = LocalTime.of(8, 0, 0);
+        LocalTime nowTime = LocalTime.now();
+        if (nowTime.isAfter(startTime1) && nowTime.isBefore(startTime2)) {
+            LocalDate localDate = LocalDate.now();
+            if (nowTime.isBefore(startTime2)) {
+                //批次减一天
+                localDate = localDate.minusDays(1);
+            }
+            log.info("准备计算:{} 的客户价值数据", localDate);
+//            指明当前要计算的批次
+            List<com.zhidianfan.pig.yd.moduler.common.dao.entity.CustomerValueTask> customerValuesValueTask = customerValueTaskService.getCustomerValuesValueTask(localDate);
+
+            Optional.ofNullable(customerValuesValueTask)
+                    .ifPresent(customerValueTasks -> {
+
+                        int nThreads = 100;
+                        AtomicInteger count = new AtomicInteger(customerValuesValueTask.size());
+                        log.info("本次有:{}家酒店需要计算客户价值", count);
+                        ExecutorService executorService = new ThreadPoolExecutor(nThreads, nThreads,
+                                0L, TimeUnit.MILLISECONDS,
+                                new LinkedBlockingQueue<Runnable>());
+
+                        System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism","128");
+                        List<Long> collect = customerValueTasks.parallelStream()
+                                .map(customerValueTask -> CompletableFuture.supplyAsync(() -> {
+                                    log.info("{}开始被处理，剩余{}家待处理", customerValueTask.getHotelId(), count);
+                                    customerValueService.getCustomerValueBaseInfo2(customerValueTask);
+                                    count.addAndGet(-1);
+                                    log.info("{}处理结束，剩余{}家待处理", customerValueTask.getHotelId(), count);
+                                    return customerValueTask.getHotelId();
+                                }, executorService))
+                                .map(CompletableFuture::join)
+                                .collect(Collectors.toList());
+
+                        log.info("处理接触，本次计算:{}这些酒店", collect);
+
+                        executorService.shutdown();
+
+                    });
+        } else {
+            log.info("未到执行客户价值时间......");
         }
     }
 
