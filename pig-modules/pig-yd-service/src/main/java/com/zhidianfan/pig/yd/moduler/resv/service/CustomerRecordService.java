@@ -40,26 +40,31 @@ public class CustomerRecordService {
 
 
         for (Vip vip : vips) {
-            List<CustomerRecord> recordList = Lists.newArrayList();
-            List<CustomerRecord> customerRecords = reserveOrderCustomer(vip, resvOrdersMap.get(vip.getId()));
-            List<CustomerRecord> customerRecords1 = reserveOrderESC(vip, resvOrdersMap.get(vip.getId()));
-            List<CustomerRecord> customerRecords2 = manOrder(vip, resvOrdersMap.get(vip.getId()));
-            List<CustomerRecord> customerRecords3 = guestOrder(vip, resvOrdersMap.get(vip.getId()));
-            CustomerRecord valueChangeRecord = valueChange(vip, customerValueListMap.get(vip.getId()));
-            CustomerRecord userChangeRecord = appUserChange(vip, customerValueListMap.get(vip.getId()));
+            try {
+                List<CustomerRecord> recordList = Lists.newArrayList();
+                List<CustomerRecord> customerRecords = reserveOrderCustomer(vip, resvOrdersMap.get(vip.getId()));
+                List<CustomerRecord> customerRecords1 = reserveOrderESC(vip, resvOrdersMap.get(vip.getId()));
+                List<CustomerRecord> customerRecords2 = manOrder(vip, resvOrdersMap.get(vip.getId()));
+                List<CustomerRecord> customerRecords3 = guestOrder(vip, resvOrdersMap.get(vip.getId()));
+                CustomerRecord valueChangeRecord = valueChange(vip, customerValueListMap.get(vip.getId()));
+                CustomerRecord userChangeRecord = appUserChange(vip, customerValueListMap.get(vip.getId()));
 
-            recordList.addAll(customerRecords);
-            recordList.addAll(customerRecords1);
-            recordList.addAll(customerRecords2);
-            recordList.addAll(customerRecords3);
-            if (valueChangeRecord != null) {
-                recordList.add(valueChangeRecord);
-            }
-            if (userChangeRecord != null) {
-                recordList.add(userChangeRecord);
+                recordList.addAll(customerRecords);
+                recordList.addAll(customerRecords1);
+                recordList.addAll(customerRecords2);
+                recordList.addAll(customerRecords3);
+                if (valueChangeRecord != null) {
+                    recordList.add(valueChangeRecord);
+                }
+                if (userChangeRecord != null) {
+                    recordList.add(userChangeRecord);
+                }
+
+                map.put(vip.getId(), recordList);
+            }catch (Exception e){
+                log.error(e.getMessage(),e);
             }
 
-            map.put(vip.getId(), recordList);
         }
 
 

@@ -10,6 +10,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.velocity.runtime.parser.node.MathUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -38,42 +39,46 @@ public class VipConsumeActionTotalService {
     @Autowired
     private CustomerValueListService customerValueListService;
 
-    public Map<Integer,VipConsumeActionTotal> getVipConsumeActionTotal(List<Vip> vips, Map<Integer,List<ResvOrder>> resvOrdersMap) {
+    public Map<Integer, VipConsumeActionTotal> getVipConsumeActionTotal(List<Vip> vips, Map<Integer, List<ResvOrder>> resvOrdersMap) {
 
-        Map<Integer,VipConsumeActionTotal> map = new HashMap<>();
-        for (Vip vip:vips){
-            List<ResvOrder> resvOrders = resvOrdersMap.get(vip.getId());
-            // 消费订单总次数
-            VipConsumeActionTotal vipConsumeActionTotal = new VipConsumeActionTotal();
-            vipConsumeActionTotal.setVipId(vip.getId());
-            // 消费完成总订单数
-            vipConsumeActionTotal.setTotalOrderNo(customerValueListService.getCustomerCount(resvOrders));
-            // 消费完成总桌数
-            vipConsumeActionTotal.setTotalTableNo(getCustomerTableCount(resvOrders));
-            // 消费完成总人数
-            vipConsumeActionTotal.setTotalPersonNo(getCustomerPersonCount(resvOrders));
-            // 撤单桌数
-            vipConsumeActionTotal.setCancelTableNo(getCancelOrderTable(resvOrders));
-            // 消费总金额，单位：分
-            vipConsumeActionTotal.setTotalConsumeAvg(getConsumerTotalAmount(resvOrders));
-            // 桌均消费,单位:分
-            vipConsumeActionTotal.setTableConsumeAvg(getConsumerTableAmount(resvOrders));
-            // 人均消费,单位:分
-            vipConsumeActionTotal.setPersonConsumeAvg(getConsumerPersonAmount(resvOrders));
-            // 首次消费时间
-            vipConsumeActionTotal.setFirstConsumeTime(getFirstConsumerTime(resvOrders));
-            // 消费频次
-            vipConsumeActionTotal.setConsumeFrequency(getConsumerFrequency(resvOrders));
-            // 最近就餐时间
-            vipConsumeActionTotal.setLastConsumeTime(getLastEatTime(resvOrders));
-            vipConsumeActionTotal.setCreateUserId(CustomerValueConstants.DEFAULT_USER_ID);
-            vipConsumeActionTotal.setCreateTime(LocalDateTime.now());
-            vipConsumeActionTotal.setUpdateUserId(CustomerValueConstants.DEFAULT_USER_ID);
-            vipConsumeActionTotal.setUpdateTime(LocalDateTime.now());
+        Map<Integer, VipConsumeActionTotal> map = new HashMap<>();
+        for (Vip vip : vips) {
+            try {
+                List<ResvOrder> resvOrders = resvOrdersMap.get(vip.getId());
+                // 消费订单总次数
+                VipConsumeActionTotal vipConsumeActionTotal = new VipConsumeActionTotal();
+                vipConsumeActionTotal.setVipId(vip.getId());
+                // 消费完成总订单数
+                vipConsumeActionTotal.setTotalOrderNo(customerValueListService.getCustomerCount(resvOrders));
+                // 消费完成总桌数
+                vipConsumeActionTotal.setTotalTableNo(getCustomerTableCount(resvOrders));
+                // 消费完成总人数
+                vipConsumeActionTotal.setTotalPersonNo(getCustomerPersonCount(resvOrders));
+                // 撤单桌数
+                vipConsumeActionTotal.setCancelTableNo(getCancelOrderTable(resvOrders));
+                // 消费总金额，单位：分
+                vipConsumeActionTotal.setTotalConsumeAvg(getConsumerTotalAmount(resvOrders));
+                // 桌均消费,单位:分
+                vipConsumeActionTotal.setTableConsumeAvg(getConsumerTableAmount(resvOrders));
+                // 人均消费,单位:分
+                vipConsumeActionTotal.setPersonConsumeAvg(getConsumerPersonAmount(resvOrders));
+                // 首次消费时间
+                vipConsumeActionTotal.setFirstConsumeTime(getFirstConsumerTime(resvOrders));
+                // 消费频次
+                vipConsumeActionTotal.setConsumeFrequency(getConsumerFrequency(resvOrders));
+                // 最近就餐时间
+                vipConsumeActionTotal.setLastConsumeTime(getLastEatTime(resvOrders));
+                vipConsumeActionTotal.setCreateUserId(CustomerValueConstants.DEFAULT_USER_ID);
+                vipConsumeActionTotal.setCreateTime(LocalDateTime.now());
+                vipConsumeActionTotal.setUpdateUserId(CustomerValueConstants.DEFAULT_USER_ID);
+                vipConsumeActionTotal.setUpdateTime(LocalDateTime.now());
 
-            map.put(vip.getId(),vipConsumeActionTotal);
+                map.put(vip.getId(), vipConsumeActionTotal);
+            }catch (Exception e){
+                log.error(e.getMessage(),e);
+            }
+
         }
-
 
 
         return map;
@@ -86,6 +91,9 @@ public class VipConsumeActionTotalService {
      * @return 0-无
      */
     private Integer getCustomerTableCount(List<ResvOrder> resvOrders) {
+        if (CollectionUtils.isEmpty(resvOrders)) {
+            return 0;
+        }
         // 所有该客户已完成/入座的订单数量
         long count = resvOrders.stream()
                 .filter(order -> "2".equals(order.getStatus()) || "3".equals(order.getStatus()))
@@ -95,10 +103,14 @@ public class VipConsumeActionTotalService {
 
     /**
      * 消费总人数
+     *
      * @param resvOrders 订单列表
      * @return 所有该客户已完成/入座的订单中的实际人数之和。（如果没有实际人数，使用就餐人数）
      */
     public Integer getCustomerPersonCount(List<ResvOrder> resvOrders) {
+        if (CollectionUtils.isEmpty(resvOrders)) {
+            return 0;
+        }
         // 所有该客户已完成/入座的订单中的实际人数之和。（如果没有实际人数，使用就餐人数）
         OptionalInt optionalPersonCount = resvOrders.stream()
                 .filter(order -> "2".equals(order.getStatus()) || "3".equals(order.getStatus()))
@@ -145,12 +157,16 @@ public class VipConsumeActionTotalService {
      * @return 0-无
      */
     private Integer getCancelOrderTable(List<ResvOrder> resvOrders) {
+        if (CollectionUtils.isEmpty(resvOrders)) {
+            return 0;
+        }
         // 该客户所有退订的订单数量
         List<ResvOrder> cancelOrderList = resvOrders.stream()
                 .filter(order -> "4".equals(order.getStatus()))
                 .collect(toList());
         return cancelOrderList.size();
     }
+
     /**
      * 消费频次 = 消费总次数/（当前月-首次消费月份）
      *
@@ -158,6 +174,9 @@ public class VipConsumeActionTotalService {
      * @return 0-无
      */
     private Float getConsumerFrequency(List<ResvOrder> resvOrders) {
+        if (CollectionUtils.isEmpty(resvOrders)) {
+            return 0.0f;
+        }
         int customerSize = customerValueListService.getCustomerCount(resvOrders);
 
         Optional<Date> date = getFirstCustomerMonth(resvOrders);
@@ -166,7 +185,7 @@ public class VipConsumeActionTotalService {
             LocalDateTime localDateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
             LocalDate firstDate = localDateTime.toLocalDate();
             long month = firstDate.until(LocalDate.now(), ChronoUnit.MONTHS);
-            return (int)month;
+            return (int) month;
         });
         Integer month = optional.orElse(1);
         month = Math.max(month, 1);
@@ -190,6 +209,9 @@ public class VipConsumeActionTotalService {
      * @return 2000-1-1 0：0：0 - 无
      */
     private LocalDateTime getFirstConsumerTime(List<ResvOrder> resvOrders) {
+        if (CollectionUtils.isEmpty(resvOrders)) {
+            return CustomerValueConstants.DEFAULT_START_TIME;
+        }
         Optional<Date> min = resvOrders.stream()
                 .filter(resvOrder -> "2".equals(resvOrder.getStatus()) || "3".equals(resvOrder.getStatus()))
                 .map(ResvOrder::getUpdatedAt)
@@ -207,6 +229,9 @@ public class VipConsumeActionTotalService {
      * @return 0-无
      */
     private Integer getConsumerPersonAmount(List<ResvOrder> resvOrders) {
+        if (CollectionUtils.isEmpty(resvOrders)) {
+            return 0;
+        }
         // 总消费金额/对应批次号的订单实际人数之和。（如果订单没有实际人数，用预订人数代替）
         // 有实际金额的订单
         return customerValueListService.getPersonAvg(resvOrders);
@@ -219,6 +244,9 @@ public class VipConsumeActionTotalService {
      * @return
      */
     private Integer getConsumerTableAmount(List<ResvOrder> resvOrders) {
+        if (CollectionUtils.isEmpty(resvOrders)) {
+            return 0;
+        }
         // 总消费金额
         Integer consumerTotalAmount = getConsumerTotalAmount(resvOrders);
         // 桌数
@@ -235,6 +263,9 @@ public class VipConsumeActionTotalService {
      * @return
      */
     public Integer getConsumerTotalAmount(List<ResvOrder> resvOrders) {
+        if (CollectionUtils.isEmpty(resvOrders)) {
+            return 0;
+        }
         // 将该客户所有订单的消费金额累加
         int sum = resvOrders.stream()
                 .filter(resvOrder -> "3".equals(resvOrder.getStatus()))
@@ -258,10 +289,14 @@ public class VipConsumeActionTotalService {
 
     /**
      * 最近一次就餐时间
+     *
      * @param resvOrders 订单列表
      * @return 2000-1-1 0:0:0 - 无
      */
     private LocalDateTime getLastEatTime(List<ResvOrder> resvOrders) {
+        if (CollectionUtils.isEmpty(resvOrders)) {
+            return CustomerValueConstants.DEFAULT_START_TIME;
+        }
         // 最近一笔已入座/完成的订单距离系统的时间
         Optional<Date> min = resvOrders.stream()
                 .filter(resvOrder -> "2".equals(resvOrder.getStatus()) || "3".equals(resvOrder.getStatus()))
@@ -274,6 +309,7 @@ public class VipConsumeActionTotalService {
 
     /**
      * 撤单桌数
+     *
      * @param vipId vip 表主键
      * @param value 桌数，Integer 类型
      */
@@ -288,6 +324,7 @@ public class VipConsumeActionTotalService {
 
     /**
      * 首次消费时间
+     *
      * @param vipId 主键
      * @param value 首次消费时间，yyy-MM-dd HH:mm:ss
      */

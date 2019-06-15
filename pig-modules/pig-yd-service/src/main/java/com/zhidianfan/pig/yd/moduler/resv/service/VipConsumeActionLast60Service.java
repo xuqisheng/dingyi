@@ -34,33 +34,38 @@ public class VipConsumeActionLast60Service {
 
         for (Vip vip:vips){
 
-            List<ResvOrder> resvOrdersBy60days = resvOrdersBy60daysMap.get(vip.getId());
-            VipConsumeActionLast60 vipConsumeActionLast60 = new VipConsumeActionLast60();
+            try {
+                List<ResvOrder> resvOrdersBy60days = resvOrdersBy60daysMap.get(vip.getId());
+                VipConsumeActionLast60 vipConsumeActionLast60 = new VipConsumeActionLast60();
 
-            vipConsumeActionLast60.setVipId(vip.getId());
-            // 消费完成总订单数
-            vipConsumeActionLast60.setTotalOrderNo(getTotalOrderNo60(resvOrdersBy60days));
-            // 消费完成总桌数
-            vipConsumeActionLast60.setTotalTableNo(getTotalTableNo60(resvOrdersBy60days));
-            // 消费完成总人数
-            vipConsumeActionLast60.setTotalPersonNo(getTotalPersonNo60(resvOrdersBy60days));
-            // 撤单桌数
-            vipConsumeActionLast60.setCancelTableNo(getCancelTableNo60(resvOrdersBy60days));
-            // 消费总金额,单位:分
-            vipConsumeActionLast60.setTotalConsumeAmount(getTotalConsumeAmount60(resvOrdersBy60days));
-            // 桌均消费,单位:分
-            vipConsumeActionLast60.setTableConsumeAvg(getTableConsumeAvg60(resvOrdersBy60days));
-            // 人均消费,单位:分
-            vipConsumeActionLast60.setPersonConsumeAvg(getPersonConsumeAvg(resvOrdersBy60days));
-            // 消费频次
-            vipConsumeActionLast60.setConsumeFrequency(getConsumeFrequency60(resvOrdersBy60days));
-            vipConsumeActionLast60.setCreateUserId(CustomerValueConstants.DEFAULT_USER_ID);
-            vipConsumeActionLast60.setCreateTime(LocalDateTime.now());
-            vipConsumeActionLast60.setUpdateUserId(CustomerValueConstants.DEFAULT_USER_ID);
-            vipConsumeActionLast60.setUpdateTime(LocalDateTime.now());
+                vipConsumeActionLast60.setVipId(vip.getId());
+                // 消费完成总订单数
+                vipConsumeActionLast60.setTotalOrderNo(getTotalOrderNo60(resvOrdersBy60days));
+                // 消费完成总桌数
+                vipConsumeActionLast60.setTotalTableNo(getTotalTableNo60(resvOrdersBy60days));
+                // 消费完成总人数
+                vipConsumeActionLast60.setTotalPersonNo(getTotalPersonNo60(resvOrdersBy60days));
+                // 撤单桌数
+                vipConsumeActionLast60.setCancelTableNo(getCancelTableNo60(resvOrdersBy60days));
+                // 消费总金额,单位:分
+                vipConsumeActionLast60.setTotalConsumeAmount(getTotalConsumeAmount60(resvOrdersBy60days));
+                // 桌均消费,单位:分
+                vipConsumeActionLast60.setTableConsumeAvg(getTableConsumeAvg60(resvOrdersBy60days));
+                // 人均消费,单位:分
+                vipConsumeActionLast60.setPersonConsumeAvg(getPersonConsumeAvg(resvOrdersBy60days));
+                // 消费频次
+                vipConsumeActionLast60.setConsumeFrequency(getConsumeFrequency60(resvOrdersBy60days));
+                vipConsumeActionLast60.setCreateUserId(CustomerValueConstants.DEFAULT_USER_ID);
+                vipConsumeActionLast60.setCreateTime(LocalDateTime.now());
+                vipConsumeActionLast60.setUpdateUserId(CustomerValueConstants.DEFAULT_USER_ID);
+                vipConsumeActionLast60.setUpdateTime(LocalDateTime.now());
 
 
-            map.put(vip.getId(),vipConsumeActionLast60);
+                map.put(vip.getId(),vipConsumeActionLast60);
+            }catch (Exception e){
+                log.error(e.getMessage(),e);
+            }
+
         }
 
 

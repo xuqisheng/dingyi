@@ -249,20 +249,25 @@ public class CustomerValueService {
 
         Map<Integer, NowChangeInfo> map = new HashMap<>();
         for (Vip vip : vips) {
-            if (vip == null) {
-                return null;
+            try {
+                if (vip == null) {
+                    return null;
+                }
+                int profile = vipService.getProfile(vip);
+                Integer vipId = vip.getId();
+                NowChangeInfo nowChangeInfo = new NowChangeInfo();
+                nowChangeInfo.setVipId(vipId);
+                nowChangeInfo.setValue(profile);
+                nowChangeInfo.setType(CustomerValueChangeFieldDTO.PROFILE);
+                nowChangeInfo.setChangeTime(LocalDateTime.now());
+                nowChangeInfo.setRemark(StringUtils.EMPTY);
+                nowChangeInfo.setCreateTime(LocalDateTime.now());
+                nowChangeInfo.setUpdateTime(LocalDateTime.now());
+                map.put(vipId, nowChangeInfo);
+            } catch (Exception e) {
+                log.error(e.getMessage(), e);
             }
-            int profile = vipService.getProfile(vip);
-            Integer vipId = vip.getId();
-            NowChangeInfo nowChangeInfo = new NowChangeInfo();
-            nowChangeInfo.setVipId(vipId);
-            nowChangeInfo.setValue(profile);
-            nowChangeInfo.setType(CustomerValueChangeFieldDTO.PROFILE);
-            nowChangeInfo.setChangeTime(LocalDateTime.now());
-            nowChangeInfo.setRemark(StringUtils.EMPTY);
-            nowChangeInfo.setCreateTime(LocalDateTime.now());
-            nowChangeInfo.setUpdateTime(LocalDateTime.now());
-            map.put(vipId, nowChangeInfo);
+
         }
 
 
