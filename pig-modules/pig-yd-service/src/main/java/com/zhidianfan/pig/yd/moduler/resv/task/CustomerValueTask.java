@@ -58,7 +58,7 @@ public class CustomerValueTask {
         }
     }
 
-    //    @Scheduled(fixedDelay = 10_000)
+    @Scheduled(fixedDelay = 10_000)
     public void customerValue2() {
         LocalTime startTime1 = LocalTime.of(23, 0, 0);
         LocalTime startTime2 = LocalTime.of(8, 0, 0);
