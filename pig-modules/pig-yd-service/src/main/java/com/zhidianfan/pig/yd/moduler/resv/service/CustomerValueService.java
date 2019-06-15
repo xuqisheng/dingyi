@@ -65,40 +65,40 @@ public class CustomerValueService {
 
     //    @Async
 //    @Transactional(rollbackFor = Exception.class)
-    public void getCustomerValueBaseInfo() {
-        LocalDateTime startTime = LocalDateTime.now();
-        CustomerValueTask customerValueTask = customerValueTaskService.getCustomerValueTask();
-        log.info("获取到的任务编号：{}", customerValueTask.getId());
-        // 1. 从任务表中取出酒店 id
-        Long hotelId = customerValueTask.getHotelId();
-        cleanData(hotelId);
-        // 1.1 查询属于该酒店的所有客户
-        List<Vip> vips = vipService.getVipList(hotelId);
-
-        Long taskId = customerValueTask.getId();
-        log.info("任务开始，taskId：{}, 开始时间：{}", taskId, DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(startTime));
-        // 任务执行标记,0-未开始,1-执行中,2-执行成功,3-执行异常
-        customerValueTaskService.updateTaskStatus(taskId, CustomerValueConstants.EXECUTING, startTime, CustomerValueConstants.DEFAULT_END_TIME, StringUtils.EMPTY);
-
-        AtomicInteger count = new AtomicInteger(0);
-
-        Optional.ofNullable(vips)
-                .ifPresent(vips1 -> {
-                    vips1.parallelStream()
-                            .forEach(vip -> {
-                                try {
-                                    execute(vip);
-                                    log.info("当前执行进度,酒店：{},{}/{}", hotelId, count.addAndGet(1), vips.size());
-                                } catch (Exception e) {
-                                    customerValueTaskService.updateTaskStatus(taskId, CustomerValueConstants.EXECUTE_EXCEPTION, startTime, LocalDateTime.now(), StringUtils.EMPTY);
-                                    log.error("任务发生异常，taskId: {}, 异常时间:{}", taskId, DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(LocalDateTime.now()), e);
-                                }
-                            });
-                });
-
-        LocalDateTime endTime = LocalDateTime.now();
-        customerValueTaskService.updateTaskStatus(taskId, CustomerValueConstants.EXECUTE_SUCCESS, startTime, endTime, StringUtils.EMPTY);
-        log.info("任务结束，taskId: {}, 结束时间:{}", taskId, DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(endTime));
+//    public void getCustomerValueBaseInfo() {
+//        LocalDateTime startTime = LocalDateTime.now();
+//        CustomerValueTask customerValueTask = customerValueTaskService.getCustomerValueTask();
+//        log.info("获取到的任务编号：{}", customerValueTask.getId());
+//        // 1. 从任务表中取出酒店 id
+//        Long hotelId = customerValueTask.getHotelId();
+//        cleanData(hotelId);
+//        // 1.1 查询属于该酒店的所有客户
+//        List<Vip> vips = vipService.getVipList(hotelId);
+//
+//        Long taskId = customerValueTask.getId();
+//        log.info("任务开始，taskId：{}, 开始时间：{}", taskId, DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(startTime));
+//        // 任务执行标记,0-未开始,1-执行中,2-执行成功,3-执行异常
+//        customerValueTaskService.updateTaskStatus(taskId, CustomerValueConstants.EXECUTING, startTime, CustomerValueConstants.DEFAULT_END_TIME, StringUtils.EMPTY);
+//
+//        AtomicInteger count = new AtomicInteger(0);
+//
+//        Optional.ofNullable(vips)
+//                .ifPresent(vips1 -> {
+//                    vips1.parallelStream()
+//                            .forEach(vip -> {
+//                                try {
+//                                    execute(vip);
+//                                    log.info("当前执行进度,酒店：{},{}/{}", hotelId, count.addAndGet(1), vips.size());
+//                                } catch (Exception e) {
+//                                    customerValueTaskService.updateTaskStatus(taskId, CustomerValueConstants.EXECUTE_EXCEPTION, startTime, LocalDateTime.now(), StringUtils.EMPTY);
+//                                    log.error("任务发生异常，taskId: {}, 异常时间:{}", taskId, DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(LocalDateTime.now()), e);
+//                                }
+//                            });
+//                });
+//
+//        LocalDateTime endTime = LocalDateTime.now();
+//        customerValueTaskService.updateTaskStatus(taskId, CustomerValueConstants.EXECUTE_SUCCESS, startTime, endTime, StringUtils.EMPTY);
+//        log.info("任务结束，taskId: {}, 结束时间:{}", taskId, DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(endTime));
     }
 
     public void getCustomerValueBaseInfo2(CustomerValueTask customerValueTask) {
