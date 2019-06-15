@@ -38,36 +38,45 @@ public class VipConsumeActionTotalService {
     @Autowired
     private CustomerValueListService customerValueListService;
 
-    public VipConsumeActionTotal getVipConsumeActionTotal(Vip vip, List<ResvOrder> resvOrders) {
-        // 消费订单总次数
-        VipConsumeActionTotal vipConsumeActionTotal = new VipConsumeActionTotal();
-        vipConsumeActionTotal.setVipId(vip.getId());
-        // 消费完成总订单数
-        vipConsumeActionTotal.setTotalOrderNo(customerValueListService.getCustomerCount(resvOrders));
-        // 消费完成总桌数
-        vipConsumeActionTotal.setTotalTableNo(getCustomerTableCount(resvOrders));
-        // 消费完成总人数
-        vipConsumeActionTotal.setTotalPersonNo(getCustomerPersonCount(resvOrders));
-        // 撤单桌数
-        vipConsumeActionTotal.setCancelTableNo(getCancelOrderTable(resvOrders));
-        // 消费总金额，单位：分
-        vipConsumeActionTotal.setTotalConsumeAvg(getConsumerTotalAmount(resvOrders));
-        // 桌均消费,单位:分
-        vipConsumeActionTotal.setTableConsumeAvg(getConsumerTableAmount(resvOrders));
-        // 人均消费,单位:分
-        vipConsumeActionTotal.setPersonConsumeAvg(getConsumerPersonAmount(resvOrders));
-        // 首次消费时间
-        vipConsumeActionTotal.setFirstConsumeTime(getFirstConsumerTime(resvOrders));
-        // 消费频次
-        vipConsumeActionTotal.setConsumeFrequency(getConsumerFrequency(resvOrders));
-        // 最近就餐时间
-        vipConsumeActionTotal.setLastConsumeTime(getLastEatTime(resvOrders));
-        vipConsumeActionTotal.setCreateUserId(CustomerValueConstants.DEFAULT_USER_ID);
-        vipConsumeActionTotal.setCreateTime(LocalDateTime.now());
-        vipConsumeActionTotal.setUpdateUserId(CustomerValueConstants.DEFAULT_USER_ID);
-        vipConsumeActionTotal.setUpdateTime(LocalDateTime.now());
+    public Map<Integer,VipConsumeActionTotal> getVipConsumeActionTotal(List<Vip> vips, Map<Integer,List<ResvOrder>> resvOrdersMap) {
 
-        return vipConsumeActionTotal;
+        Map<Integer,VipConsumeActionTotal> map = new HashMap<>();
+        for (Vip vip:vips){
+            List<ResvOrder> resvOrders = resvOrdersMap.get(vip.getId());
+            // 消费订单总次数
+            VipConsumeActionTotal vipConsumeActionTotal = new VipConsumeActionTotal();
+            vipConsumeActionTotal.setVipId(vip.getId());
+            // 消费完成总订单数
+            vipConsumeActionTotal.setTotalOrderNo(customerValueListService.getCustomerCount(resvOrders));
+            // 消费完成总桌数
+            vipConsumeActionTotal.setTotalTableNo(getCustomerTableCount(resvOrders));
+            // 消费完成总人数
+            vipConsumeActionTotal.setTotalPersonNo(getCustomerPersonCount(resvOrders));
+            // 撤单桌数
+            vipConsumeActionTotal.setCancelTableNo(getCancelOrderTable(resvOrders));
+            // 消费总金额，单位：分
+            vipConsumeActionTotal.setTotalConsumeAvg(getConsumerTotalAmount(resvOrders));
+            // 桌均消费,单位:分
+            vipConsumeActionTotal.setTableConsumeAvg(getConsumerTableAmount(resvOrders));
+            // 人均消费,单位:分
+            vipConsumeActionTotal.setPersonConsumeAvg(getConsumerPersonAmount(resvOrders));
+            // 首次消费时间
+            vipConsumeActionTotal.setFirstConsumeTime(getFirstConsumerTime(resvOrders));
+            // 消费频次
+            vipConsumeActionTotal.setConsumeFrequency(getConsumerFrequency(resvOrders));
+            // 最近就餐时间
+            vipConsumeActionTotal.setLastConsumeTime(getLastEatTime(resvOrders));
+            vipConsumeActionTotal.setCreateUserId(CustomerValueConstants.DEFAULT_USER_ID);
+            vipConsumeActionTotal.setCreateTime(LocalDateTime.now());
+            vipConsumeActionTotal.setUpdateUserId(CustomerValueConstants.DEFAULT_USER_ID);
+            vipConsumeActionTotal.setUpdateTime(LocalDateTime.now());
+
+            map.put(vip.getId(),vipConsumeActionTotal);
+        }
+
+
+
+        return map;
     }
 
     /**

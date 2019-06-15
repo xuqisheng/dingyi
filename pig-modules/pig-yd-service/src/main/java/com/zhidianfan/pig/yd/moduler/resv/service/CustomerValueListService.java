@@ -47,55 +47,61 @@ public class CustomerValueListService {
     /**
      * 获取客户价值列表实体对象
      *
-     * @param vip        vip 对象
-     * @param resvOrders 订单列表
+     * @param vips        vip 对象
+     * @param resvOrdersMap 订单列表
      * @return CustomerValueList
      */
-    public CustomerValueList getCustomerValueList(Vip vip, List<ResvOrder> resvOrders) {
-        Integer businessId = vip.getBusinessId();
-        // 消费次数
-        int customerCount = getCustomerCount(resvOrders);
-        // 总消费金额
-        double customerAmount = getCustomerAmount(resvOrders);
-        int customerAmountInt = (int) Math.round(customerAmount * 100);
-        // 人均消费金额
-        int personAvg = getPersonAvg(resvOrders);
-        // 最近就餐时间
-        LocalDateTime lastEatTime = getLastEatTime(resvOrders);
-        // 一级价值，意向客户、活跃客户、沉睡客户、流失客户
-        int firstValue = getFirstValue(resvOrders, businessId);
-        // 细分价值
-        String lossValue = getLossValue(resvOrders, businessId);
-        // 自定义分类
-        String customerClass = vip.getVipClassName();
-        customerClass = Optional.ofNullable(customerClass).orElse(StringUtils.EMPTY);
+    public Map<Integer,CustomerValueList> getCustomerValueList(List<Vip> vips, Map<Integer,List<ResvOrder>> resvOrdersMap) {
+        Map<Integer,CustomerValueList> map = new HashMap<>();
+        for (Vip vip:vips){
+            List<ResvOrder> resvOrders = resvOrdersMap.get(vip.getId());
+            Integer businessId = vip.getBusinessId();
+            // 消费次数
+            int customerCount = getCustomerCount(resvOrders);
+            // 总消费金额
+            double customerAmount = getCustomerAmount(resvOrders);
+            int customerAmountInt = (int) Math.round(customerAmount * 100);
+            // 人均消费金额
+            int personAvg = getPersonAvg(resvOrders);
+            // 最近就餐时间
+            LocalDateTime lastEatTime = getLastEatTime(resvOrders);
+            // 一级价值，意向客户、活跃客户、沉睡客户、流失客户
+            int firstValue = getFirstValue(resvOrders, businessId);
+            // 细分价值
+            String lossValue = getLossValue(resvOrders, businessId);
+            // 自定义分类
+            String customerClass = vip.getVipClassName();
+            customerClass = Optional.ofNullable(customerClass).orElse(StringUtils.EMPTY);
 
-        Integer appUserId = vip.getAppUserId();
-        Optional<Integer> optionalAppUserId = Optional.ofNullable(appUserId);
-        String appUserName = getAppUserName(appUserId);
+            Integer appUserId = vip.getAppUserId();
+            Optional<Integer> optionalAppUserId = Optional.ofNullable(appUserId);
+            String appUserName = getAppUserName(appUserId);
 
-        // todo 列表页面
-        CustomerValueList customerValueList = new CustomerValueList();
-        customerValueList.setVipId(vip.getId());
-        customerValueList.setVipName(getVipName(vip));
-        customerValueList.setVipSex(getVipSex(vip));
-        customerValueList.setVipPhone(getVipPhone(vip));
-        customerValueList.setVipAge(vipService.getAge(vip));
-        customerValueList.setVipCompany(getVipCompany(vip));
-        customerValueList.setAppUserId(optionalAppUserId.orElse(-1));
-        customerValueList.setAppUserName(appUserName);
-        customerValueList.setHotelId(businessId);
-        customerValueList.setCustomerCount(customerCount);
-        customerValueList.setCustomerAmountTotal(customerAmountInt);
-        customerValueList.setCustomerAmountAvg(personAvg);
-        customerValueList.setLastEatTime(lastEatTime);
-        customerValueList.setFirstClassValue(firstValue);
-        customerValueList.setSubValue(lossValue);
-        customerValueList.setCustomerClass(customerClass);
-        customerValueList.setCreateTime(LocalDateTime.now());
-        customerValueList.setUpdateTime(LocalDateTime.now());
+            CustomerValueList customerValueList = new CustomerValueList();
+            customerValueList.setVipId(vip.getId());
+            customerValueList.setVipName(getVipName(vip));
+            customerValueList.setVipSex(getVipSex(vip));
+            customerValueList.setVipPhone(getVipPhone(vip));
+            customerValueList.setVipAge(vipService.getAge(vip));
+            customerValueList.setVipCompany(getVipCompany(vip));
+            customerValueList.setAppUserId(optionalAppUserId.orElse(-1));
+            customerValueList.setAppUserName(appUserName);
+            customerValueList.setHotelId(businessId);
+            customerValueList.setCustomerCount(customerCount);
+            customerValueList.setCustomerAmountTotal(customerAmountInt);
+            customerValueList.setCustomerAmountAvg(personAvg);
+            customerValueList.setLastEatTime(lastEatTime);
+            customerValueList.setFirstClassValue(firstValue);
+            customerValueList.setSubValue(lossValue);
+            customerValueList.setCustomerClass(customerClass);
+            customerValueList.setCreateTime(LocalDateTime.now());
+            customerValueList.setUpdateTime(LocalDateTime.now());
 
-        return customerValueList;
+            map.put(vip.getId(),customerValueList);
+        }
+
+
+        return map;
     }
 
     /**
