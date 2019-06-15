@@ -14,8 +14,10 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -101,7 +103,18 @@ public class CustomerValueService {
 //        log.info("任务结束，taskId: {}, 结束时间:{}", taskId, DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(endTime));
 //    }
 
-    public void getCustomerValueBaseInfo2(CustomerValueTask customerValueTask) {
+    public void getCustomerValueBaseInfo2(CustomerValueTask customerValueTask,int groupNum) {
+        LocalTime startTime1 = LocalTime.of(23, 0, 0);
+        LocalTime startTime2 = LocalTime.of(8, 0, 0);
+        while (!(LocalTime.now().isAfter(startTime1) || LocalTime.now().isBefore(startTime2))) {
+            log.info("非客户价值计算时间暂停执行======");
+            try {
+                TimeUnit.MINUTES.sleep(10);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
         LocalDateTime startTime = LocalDateTime.now();
         // 1. 从任务表中取出酒店 id
         Long hotelId = customerValueTask.getHotelId();
@@ -109,7 +122,7 @@ public class CustomerValueService {
         // 1.1 查询属于该酒店的所有客户
         List<Vip> vips = vipService.getVipList(hotelId);
         //对vips分组，100个vip一组
-        Map<String, List<Vip>> map = getVipsMap(vips, 10);
+        Map<String, List<Vip>> map = getVipsMap(vips, groupNum);
 
         Long taskId = customerValueTask.getId();
         // 任务执行标记,0-未开始,1-执行中,2-执行成功,3-执行异常
