@@ -35,31 +35,40 @@ public class CustomerRecordService {
     private IGuestCustomerVipMappingService iGuestCustomerVipMappingService;
 
 
-    public List<CustomerRecord> getCustomerRecord(Vip vip, List<ResvOrder> resvOrders, CustomerValueList customerValueList) {
-        List<CustomerRecord> recordList = Lists.newArrayList();
-        List<CustomerRecord> customerRecords = reserveOrderCustomer(vip, resvOrders);
-        List<CustomerRecord> customerRecords1 = reserveOrderESC(vip, resvOrders);
-        List<CustomerRecord> customerRecords2 = manOrder(vip, resvOrders);
-        List<CustomerRecord> customerRecords3 = guestOrder(vip, resvOrders);
-        CustomerRecord valueChangeRecord = valueChange(vip, customerValueList);
-        CustomerRecord userChangeRecord = appUserChange(vip, customerValueList);
+    public Map<Integer, List<CustomerRecord>> getCustomerRecord(List<Vip> vips, Map<Integer, List<ResvOrder>> resvOrdersMap, Map<Integer, CustomerValueList> customerValueListMap) {
+        Map<Integer, List<CustomerRecord>> map = new HashMap<>();
 
-        recordList.addAll(customerRecords);
-        recordList.addAll(customerRecords1);
-        recordList.addAll(customerRecords2);
-        recordList.addAll(customerRecords3);
-        if (valueChangeRecord != null) {
-            recordList.add(valueChangeRecord);
-        }
-        if (userChangeRecord != null) {
-            recordList.add(userChangeRecord);
+
+        for (Vip vip : vips) {
+            List<CustomerRecord> recordList = Lists.newArrayList();
+            List<CustomerRecord> customerRecords = reserveOrderCustomer(vip, resvOrdersMap.get(vip.getId()));
+            List<CustomerRecord> customerRecords1 = reserveOrderESC(vip, resvOrdersMap.get(vip.getId()));
+            List<CustomerRecord> customerRecords2 = manOrder(vip, resvOrdersMap.get(vip.getId()));
+            List<CustomerRecord> customerRecords3 = guestOrder(vip, resvOrdersMap.get(vip.getId()));
+            CustomerRecord valueChangeRecord = valueChange(vip, customerValueListMap.get(vip.getId()));
+            CustomerRecord userChangeRecord = appUserChange(vip, customerValueListMap.get(vip.getId()));
+
+            recordList.addAll(customerRecords);
+            recordList.addAll(customerRecords1);
+            recordList.addAll(customerRecords2);
+            recordList.addAll(customerRecords3);
+            if (valueChangeRecord != null) {
+                recordList.add(valueChangeRecord);
+            }
+            if (userChangeRecord != null) {
+                recordList.add(userChangeRecord);
+            }
+
+            map.put(vip.getId(), recordList);
         }
 
-        return recordList;
+
+        return map;
     }
 
     /**
      * 预订定单 - 消费订单
+     *
      * @param resvOrders 订单列表
      */
     private List<CustomerRecord> reserveOrderCustomer(Vip vip, List<ResvOrder> resvOrders) {
@@ -124,6 +133,7 @@ public class CustomerRecordService {
 
     /**
      * 预订定单-退订订单
+     *
      * @param resvOrders 预订订单
      */
     private List<CustomerRecord> reserveOrderESC(Vip vip, List<ResvOrder> resvOrders) {
@@ -196,7 +206,7 @@ public class CustomerRecordService {
         Integer firstClassValue = customerValueList.getFirstClassValue();
         String value = getFirstClassValueStr(firstClassValue);
 
-        customerValue = customerValue == null ? "": customerValue;
+        customerValue = customerValue == null ? "" : customerValue;
         value = value == null ? "" : value;
 
         // 沉睡客户，沉睡用户，只匹配前面两个字是否一样
@@ -253,9 +263,9 @@ public class CustomerRecordService {
             return "意向客户";
         } else if (firstClassValue.equals(2)) {
             return "活跃客户";
-        }else if (firstClassValue.equals(3)) {
+        } else if (firstClassValue.equals(3)) {
             return "沉睡客户";
-        }else if (firstClassValue.equals(4)) {
+        } else if (firstClassValue.equals(4)) {
             return "流失客户";
         }
         log.error("客户一级价值错误:[{}]", firstClassValue);
@@ -265,6 +275,7 @@ public class CustomerRecordService {
 
     /**
      * 客户一级价值
+     *
      * @param vip 客户信息
      * @return
      */
@@ -337,6 +348,7 @@ public class CustomerRecordService {
 
     /**
      * 指定 vipId 获取其当前的 营销经理
+     *
      * @param vip vip
      * @return 营销经理对应的 app_user_id
      */

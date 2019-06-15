@@ -10,9 +10,7 @@ import com.zhidianfan.pig.yd.moduler.resv.dto.CustomerValueChangeFieldDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -67,41 +65,41 @@ public class CustomerValueService {
 
     //    @Async
 //    @Transactional(rollbackFor = Exception.class)
-    public void getCustomerValueBaseInfo() {
-        LocalDateTime startTime = LocalDateTime.now();
-        CustomerValueTask customerValueTask = customerValueTaskService.getCustomerValueTask();
-        log.info("获取到的任务编号：{}", customerValueTask.getId());
-        // 1. 从任务表中取出酒店 id
-        Long hotelId = customerValueTask.getHotelId();
-        cleanData(hotelId);
-        // 1.1 查询属于该酒店的所有客户
-        List<Vip> vips = vipService.getVipList(hotelId);
-
-        Long taskId = customerValueTask.getId();
-        log.info("任务开始，taskId：{}, 开始时间：{}", taskId, DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(startTime));
-        // 任务执行标记,0-未开始,1-执行中,2-执行成功,3-执行异常
-        customerValueTaskService.updateTaskStatus(taskId, CustomerValueConstants.EXECUTING, startTime, CustomerValueConstants.DEFAULT_END_TIME, StringUtils.EMPTY);
-
-        AtomicInteger count = new AtomicInteger(0);
-
-        Optional.ofNullable(vips)
-                .ifPresent(vips1 -> {
-                    vips1.parallelStream()
-                            .forEach(vip -> {
-                                try {
-                                    execute(vip);
-                                    log.info("当前执行进度,酒店：{},{}/{}", hotelId, count.addAndGet(1), vips.size());
-                                } catch (Exception e) {
-                                    customerValueTaskService.updateTaskStatus(taskId, CustomerValueConstants.EXECUTE_EXCEPTION, startTime, LocalDateTime.now(), StringUtils.EMPTY);
-                                    log.error("任务发生异常，taskId: {}, 异常时间:{}", taskId, DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(LocalDateTime.now()), e);
-                                }
-                            });
-                });
-
-        LocalDateTime endTime = LocalDateTime.now();
-        customerValueTaskService.updateTaskStatus(taskId, CustomerValueConstants.EXECUTE_SUCCESS, startTime, endTime, StringUtils.EMPTY);
-        log.info("任务结束，taskId: {}, 结束时间:{}", taskId, DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(endTime));
-    }
+//    public void getCustomerValueBaseInfo() {
+//        LocalDateTime startTime = LocalDateTime.now();
+//        CustomerValueTask customerValueTask = customerValueTaskService.getCustomerValueTask();
+//        log.info("获取到的任务编号：{}", customerValueTask.getId());
+//        // 1. 从任务表中取出酒店 id
+//        Long hotelId = customerValueTask.getHotelId();
+//        cleanData(hotelId);
+//        // 1.1 查询属于该酒店的所有客户
+//        List<Vip> vips = vipService.getVipList(hotelId);
+//
+//        Long taskId = customerValueTask.getId();
+//        log.info("任务开始，taskId：{}, 开始时间：{}", taskId, DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(startTime));
+//        // 任务执行标记,0-未开始,1-执行中,2-执行成功,3-执行异常
+//        customerValueTaskService.updateTaskStatus(taskId, CustomerValueConstants.EXECUTING, startTime, CustomerValueConstants.DEFAULT_END_TIME, StringUtils.EMPTY);
+//
+//        AtomicInteger count = new AtomicInteger(0);
+//
+//        Optional.ofNullable(vips)
+//                .ifPresent(vips1 -> {
+//                    vips1.parallelStream()
+//                            .forEach(vip -> {
+//                                try {
+//                                    execute(vip);
+//                                    log.info("当前执行进度,酒店：{},{}/{}", hotelId, count.addAndGet(1), vips.size());
+//                                } catch (Exception e) {
+//                                    customerValueTaskService.updateTaskStatus(taskId, CustomerValueConstants.EXECUTE_EXCEPTION, startTime, LocalDateTime.now(), StringUtils.EMPTY);
+//                                    log.error("任务发生异常，taskId: {}, 异常时间:{}", taskId, DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(LocalDateTime.now()), e);
+//                                }
+//                            });
+//                });
+//
+//        LocalDateTime endTime = LocalDateTime.now();
+//        customerValueTaskService.updateTaskStatus(taskId, CustomerValueConstants.EXECUTE_SUCCESS, startTime, endTime, StringUtils.EMPTY);
+//        log.info("任务结束，taskId: {}, 结束时间:{}", taskId, DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(endTime));
+//    }
 
     public void getCustomerValueBaseInfo2(CustomerValueTask customerValueTask) {
         LocalDateTime startTime = LocalDateTime.now();
@@ -111,7 +109,7 @@ public class CustomerValueService {
         // 1.1 查询属于该酒店的所有客户
         List<Vip> vips = vipService.getVipList(hotelId);
         //对vips分组，100个vip一组
-        Map<String, List<Vip>> map = getVipsMap(vips, 100);
+        Map<String, List<Vip>> map = getVipsMap(vips, 200);
 
         Long taskId = customerValueTask.getId();
         // 任务执行标记,0-未开始,1-执行中,2-执行成功,3-执行异常
@@ -119,34 +117,34 @@ public class CustomerValueService {
 
         AtomicInteger count = new AtomicInteger(0);
 
-//        TODO 稍后批处理优化
-//        Optional.ofNullable(map)
-//                .ifPresent(map1 -> {
-//                    map1.forEach((k, v) -> {
-//                        try {
-//                            executeBatchs(v);
-//                        } catch (Exception e) {
-//                            log.error(e.getMessage(), e);
-//                        }
-//                    });
-//                });
-
-        Optional.ofNullable(vips)
-                .ifPresent(vips1 -> {
-
-                    System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "128");
-
-                    vips1.parallelStream()
-                            .forEach(vip -> {
-                                try {
-                                    execute(vip);
-                                    log.info("当前执行进度,酒店：{},{}/{}", hotelId, count.addAndGet(1), vips.size());
-                                } catch (Exception e) {
-                                    customerValueTaskService.updateTaskStatus(taskId, CustomerValueConstants.EXECUTE_EXCEPTION, startTime, LocalDateTime.now(), StringUtils.EMPTY);
-                                    log.error("任务发生异常，taskId: {}, 异常时间:{}", taskId, DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(LocalDateTime.now()), e);
-                                }
-                            });
+        Optional.ofNullable(map)
+                .ifPresent(map1 -> {
+                    map1.forEach((k, v) -> {
+                        try {
+                            System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "64");
+                            execute(v);
+                        } catch (Exception e) {
+                            log.error(e.getMessage(), e);
+                            customerValueTaskService.updateTaskStatus(taskId, CustomerValueConstants.EXECUTE_EXCEPTION, startTime, LocalDateTime.now(), StringUtils.EMPTY);
+                            log.error("任务发生异常，taskId: {}, 异常时间:{}", taskId, DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(LocalDateTime.now()), e);
+                        }
+                    });
                 });
+//        Optional.ofNullable(vips)
+//                .ifPresent(vips1 -> {
+//
+//
+//                    vips1.parallelStream()
+//                            .forEach(vip -> {
+//                                try {
+//                                    execute(vip);
+//                                    log.info("当前执行进度,酒店：{},{}/{}", hotelId, count.addAndGet(1), vips.size());
+//                                } catch (Exception e) {
+//                                    customerValueTaskService.updateTaskStatus(taskId, CustomerValueConstants.EXECUTE_EXCEPTION, startTime, LocalDateTime.now(), StringUtils.EMPTY);
+//                                    log.error("任务发生异常，taskId: {}, 异常时间:{}", taskId, DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(LocalDateTime.now()), e);
+//                                }
+//                            });
+//                });
 
         LocalDateTime endTime = LocalDateTime.now();
         customerValueTaskService.updateTaskStatus(taskId, CustomerValueConstants.EXECUTE_SUCCESS, startTime, endTime, StringUtils.EMPTY);
@@ -197,56 +195,95 @@ public class CustomerValueService {
      *
      * @param vip vip 信息
      */
-    public void execute(Vip vip) {
-        List<ResvOrder> resvOrders = getResvOrders(vip.getId());
-        List<ResvOrder> resvOrdersBy60days = getResvOrdersBy60day(vip.getId());
+    public void execute(List<Vip> vip) {
 
-        CustomerValueList customerValueList = customerValueListService.getCustomerValueList(vip, resvOrders);
+        List<Integer> vipIds = vip.stream().map(Vip::getId).collect(Collectors.toList());
 
-        VipConsumeActionTotal vipConsumeActionTotal = vipConsumeActionTotalService.getVipConsumeActionTotal(vip, resvOrders);
+        //获取客户的所有订单
+//        List<ResvOrder> resvOrders = getResvOrders(vip.getId());
+        Map<Integer, List<ResvOrder>> resvOrders = getResvOrders(vipIds);
+//        List<ResvOrder> resvOrdersBy60days = getResvOrdersBy60day(vip.getId());
+        Map<Integer, List<ResvOrder>> resvOrdersBy60days = getResvOrdersBy60day(vipIds);
 
-        VipConsumeActionLast60 vipConsumeActionLast60 = vipConsumeActionLast60Service.getVipConsumeActionLast60(vip, resvOrdersBy60days);
+        Map<Integer, CustomerValueList> customerValueList = customerValueListService.getCustomerValueList(vip, resvOrders);
 
-        List<CustomerRecord> customerRecordList = customerRecordService.getCustomerRecord(vip, resvOrders, customerValueList);
+        Map<Integer, VipConsumeActionTotal> vipConsumeActionTotal = vipConsumeActionTotalService.getVipConsumeActionTotal(vip, resvOrders);
 
-        NowChangeInfo nowChangeInfo = getProfile(vip);
+        Map<Integer, VipConsumeActionLast60> vipConsumeActionLast60 = vipConsumeActionLast60Service.getVipConsumeActionLast60(vip, resvOrdersBy60days);
 
-        customerValueListMapper.insertOrUpdate(customerValueList);
+        Map<Integer, List<CustomerRecord>> customerRecordList = customerRecordService.getCustomerRecord(vip, resvOrders, customerValueList);
 
-        vipConsumeActionTotalMapper.insertOrUpdate(vipConsumeActionTotal);
+        Map<Integer, NowChangeInfo> nowChangeInfo = getProfile(vip);
 
-        vipConsumeActionLast60Mapper.insertOrUpdate(vipConsumeActionLast60);
+        Optional.ofNullable(customerValueList)
+                .ifPresent(map -> {
+                    map.forEach((k, v) -> {
+                        customerValueListMapper.insertOrUpdate(v);
+                    });
+                });
 
-        customerRecordMapper.insertBatch(customerRecordList);
+        Optional.ofNullable(vipConsumeActionTotal)
+                .ifPresent(map -> {
+                    map.forEach((k, v) -> {
+                        vipConsumeActionTotalMapper.insertOrUpdate(v);
+                    });
+                });
 
-        if (nowChangeInfo != null) {
-            nowChangeInfoMapper.insertOrUpdate(nowChangeInfo);
-            log.info("客户资料完整度 [{}] 插入完成", nowChangeInfo);
-        }
-        log.info("插入 vip:[{}] 完成", vip.getId());
+        Optional.ofNullable(vipConsumeActionLast60)
+                .ifPresent(map -> {
+                    map.forEach((k, v) -> {
+                        vipConsumeActionLast60Mapper.insertOrUpdate(v);
+                    });
+                });
+
+        Optional.ofNullable(customerRecordList)
+                .ifPresent(map -> {
+                    map.forEach((k, v) -> {
+                        customerRecordMapper.insertBatch(v);
+                    });
+                });
+
+        Optional.ofNullable(nowChangeInfo)
+                .ifPresent(map -> {
+                    map.forEach((k, v) -> {
+                        if (v != null) {
+                            nowChangeInfoMapper.insertOrUpdate(v);
+                            log.info("客户资料完整度 [{}] 插入完成", v);
+                        }
+                    });
+                });
+
+        log.info("插入 vip:[{}] 完成", vipIds);
     }
 
     /**
      * 客户资料完整度
      *
-     * @param vip vip 信息
+     * @param vips vip 信息
      * @return NowChangeInfo
      */
-    private NowChangeInfo getProfile(Vip vip) {
-        if (vip == null) {
-            return null;
+    private Map<Integer, NowChangeInfo> getProfile(List<Vip> vips) {
+
+        Map<Integer, NowChangeInfo> map = new HashMap<>();
+        for (Vip vip : vips) {
+            if (vip == null) {
+                return null;
+            }
+            int profile = vipService.getProfile(vip);
+            Integer vipId = vip.getId();
+            NowChangeInfo nowChangeInfo = new NowChangeInfo();
+            nowChangeInfo.setVipId(vipId);
+            nowChangeInfo.setValue(profile);
+            nowChangeInfo.setType(CustomerValueChangeFieldDTO.PROFILE);
+            nowChangeInfo.setChangeTime(LocalDateTime.now());
+            nowChangeInfo.setRemark(StringUtils.EMPTY);
+            nowChangeInfo.setCreateTime(LocalDateTime.now());
+            nowChangeInfo.setUpdateTime(LocalDateTime.now());
+            map.put(vipId, nowChangeInfo);
         }
-        int profile = vipService.getProfile(vip);
-        Integer vipId = vip.getId();
-        NowChangeInfo nowChangeInfo = new NowChangeInfo();
-        nowChangeInfo.setVipId(vipId);
-        nowChangeInfo.setValue(profile);
-        nowChangeInfo.setType(CustomerValueChangeFieldDTO.PROFILE);
-        nowChangeInfo.setChangeTime(LocalDateTime.now());
-        nowChangeInfo.setRemark(StringUtils.EMPTY);
-        nowChangeInfo.setCreateTime(LocalDateTime.now());
-        nowChangeInfo.setUpdateTime(LocalDateTime.now());
-        return nowChangeInfo;
+
+
+        return map;
     }
 
     /**
@@ -254,28 +291,34 @@ public class CustomerValueService {
      *
      * @param vipId vip 表的主键
      */
-    private List<ResvOrder> getResvOrdersBy60day(Integer vipId) {
+    private Map<Integer, List<ResvOrder>> getResvOrdersBy60day(List<Integer> vipId) {
         EntityWrapper<ResvOrder> wrapper = new EntityWrapper<>();
-        wrapper.eq("vip_id", vipId);
+        wrapper.in("vip_id", vipId);
         LocalDate now = LocalDate.now();
         LocalDate start = now.minusDays(60);
         wrapper.ge("updated_at", start);
         wrapper.le("updated_at", now);
         wrapper.in("status", Arrays.asList(2, 3));
-        return resvOrderMapper.selectList(wrapper);
+        List<ResvOrder> resvOrders = resvOrderMapper.selectList(wrapper);
+        Map<Integer, List<ResvOrder>> map = resvOrders.stream()
+                .collect(Collectors.groupingBy(ResvOrder::getVipId));
+        return map;
     }
 
 
     /**
      * vip 用户的所有订单
      *
-     * @param vipId vip 主键
+     * @param vipIds vip 主键
      * @return 所有的订单列表
      */
-    private List<ResvOrder> getResvOrders(Integer vipId) {
+    private Map<Integer, List<ResvOrder>> getResvOrders(List<Integer> vipIds) {
         EntityWrapper<ResvOrder> wrapper = new EntityWrapper<>();
-        wrapper.eq("vip_id", vipId);
-        return resvOrderMapper.selectList(wrapper);
+        wrapper.in("vip_id", vipIds);
+        List<ResvOrder> resvOrders = resvOrderMapper.selectList(wrapper);
+        Map<Integer, List<ResvOrder>> map = resvOrders.stream()
+                .collect(Collectors.groupingBy(ResvOrder::getVipId));
+        return map;
     }
 
 
