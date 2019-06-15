@@ -63,7 +63,7 @@ public class CustomerValueTask {
         LocalTime startTime1 = LocalTime.of(22, 0, 0);
         LocalTime startTime2 = LocalTime.of(8, 0, 0);
         LocalTime nowTime = LocalTime.now();
-        if (nowTime.isAfter(startTime1) && nowTime.isBefore(startTime2)) {
+        if (nowTime.isAfter(startTime1) || nowTime.isBefore(startTime2)) {
             LocalDate localDate = LocalDate.now();
             if (nowTime.isBefore(startTime2)) {
                 //批次减一天
