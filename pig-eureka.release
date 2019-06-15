@@ -6,5 +6,10 @@ code.language=oracle-jdk1.8
 # 构建打包使用的打包文件
 build.output=pig-eureka/target/pig-eureka.jar
 
-# 应用部署脚本
-deploy.appctl.path=deploy.sh
+# docker构建所用的Dockerfile的路径
+docker.file=pigeureka-YXDockerfile
+
+# Docker镜像构建之后push的仓库地址
+docker.repo=registry.cn-hangzhou.aliyuncs.com/zhidianfan/pig-eureka
+
+docker.tag=0.0.2-eureka-release
