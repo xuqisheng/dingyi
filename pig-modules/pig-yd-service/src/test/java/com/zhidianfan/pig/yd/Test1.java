@@ -52,7 +52,7 @@ public class Test1 {
 //        String property = System.getProperty("java.util.concurrent.ForkJoinPool.common.parallelism");
 //        System.out.println(property);
         System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism","100");
-        List<Integer> collect = limit.parallel().map(count -> CompletableFuture.supplyAsync(() -> {
+        List<Integer> collect = limit.map(count -> CompletableFuture.supplyAsync(() -> {
             try {
                 System.out.println("等待开始");
                 TimeUnit.SECONDS.sleep(2);

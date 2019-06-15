@@ -120,6 +120,9 @@ public class CustomerValueService {
 
         Optional.ofNullable(vips)
                 .ifPresent(vips1 -> {
+
+                    System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "128");
+
                     vips1.parallelStream()
                             .forEach(vip -> {
                                 try {
