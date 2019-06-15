@@ -150,6 +150,9 @@ public class VipConsumeActionLast60Service {
      * @return
      */
     private Integer getConsumeFrequency60(List<ResvOrder> resvOrdersBy60day) {
+        if (CollectionUtils.isEmpty(resvOrdersBy60day)){
+            return 0;
+        }
         // 消费总次数
         long count = resvOrdersBy60day.stream()
                 .filter(order -> "2".equals(order.getStatus()) || "3".equals(order.getStatus()))
@@ -167,6 +170,9 @@ public class VipConsumeActionLast60Service {
      * @return
      */
     private Integer getPersonConsumeAvg(List<ResvOrder> resvOrdersBy60day) {
+        if (CollectionUtils.isEmpty(resvOrdersBy60day)){
+            return 0;
+        }
         // 总消费金额/对应批次号的订单实际人数之和。（如果订单没有实际人数，用预订人数代替）
         // 总消费金额
         int sum = getTotalConsumeAmount60(resvOrdersBy60day);
@@ -200,6 +206,9 @@ public class VipConsumeActionLast60Service {
      * @return
      */
     private Integer getTableConsumeAvg60(List<ResvOrder> resvOrdersBy60day) {
+        if (CollectionUtils.isEmpty(resvOrdersBy60day)){
+            return 0;
+        }
         // 总消费金额/对应批次号的订单之和。（仅指已入座/完成的订单）
         int consumerSum = getTotalConsumeAmount60(resvOrdersBy60day);
         Integer totalTableNo = getTotalTableNo60(resvOrdersBy60day);
@@ -215,6 +224,9 @@ public class VipConsumeActionLast60Service {
      * @return
      */
     private Integer getTotalConsumeAmount60(List<ResvOrder> resvOrdersBy60day) {
+        if (CollectionUtils.isEmpty(resvOrdersBy60day)){
+            return 0;
+        }
         return resvOrdersBy60day.stream()
                 .filter(order -> "2".equals(order.getStatus()) || "3".equals(order.getStatus()))
                 .map(ResvOrder::getPayamount)
@@ -240,6 +252,9 @@ public class VipConsumeActionLast60Service {
      * @return
      */
     private Integer getCancelTableNo60(List<ResvOrder> resvOrdersBy60day) {
+        if (CollectionUtils.isEmpty(resvOrdersBy60day)){
+            return 0;
+        }
         long count = resvOrdersBy60day.stream()
                 .filter(order -> "4".equals(order.getStatus()))
                 .count();
