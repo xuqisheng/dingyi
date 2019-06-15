@@ -8,6 +8,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.velocity.runtime.parser.node.MathUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -47,13 +48,13 @@ public class CustomerValueListService {
     /**
      * 获取客户价值列表实体对象
      *
-     * @param vips        vip 对象
+     * @param vips          vip 对象
      * @param resvOrdersMap 订单列表
      * @return CustomerValueList
      */
-    public Map<Integer,CustomerValueList> getCustomerValueList(List<Vip> vips, Map<Integer,List<ResvOrder>> resvOrdersMap) {
-        Map<Integer,CustomerValueList> map = new HashMap<>();
-        for (Vip vip:vips){
+    public Map<Integer, CustomerValueList> getCustomerValueList(List<Vip> vips, Map<Integer, List<ResvOrder>> resvOrdersMap) {
+        Map<Integer, CustomerValueList> map = new HashMap<>();
+        for (Vip vip : vips) {
             List<ResvOrder> resvOrders = resvOrdersMap.get(vip.getId());
             Integer businessId = vip.getBusinessId();
             // 消费次数
@@ -97,7 +98,7 @@ public class CustomerValueListService {
             customerValueList.setCreateTime(LocalDateTime.now());
             customerValueList.setUpdateTime(LocalDateTime.now());
 
-            map.put(vip.getId(),customerValueList);
+            map.put(vip.getId(), customerValueList);
         }
 
 
@@ -167,6 +168,9 @@ public class CustomerValueListService {
      * @return 0-无
      */
     public int getCustomerCount(List<ResvOrder> resvOrders) {
+        if (CollectionUtils.isEmpty(resvOrders)) {
+            return 0;
+        }
         List<ResvOrder> collect = resvOrders.stream()
                 .filter(order -> "2".equals(order.getStatus()) || "3".equals(order.getStatus()))
                 .collect(collectingAndThen(toCollection(
@@ -366,7 +370,7 @@ public class CustomerValueListService {
 
     private boolean getCustomerPersonAvgConfig(Integer customerPersonAvgStart, Integer customerPersonAvgEnd, int personAvg) {
         int flag = 0;
-        if ( customerPersonAvgStart > 0) {
+        if (customerPersonAvgStart > 0) {
             flag = 1;
         }
         if (customerPersonAvgEnd > 0) {
