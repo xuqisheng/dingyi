@@ -88,7 +88,6 @@ public class CustomerRecordService {
         LocalDate nowDate = LocalDate.now();
         LocalDateTime startDateTime = LocalDateTime.of(nowDate, startTime);
         LocalDateTime endDateTime = LocalDateTime.of(nowDate, endTime);
-        wrapper.eq("vip_id", vip.getId());
         wrapper.ge("create_time", startDateTime);
         wrapper.le("create_time", endDateTime);
         customerRecordMapper.delete(wrapper);
