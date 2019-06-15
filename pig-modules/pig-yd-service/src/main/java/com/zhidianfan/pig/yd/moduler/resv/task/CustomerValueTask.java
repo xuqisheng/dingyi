@@ -84,7 +84,7 @@ public class CustomerValueTask {
 
                         System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "8");
 
-                        List<Long> collect = customerValueTasks.stream()
+                        List<Long> collect = customerValueTasks.parallelStream()
                                 .map(customerValueTask -> CompletableFuture.supplyAsync(() -> {
                                     log.info("{}开始被处理，剩余{}家待处理", customerValueTask.getHotelId(), count);
                                     if (LocalTime.now().isAfter(startTime1) || LocalTime.now().isBefore(startTime2)) {
