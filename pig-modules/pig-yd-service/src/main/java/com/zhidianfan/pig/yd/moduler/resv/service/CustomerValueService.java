@@ -17,10 +17,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 /**
  * @author sjl
@@ -111,12 +110,26 @@ public class CustomerValueService {
         cleanData(hotelId);
         // 1.1 查询属于该酒店的所有客户
         List<Vip> vips = vipService.getVipList(hotelId);
+        //对vips分组，100个vip一组
+        Map<String, List<Vip>> map = getVipsMap(vips, 100);
 
         Long taskId = customerValueTask.getId();
         // 任务执行标记,0-未开始,1-执行中,2-执行成功,3-执行异常
         customerValueTaskService.updateTaskStatus(taskId, CustomerValueConstants.EXECUTING, startTime, CustomerValueConstants.DEFAULT_END_TIME, StringUtils.EMPTY);
 
         AtomicInteger count = new AtomicInteger(0);
+
+//        TODO 稍后批处理优化
+//        Optional.ofNullable(map)
+//                .ifPresent(map1 -> {
+//                    map1.forEach((k, v) -> {
+//                        try {
+//                            executeBatchs(v);
+//                        } catch (Exception e) {
+//                            log.error(e.getMessage(), e);
+//                        }
+//                    });
+//                });
 
         Optional.ofNullable(vips)
                 .ifPresent(vips1 -> {
@@ -137,6 +150,36 @@ public class CustomerValueService {
 
         LocalDateTime endTime = LocalDateTime.now();
         customerValueTaskService.updateTaskStatus(taskId, CustomerValueConstants.EXECUTE_SUCCESS, startTime, endTime, StringUtils.EMPTY);
+    }
+
+    /**
+     * 对客户进行分组
+     *
+     * @param vips
+     * @param i
+     * @return
+     */
+    private Map<String, List<Vip>> getVipsMap(List<Vip> vips, int i) {
+        //vips分组，每组i个vip
+        //可以分成多少组？即map大小
+        Map<String, List<Vip>> map = new HashMap<>(vips.size() / i + 1);
+        for (int j = 0; j < vips.size() / i + 1; j++) {
+            int startIndex = j * 2;
+            int endIndex = (j + 1) * 2;
+
+            if (startIndex >= vips.size()) {
+                continue;
+            }
+
+            if (endIndex > vips.size()) {
+                endIndex = vips.size();
+            }
+
+            List<Vip> tmp = vips.subList(startIndex, endIndex);
+            map.put("" + j, tmp);
+
+        }
+        return map;
     }
 
     // 清除脏数据
@@ -222,6 +265,7 @@ public class CustomerValueService {
         return resvOrderMapper.selectList(wrapper);
     }
 
+
     /**
      * vip 用户的所有订单
      *
@@ -233,5 +277,6 @@ public class CustomerValueService {
         wrapper.eq("vip_id", vipId);
         return resvOrderMapper.selectList(wrapper);
     }
+
 
 }

@@ -40,6 +40,30 @@ public class Test1 {
     private String url = "http://47.99.14.92:9999/auth/oauth/token";
 
     @Test
+    public void test44() {
+        //10个数字，每组2个，进行分组
+        List<Integer> list = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 10);
+        Map<String, List<Integer>> listMap = new HashMap<>(list.size() / 2 + 1);
+        for (int i = 0; i < list.size() / 2 + 1; i++) {
+            int startIndex = i * 2;
+            int endIndex = (i + 1) * 2;
+
+            if (startIndex >= list.size()) {
+                continue;
+            }
+
+            if (endIndex > list.size()) {
+                endIndex = list.size();
+            }
+
+            List<Integer> tmp = list.subList(startIndex, endIndex);
+            listMap.put("" + i, tmp);
+        }
+        System.out.println(listMap);
+
+    }
+
+    @Test
     public void test43() {
         int nThreads = 500;
         Stream<Integer> limit = Stream.iterate(0, n -> n + 2)
@@ -51,7 +75,7 @@ public class Test1 {
         LocalDateTime start = LocalDateTime.now();
 //        String property = System.getProperty("java.util.concurrent.ForkJoinPool.common.parallelism");
 //        System.out.println(property);
-        System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism","100");
+        System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "100");
         List<Integer> collect = limit.map(count -> CompletableFuture.supplyAsync(() -> {
             try {
                 System.out.println("等待开始");
@@ -66,7 +90,7 @@ public class Test1 {
                 .collect(Collectors.toList());
 
         LocalDateTime end = LocalDateTime.now();
-        System.out.println("执行结束,耗时："+(Duration.between(start,end).getSeconds()+"秒"));
+        System.out.println("执行结束,耗时：" + (Duration.between(start, end).getSeconds() + "秒"));
 
         executorService.shutdown();
 
