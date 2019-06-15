@@ -187,6 +187,9 @@ public class CustomerValueListService {
      * @return 消费总金额，单位:分
      */
     private int getCustomerAmount(List<ResvOrder> resvOrders) {
+        if (CollectionUtils.isEmpty(resvOrders)){
+            return 0;
+        }
         return resvOrders.stream()
                 .filter((order) -> "3".equals(order.getStatus()))
                 .map(ResvOrder::getPayamount)
@@ -206,6 +209,9 @@ public class CustomerValueListService {
      * @return 人均消费金额，单元:分
      */
     public int getPersonAvg(List<ResvOrder> resvOrders) {
+        if (CollectionUtils.isEmpty(resvOrders)){
+            return 0;
+        }
         //消费总金额
         Integer consumerTotalAmount = vipConsumeActionTotalService.getConsumerTotalAmount(resvOrders);
         // 消费人数
@@ -223,6 +229,9 @@ public class CustomerValueListService {
      * @return 2000-1-1 0:0:0 表示坎
      */
     private LocalDateTime getLastEatTime(List<ResvOrder> resvOrders) {
+        if (CollectionUtils.isEmpty(resvOrders)){
+            return LocalDateTime.of(2000,1,1,0,0,0);
+        }
         // 最近一笔已入座/完成的订单
         Optional<LocalDateTime> optionalLocalDateTime = resvOrders.stream()
                 .filter(order -> "2".equals(order.getStatus()) || "3".equals(order.getStatus()))
@@ -286,7 +295,7 @@ public class CustomerValueListService {
             log.error("-------配置出错，请检查配置 businessId:[{}]-------------", hotelId);
             return -1;
         }
-        if (resvOrders.isEmpty()) {
+        if (CollectionUtils.isEmpty(resvOrders)) {
             //意向客户 未消费客户
             return CustomerValueConstants.INTENTION_CUSTOMER;
         }

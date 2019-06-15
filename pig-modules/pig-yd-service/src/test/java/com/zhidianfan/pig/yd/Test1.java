@@ -40,6 +40,18 @@ public class Test1 {
     private String url = "http://47.99.14.92:9999/auth/oauth/token";
 
     @Test
+    public void test45(){
+        Integer integer = new Integer(10);
+        Integer integer1 = new Integer(10000);
+        Map<Integer,String> map = new HashMap<>();
+        map.put(integer,"10");
+        map.put(integer1,"101");
+        System.out.println(map.get(new Integer("10")));
+        System.out.println(map.get(new Integer("10000")));
+
+    }
+
+    @Test
     public void test44() {
         //10个数字，每组2个，进行分组
         List<Integer> list = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 10);
