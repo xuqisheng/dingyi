@@ -15,9 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -42,6 +40,7 @@ public class CustomerRecordService {
 
         for (Vip vip : vips) {
             try {
+                cleanData(vip);
                 List<CustomerRecord> recordList = Lists.newArrayList();
                 List<CustomerRecord> customerRecords = reserveOrderCustomer(vip, resvOrdersMap.get(vip.getId()));
                 List<CustomerRecord> customerRecords1 = reserveOrderESC(vip, resvOrdersMap.get(vip.getId()));
@@ -70,6 +69,28 @@ public class CustomerRecordService {
 
 
         return map;
+    }
+
+    /**
+     * 清除指定 vip 的定时任务跑的当天的数据
+     * @param vip
+     */
+    private void cleanData(Vip vip) {
+        if (vip == null) {
+            return;
+        }
+        if (vip.getId() == null) {
+            return;
+        }
+        Wrapper<CustomerRecord> wrapper = new EntityWrapper<>();
+        LocalTime startTime = LocalTime.of(23, 59, 59);
+        LocalTime endTime = LocalTime.of(0, 0, 0);
+        LocalDate nowDate = LocalDate.now();
+        LocalDateTime startDateTime = LocalDateTime.of(nowDate, startTime);
+        LocalDateTime endDateTime = LocalDateTime.of(nowDate, endTime);
+        wrapper.ge("create_time", startDateTime);
+        wrapper.le("create_time", endDateTime);
+        customerRecordMapper.delete(wrapper);
     }
 
     /**
