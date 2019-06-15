@@ -99,7 +99,7 @@ public class CustomerValueService {
 //        LocalDateTime endTime = LocalDateTime.now();
 //        customerValueTaskService.updateTaskStatus(taskId, CustomerValueConstants.EXECUTE_SUCCESS, startTime, endTime, StringUtils.EMPTY);
 //        log.info("任务结束，taskId: {}, 结束时间:{}", taskId, DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(endTime));
-    }
+//    }
 
     public void getCustomerValueBaseInfo2(CustomerValueTask customerValueTask) {
         LocalDateTime startTime = LocalDateTime.now();
