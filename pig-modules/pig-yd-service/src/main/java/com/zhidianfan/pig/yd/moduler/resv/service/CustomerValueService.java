@@ -115,7 +115,6 @@ public class CustomerValueService {
         // 任务执行标记,0-未开始,1-执行中,2-执行成功,3-执行异常
         customerValueTaskService.updateTaskStatus(taskId, CustomerValueConstants.EXECUTING, startTime, CustomerValueConstants.DEFAULT_END_TIME, StringUtils.EMPTY);
 
-        System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "128");
         Optional.ofNullable(map)
                 .ifPresent(map1 -> {
                     map1.forEach((k, v) -> {

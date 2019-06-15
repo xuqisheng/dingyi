@@ -18,6 +18,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -63,7 +64,7 @@ public class CustomerValueTaskService {
     public List<CustomerValueTask> getCustomerValuesValueTask(LocalDate planTime) {
         EntityWrapper<CustomerValueTask> wrapper = new EntityWrapper<>();
         wrapper.eq("plan_time", planTime);
-        wrapper.eq("flag", 0);
+        wrapper.in("flag", Arrays.asList(0,1,3));
         wrapper.orderBy("sort", false);
 
         List<CustomerValueTask> customerValueTasks = customerValueTaskMapper.selectList(wrapper);
