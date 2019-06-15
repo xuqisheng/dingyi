@@ -83,7 +83,7 @@ public class CustomerValueTask {
                                 0L, TimeUnit.MILLISECONDS,
                                 new LinkedBlockingQueue<Runnable>());
 
-                        System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism","128");
+                        System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "128");
                         List<Long> collect = customerValueTasks.parallelStream()
                                 .map(customerValueTask -> CompletableFuture.supplyAsync(() -> {
                                     log.info("{}开始被处理，剩余{}家待处理", customerValueTask.getHotelId(), count);
@@ -95,7 +95,7 @@ public class CustomerValueTask {
                                 .map(CompletableFuture::join)
                                 .collect(Collectors.toList());
 
-                        log.info("处理接触，本次计算:{}这些酒店", collect);
+                        log.info("处理结束，本次计算:{}这些酒店", collect);
 
                         executorService.shutdown();
 
