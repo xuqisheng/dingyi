@@ -65,7 +65,7 @@ public class CustomerValueListService {
         // 一级价值，意向客户、活跃客户、沉睡客户、流失客户
         int firstValue = getFirstValue(resvOrders, businessId);
         // 细分价值
-        String lossValue = getLossValue(resvOrders, businessId);
+        Long lossValue = getLossValue(resvOrders, businessId);
         // 自定义分类
         String customerClass = vip.getVipClassName();
         customerClass = Optional.ofNullable(customerClass).orElse(StringUtils.EMPTY);
@@ -322,7 +322,7 @@ public class CustomerValueListService {
      * @param hotelId    酒店id
      * @return 1-4 的取值
      */
-    private String getLossValue(List<ResvOrder> resvOrders, Integer hotelId) {
+    private Long getLossValue(List<ResvOrder> resvOrders, Integer hotelId) {
         List<LossValueConfig> lossValueConfigList = lossValueConfigService.getLossValueConfig(hotelId);
         // 排序小的在前面
         lossValueConfigList.sort(Comparator.comparing(LossValueConfig::getSort));
@@ -352,10 +352,10 @@ public class CustomerValueListService {
             boolean customerCountConfig = getCustomerCountConfig(customerCountStart, customerCountEnd, customerCount);
 
             if (customerPersonAvConfig && customerTotalConfig && customerCountConfig) {
-                return id + "";
+                return id;
             }
         }
-        return StringUtils.EMPTY;
+        return -1L;
     }
 
     private boolean getCustomerPersonAvgConfig(Integer customerPersonAvgStart, Integer customerPersonAvgEnd, int personAvg) {
