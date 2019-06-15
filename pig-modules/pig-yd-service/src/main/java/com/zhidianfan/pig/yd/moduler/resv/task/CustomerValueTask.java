@@ -75,14 +75,14 @@ public class CustomerValueTask {
             Optional.ofNullable(customerValuesValueTask)
                     .ifPresent(customerValueTasks -> {
 
-                        int nThreads = 8;
+                        int nThreads = 24;
                         AtomicInteger count = new AtomicInteger(customerValuesValueTask.size());
                         log.info("本次有:{}家酒店需要计算客户价值", count);
                         ExecutorService executorService = new ThreadPoolExecutor(nThreads, nThreads,
                                 0L, TimeUnit.MILLISECONDS,
                                 new LinkedBlockingQueue<Runnable>());
 
-                        System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "8");
+                        System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "24");
 
                         List<Long> collect = customerValueTasks.parallelStream()
                                 .map(customerValueTask -> CompletableFuture.supplyAsync(() -> {
