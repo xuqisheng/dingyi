@@ -109,7 +109,7 @@ public class CustomerValueService {
         // 1.1 查询属于该酒店的所有客户
         List<Vip> vips = vipService.getVipList(hotelId);
         //对vips分组，100个vip一组
-        Map<String, List<Vip>> map = getVipsMap(vips, 500);
+        Map<String, List<Vip>> map = getVipsMap(vips, 10);
 
         Long taskId = customerValueTask.getId();
         // 任务执行标记,0-未开始,1-执行中,2-执行成功,3-执行异常
