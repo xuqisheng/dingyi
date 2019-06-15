@@ -83,7 +83,7 @@ public class CustomerValueTask {
                                 0L, TimeUnit.MILLISECONDS,
                                 new LinkedBlockingQueue<Runnable>());
 
-                        System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "64");
+                        System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "16");
 
                         List<Long> collect = customerValueTasks.parallelStream()
                                 .map(customerValueTask -> CompletableFuture.supplyAsync(() -> {
