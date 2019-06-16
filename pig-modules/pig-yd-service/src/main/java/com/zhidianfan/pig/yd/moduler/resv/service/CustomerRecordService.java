@@ -117,7 +117,7 @@ public class CustomerRecordService {
         record.setLogTime(LocalDateTime.now());
         record.setResvOrder(order.getBatchNo());
         Date updatedAt = order.getUpdatedAt();
-        LocalDateTime resvDate = null;
+        LocalDateTime resvDate;
         if (updatedAt != null) {
             Instant instant = updatedAt.toInstant();
             resvDate = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
@@ -149,7 +149,12 @@ public class CustomerRecordService {
         record.setTableId(order.getTableId());
         record.setTableName(order.getTableName());
         record.setVipName(order.getVipName());
-        record.setVipPhone(order.getVipPhone());
+        String vipPhone = order.getVipPhone();
+        if (NumberUtils.isCreatable(vipPhone) && vipPhone.length() == 11) {
+            record.setVipPhone(vipPhone);
+        } else {
+            log.error("手机号异常:[{}],订单号 [{}]", vipPhone, order.getId());
+        }
         record.setAppUserName(order.getAppUserName());
         record.setAppUserId(order.getAppUserId());
         record.setAppUserPhone(order.getAppUserPhone());
@@ -182,10 +187,15 @@ public class CustomerRecordService {
      * 主客订单
      */
     private List<CustomerRecord> manOrder(Vip vip, List<ResvOrder> resvOrders) {
-        if (vip == null||CollectionUtils.isEmpty(resvOrders)) {
+        if (vip == null || vip.getId() == null) {
             log.error("vip 信息为空");
             return Lists.newArrayList();
         }
+        if (CollectionUtils.isEmpty(resvOrders)) {
+            log.error("订单信息不存在:{}", vip.getId());
+            return Lists.newArrayList();
+        }
+
         Integer vipId = vip.getId();
         Integer businessId = vip.getBusinessId();
         Wrapper<MasterCustomerVipMapping> wrapper = new EntityWrapper<>();
@@ -287,7 +297,7 @@ public class CustomerRecordService {
         if (StringUtils.isNotBlank(vipValueName)) {
             return vipValueName;
         }
-        log.error("vip 信息为 null,[{}]", vip);
+        log.error("vipValueName 信息为 null, Vip ID 为：{} ", vip.getId());
         return StringUtils.EMPTY;
     }
 

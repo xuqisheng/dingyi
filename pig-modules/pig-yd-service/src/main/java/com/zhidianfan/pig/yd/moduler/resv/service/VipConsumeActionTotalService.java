@@ -7,6 +7,7 @@ import com.zhidianfan.pig.yd.moduler.common.service.IVipConsumeActionTotalServic
 import com.zhidianfan.pig.yd.moduler.resv.constants.CustomerValueConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.velocity.runtime.parser.node.MathUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -49,7 +50,7 @@ public class VipConsumeActionTotalService {
                 VipConsumeActionTotal vipConsumeActionTotal = new VipConsumeActionTotal();
                 vipConsumeActionTotal.setVipId(vip.getId());
                 // 消费完成总订单数
-                vipConsumeActionTotal.setTotalOrderNo(customerValueListService.getCustomerCount(resvOrders));
+                vipConsumeActionTotal.setTotalOrderNo(customerValueListService.getCustomerCount(resvOrders, vip));
                 // 消费完成总桌数
                 vipConsumeActionTotal.setTotalTableNo(getCustomerTableCount(resvOrders));
                 // 消费完成总人数
@@ -61,11 +62,11 @@ public class VipConsumeActionTotalService {
                 // 桌均消费,单位:分
                 vipConsumeActionTotal.setTableConsumeAvg(getConsumerTableAmount(resvOrders));
                 // 人均消费,单位:分
-                vipConsumeActionTotal.setPersonConsumeAvg(getConsumerPersonAmount(resvOrders));
+                vipConsumeActionTotal.setPersonConsumeAvg(getConsumerPersonAmount(resvOrders, vip));
                 // 首次消费时间
                 vipConsumeActionTotal.setFirstConsumeTime(getFirstConsumerTime(resvOrders));
                 // 消费频次
-                vipConsumeActionTotal.setConsumeFrequency(getConsumerFrequency(resvOrders));
+                vipConsumeActionTotal.setConsumeFrequency(getConsumerFrequency(resvOrders, vip));
                 // 最近就餐时间
                 vipConsumeActionTotal.setLastConsumeTime(getLastEatTime(resvOrders));
                 vipConsumeActionTotal.setCreateUserId(CustomerValueConstants.DEFAULT_USER_ID);
@@ -173,11 +174,11 @@ public class VipConsumeActionTotalService {
      * @param resvOrders 订单列表
      * @return 0-无
      */
-    private Float getConsumerFrequency(List<ResvOrder> resvOrders) {
+    private Float getConsumerFrequency(List<ResvOrder> resvOrders, Vip vip) {
         if (CollectionUtils.isEmpty(resvOrders)) {
             return 0.0f;
         }
-        int customerSize = customerValueListService.getCustomerCount(resvOrders);
+        int customerSize = customerValueListService.getCustomerCount(resvOrders, vip);
 
         Optional<Date> date = getFirstCustomerMonth(resvOrders);
         Optional<Integer> optional = date.map(date1 -> {
@@ -228,13 +229,13 @@ public class VipConsumeActionTotalService {
      * @param resvOrders 订单列表
      * @return 0-无
      */
-    private Integer getConsumerPersonAmount(List<ResvOrder> resvOrders) {
+    private Integer getConsumerPersonAmount(List<ResvOrder> resvOrders, Vip vip) {
         if (CollectionUtils.isEmpty(resvOrders)) {
             return 0;
         }
         // 总消费金额/对应批次号的订单实际人数之和。（如果订单没有实际人数，用预订人数代替）
         // 有实际金额的订单
-        return customerValueListService.getPersonAvg(resvOrders);
+        return customerValueListService.getPersonAvg(resvOrders, vip);
     }
 
     /**
@@ -268,18 +269,18 @@ public class VipConsumeActionTotalService {
         }
         // 将该客户所有订单的消费金额累加
         int sum = resvOrders.stream()
-                .filter(resvOrder -> "3".equals(resvOrder.getStatus()))
+                .filter(resvOrder -> "2".equals(resvOrder.getStatus()) || "3".equals(resvOrder.getStatus()))
                 .map(ResvOrder::getPayamount)
                 .mapToInt(payAmount -> {
-                    if (StringUtils.isBlank(payAmount)) {
+                    if (StringUtils.isBlank(payAmount) || !NumberUtils.isCreatable(payAmount)) {
                         return CustomerValueConstants.DEFAULT_PAYAMOUNT;
                     }
-                    //暂时不处理不正常的数据
                     try {
-                        double v = Double.parseDouble(payAmount);
-                        return (int) (v * 100);
+                        float v = Float.parseFloat(payAmount);
+                        Number multiply = MathUtils.multiply(v, 100);
+                        return Math.round(multiply.floatValue());
                     } catch (NumberFormatException e) {
-                        log.error("订单金额转换异常-", e);
+                        log.error("订单金额转换异常,数据内容为：{}", payAmount);
                         return CustomerValueConstants.DEFAULT_PAYAMOUNT;
                     }
                 }).sum();

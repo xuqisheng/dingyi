@@ -5,6 +5,7 @@ import com.zhidianfan.pig.yd.moduler.common.service.IAppUserService;
 import com.zhidianfan.pig.yd.moduler.resv.constants.CustomerValueConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.velocity.runtime.parser.node.MathUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -59,18 +60,17 @@ public class CustomerValueListService {
                 List<ResvOrder> resvOrders = resvOrdersMap.get(vip.getId());
                 Integer businessId = vip.getBusinessId();
                 // 消费次数
-                int customerCount = getCustomerCount(resvOrders);
+                int customerCount = getCustomerCount(resvOrders, vip);
                 // 总消费金额
-                double customerAmount = getCustomerAmount(resvOrders);
-                int customerAmountInt = (int) Math.round(customerAmount * 100);
+                int customerAmount = getCustomerAmount(resvOrders);
                 // 人均消费金额
-                int personAvg = getPersonAvg(resvOrders);
+                int personAvg = getPersonAvg(resvOrders, vip);
                 // 最近就餐时间
                 LocalDateTime lastEatTime = getLastEatTime(resvOrders);
                 // 一级价值，意向客户、活跃客户、沉睡客户、流失客户
                 int firstValue = getFirstValue(resvOrders, businessId);
                 // 细分价值
-                Long lossValue = getLossValue(resvOrders, businessId);
+                Long lossValue = getLossValue(resvOrders, businessId, vip);
                 // 自定义分类
                 String customerClass = vip.getVipClassName();
                 customerClass = Optional.ofNullable(customerClass).orElse(StringUtils.EMPTY);
@@ -90,7 +90,7 @@ public class CustomerValueListService {
                 customerValueList.setAppUserName(appUserName);
                 customerValueList.setHotelId(businessId);
                 customerValueList.setCustomerCount(customerCount);
-                customerValueList.setCustomerAmountTotal(customerAmountInt);
+                customerValueList.setCustomerAmountTotal(customerAmount);
                 customerValueList.setCustomerAmountAvg(personAvg);
                 customerValueList.setLastEatTime(lastEatTime);
                 customerValueList.setFirstClassValue(firstValue);
@@ -119,6 +119,10 @@ public class CustomerValueListService {
     private String getVipPhone(Vip vip) {
         String vipPhone = vip.getVipPhone();
         if (StringUtils.isBlank(vipPhone)) {
+            return StringUtils.EMPTY;
+        }
+        if (vipPhone.length() > 11) {
+            log.error("vipId: {} 用户手机号数据异常异常,异常数据为:{}", vip.getId(), vipPhone);
             return StringUtils.EMPTY;
         }
         return vipPhone;
@@ -172,8 +176,9 @@ public class CustomerValueListService {
      * @param resvOrders 订单列表
      * @return 0-无
      */
-    public int getCustomerCount(List<ResvOrder> resvOrders) {
+    public int getCustomerCount(List<ResvOrder> resvOrders, Vip vip) {
         if (CollectionUtils.isEmpty(resvOrders)) {
+            log.error("订单数量为空-vipId:[{}]", vip.getId());
             return 0;
         }
         List<ResvOrder> collect = resvOrders.stream()
@@ -198,11 +203,11 @@ public class CustomerValueListService {
         return resvOrders.stream()
                 .filter((order) -> "3".equals(order.getStatus()))
                 .map(ResvOrder::getPayamount)
-                .filter(payAmount -> StringUtils.isNotBlank(payAmount) && payAmount.length() < 11)
+                .filter(payAmount -> StringUtils.isNotBlank(payAmount) && payAmount.length() < 11 && NumberUtils.isCreatable(payAmount))
                 .mapToInt(payAmount -> {
                     Optional<String> optionalPayAmount = Optional.of(payAmount);
-                    double v = Double.valueOf(optionalPayAmount.orElse("0")) * 100;
-                    return (int) v;
+                    float v = Float.valueOf(optionalPayAmount.orElse("0")) * 100;
+                    return Math.round(v);
                 })
                 .sum();
     }
@@ -213,8 +218,9 @@ public class CustomerValueListService {
      * @param resvOrders 用户id
      * @return 人均消费金额，单元:分
      */
-    public int getPersonAvg(List<ResvOrder> resvOrders) {
+    public int getPersonAvg(List<ResvOrder> resvOrders, Vip vip) {
         if (CollectionUtils.isEmpty(resvOrders)){
+            log.error("该 VIP ，vipId:[{}] 订单不存在", vip.getId());
             return 0;
         }
         //消费总金额
@@ -284,7 +290,6 @@ public class CustomerValueListService {
 
         // 获取每个酒店自己的配置
         Map<String, String> hotelConfig = configHotelService.getConfig(hotelId);
-//        FirstValueConfig config = (FirstValueConfig) hotelConfig;
         if (hotelConfig == null) {
             log.error("hotelId:{}, 查询不到一级价值的配置-----", hotelId);
             return -1;
@@ -346,17 +351,16 @@ public class CustomerValueListService {
      * @param hotelId    酒店id
      * @return 1-4 的取值
      */
-    private Long getLossValue(List<ResvOrder> resvOrders, Integer hotelId) {
+    private Long getLossValue(List<ResvOrder> resvOrders, Integer hotelId, Vip vip) {
         List<LossValueConfig> lossValueConfigList = lossValueConfigService.getLossValueConfig(hotelId);
         // 排序小的在前面
         lossValueConfigList.sort(Comparator.comparing(LossValueConfig::getSort));
 
         // 单位：分
-        int personAvg = getPersonAvg(resvOrders);
+        int personAvg = getPersonAvg(resvOrders, vip);
         double customerAmount = getCustomerAmount(resvOrders);
-        int customerCount = getCustomerCount(resvOrders);
+        int customerCount = getCustomerCount(resvOrders, vip);
         for (LossValueConfig lossValueConfig : lossValueConfigList) {
-            String valueName = lossValueConfig.getValueName();
             Long id = lossValueConfig.getId();
             // 单位:分
             Integer customerPersonAvgStart = lossValueConfig.getCustomerPersonAvgStart();

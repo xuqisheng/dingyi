@@ -138,7 +138,7 @@ public class VipConsumeActionLast60Service {
                         try {
                             personCount = Integer.parseInt(resvNum);
                         } catch (NumberFormatException e) {
-                            log.warn("预订人数类型由 String -> int 转换失败，取 0:[{}]", e);
+                            log.warn("预订人数类型由 String -> int 转换失败，取 0， 订单信息:[{}]", order);
                             personCount = 0;
                         }
                     }
@@ -243,7 +243,7 @@ public class VipConsumeActionLast60Service {
                         float f = Float.parseFloat(payAmount);
                         return Math.round(f * 100);
                     } catch (NumberFormatException e) {
-                        log.error("转换失败-", e);
+                        log.error("转换失败 支付金额 ：[{}]- 支付金额数据格式错误", payAmount);
                         return CustomerValueConstants.DEFAULT_PAYAMOUNT;
                     }
                 })
