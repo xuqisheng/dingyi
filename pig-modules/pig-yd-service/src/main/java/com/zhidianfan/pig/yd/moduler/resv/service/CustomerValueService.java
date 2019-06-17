@@ -157,8 +157,8 @@ public class CustomerValueService {
         //可以分成多少组？即map大小
         Map<String, List<Vip>> map = new HashMap<>(vips.size() / i + 1);
         for (int j = 0; j < vips.size() / i + 1; j++) {
-            int startIndex = j * 2;
-            int endIndex = (j + 1) * 2;
+            int startIndex = j * i;
+            int endIndex = (j + 1) * i;
 
             if (startIndex >= vips.size()) {
                 continue;
@@ -263,7 +263,8 @@ public class CustomerValueService {
         for (Vip vip : vips) {
             try {
                 if (vip == null) {
-                    return null;
+                    log.error("getProfile() vip 信息为空");
+                    continue;
                 }
                 int profile = vipService.getProfile(vip);
                 Integer vipId = vip.getId();

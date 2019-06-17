@@ -254,11 +254,11 @@ public class CustomerRecordService {
         value = value == null ? "" : value;
 
         // 沉睡客户，沉睡用户，只匹配前面两个字是否一样
-        String customerValueNameS = "";
+        String customerValueNameS = customerValue;
         if (StringUtils.isNotBlank(customerValue) && customerValue.length() >= 2) {
             customerValueNameS = customerValue.substring(0, 2);
         }
-        String lastValue = "";
+        String lastValue = value;
         if (StringUtils.isNotBlank(value) && value.length() >= 2) {
             lastValue = value.substring(0, 2);
         }
