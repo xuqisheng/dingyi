@@ -12,4 +12,4 @@ docker.file=piggateway-YXDockerfile
 # Docker镜像构建之后push的仓库地址
 docker.repo=registry.cn-hangzhou.aliyuncs.com/zhidianfan/pig-gateway
 
-docker.tag=PV-0.0.1-pd
+docker.tag=0.0.2-gateway-release

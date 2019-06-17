@@ -103,6 +103,7 @@
              <appender-ref ref="othererror"/>
         </root>
         <logger name="com.zhidianfan.pig.yd.moduler.order.task" level="INFO">
+            <appender-ref ref="otherconsole"/>
             <appender-ref ref="debug"/>
             <appender-ref ref="error"/>
         </logger>

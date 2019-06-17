@@ -6,5 +6,10 @@ code.language=oracle-jdk1.8
 # 构建打包使用的打包文件
 build.output=pig-auth/target/pig-auth.jar
 
-# 应用部署脚本
-deploy.appctl.path=deploy.sh
+# docker构建所用的Dockerfile的路径
+docker.file=pigauth-YXDockerfile
+
+# Docker镜像构建之后push的仓库地址
+docker.repo=registry.cn-hangzhou.aliyuncs.com/zhidianfan/pig-auth
+
+docker.tag=0.0.4-auth-release
