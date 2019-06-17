@@ -103,7 +103,7 @@ public class CustomerValueService {
 //        log.info("任务结束，taskId: {}, 结束时间:{}", taskId, DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(endTime));
 //    }
 
-    public void getCustomerValueBaseInfo2(CustomerValueTask customerValueTask,int groupNum) {
+    public void getCustomerValueBaseInfo2(CustomerValueTask customerValueTask, int groupNum) {
         LocalTime startTime1 = LocalTime.of(23, 0, 0);
         LocalTime startTime2 = LocalTime.of(8, 0, 0);
         while (!(LocalTime.now().isAfter(startTime1) || LocalTime.now().isBefore(startTime2))) {
@@ -114,6 +114,8 @@ public class CustomerValueService {
                 e.printStackTrace();
             }
         }
+
+        log.info("计算当前酒店的客户价值：{}", customerValueTask);
 
         LocalDateTime startTime = LocalDateTime.now();
         // 1. 从任务表中取出酒店 id
