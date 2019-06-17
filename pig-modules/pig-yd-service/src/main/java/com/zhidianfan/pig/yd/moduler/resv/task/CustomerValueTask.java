@@ -83,41 +83,35 @@ public class CustomerValueTask {
                                 0L, TimeUnit.MILLISECONDS,
                                 new LinkedBlockingQueue<Runnable>());
 
-                        for (int i = 0; i < customerValuesValueTask.size(); ) {
+                        List<CompletableFuture<Long>> completableFutures = new ArrayList<>(customerValuesValueTask.size());
+                        for (int i = 0; i < customerValuesValueTask.size(); i++) {
 
-                            List<CompletableFuture<Long>> completableFutures = new ArrayList<>(nThreads);
-                            for (int j = 0; j < nThreads && i < customerValuesValueTask.size(); j++, i++) {
-                                com.zhidianfan.pig.yd.moduler.common.dao.entity.CustomerValueTask tmp = customerValuesValueTask.get(i);
-                                CompletableFuture<Long> integerCompletableFuture = CompletableFuture.supplyAsync(() -> {
-                                    customerValueService.getCustomerValueBaseInfo2(tmp, 500);
-                                    return tmp.getHotelId();
-                                }, executorService);
-                                completableFutures.add(integerCompletableFuture);
-                            }
+                            com.zhidianfan.pig.yd.moduler.common.dao.entity.CustomerValueTask tmp = customerValuesValueTask.get(i);
+                            CompletableFuture<Long> integerCompletableFuture = CompletableFuture.supplyAsync(() -> {
+                                customerValueService.getCustomerValueBaseInfo2(tmp, 1000);
+                                return tmp.getHotelId();
+                            }, executorService);
+                            completableFutures.add(integerCompletableFuture);
+                        }
 
-                            CompletableFuture[] completableFutures1 = new CompletableFuture[completableFutures.size()];
-                            CompletableFuture<Void> voidCompletableFuture = CompletableFuture.allOf(completableFutures.toArray(completableFutures1));
-                            try {
-//                堵塞，等待这批任务全部完成，再进行下一批
-                                voidCompletableFuture.get();
-                                int finalI = i;
-                                completableFutures.stream()
-                                        .forEach(tmp -> {
-                                            try {
-                                                log.info("酒店id：{}执行结束，剩余酒店数：{}", tmp.get(), (customerValuesValueTask.size() - finalI));
-                                            } catch (InterruptedException e) {
-                                                e.printStackTrace();
-                                            } catch (ExecutionException e) {
-                                                e.printStackTrace();
-                                            }
-                                        });
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            } catch (ExecutionException e) {
-                                e.printStackTrace();
-                            }
-
-
+                        CompletableFuture[] completableFutures1 = new CompletableFuture[completableFutures.size()];
+                        CompletableFuture<Void> voidCompletableFuture = CompletableFuture.allOf(completableFutures.toArray(completableFutures1));
+                        try {
+                            voidCompletableFuture.get();
+                            completableFutures.stream()
+                                    .forEach(tmp -> {
+                                        try {
+                                            log.info("酒店id：{}执行结束", tmp.get());
+                                        } catch (InterruptedException e) {
+                                            e.printStackTrace();
+                                        } catch (ExecutionException e) {
+                                            e.printStackTrace();
+                                        }
+                                    });
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        } catch (ExecutionException e) {
+                            e.printStackTrace();
                         }
 
                         executorService.shutdown();
