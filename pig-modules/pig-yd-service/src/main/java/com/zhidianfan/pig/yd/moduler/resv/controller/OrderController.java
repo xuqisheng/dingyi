@@ -288,6 +288,8 @@ public class OrderController {
 
     /**
      * 小程序业绩统计
+     * @param performanceDTO 查询条件
+     * @return 各个端的业绩统计
      */
     @GetMapping(value = "/performanceStatistics")
     public ResponseEntity performanceStatistics(@Valid PerformanceDTO performanceDTO) {

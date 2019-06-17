@@ -52,4 +52,10 @@ public class DeskOrderBo extends ResvOrderAndroid {
     @ApiModelProperty("订单评价id")
     private Integer orderRatingId;
 
+
+    /**
+     * 新订单来源
+     */
+    private String newResvSource;
+
 }
