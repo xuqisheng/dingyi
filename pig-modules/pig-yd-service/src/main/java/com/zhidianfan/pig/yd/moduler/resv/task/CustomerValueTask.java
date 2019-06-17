@@ -88,7 +88,7 @@ public class CustomerValueTask {
                                 .map(customerValueTask -> CompletableFuture.supplyAsync(() -> {
                                     log.info("{}开始被处理，剩余{}家待处理", customerValueTask.getHotelId(), count);
                                     if (LocalTime.now().isAfter(startTime1) || LocalTime.now().isBefore(startTime2)) {
-                                        customerValueService.getCustomerValueBaseInfo2(customerValueTask,10);
+                                        customerValueService.getCustomerValueBaseInfo2(customerValueTask,500);
                                         count.addAndGet(-1);
                                         log.info("{}处理结束，剩余{}家待处理", customerValueTask.getHotelId(), count);
                                     } else {
