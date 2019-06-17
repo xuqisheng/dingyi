@@ -76,7 +76,7 @@ public class CustomerValueTask {
             Optional.ofNullable(customerValuesValueTask)
                     .ifPresent(customerValueTasks -> {
 
-                        int nThreads = 16;
+                        int nThreads = 32;
                         AtomicInteger count = new AtomicInteger(customerValuesValueTask.size());
                         log.info("本次有:{}家酒店需要计算客户价值", count);
                         ExecutorService executorService = new ThreadPoolExecutor(nThreads, nThreads,
