@@ -116,8 +116,6 @@ public class CustomerValueTask {
 
                         executorService.shutdown();
 
-                        executorService.shutdown();
-
                     });
         } else {
             log.info("未到执行客户价值时间......");
