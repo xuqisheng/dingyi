@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.service.impl.ServiceImpl;
 import com.zhidianfan.pig.yd.moduler.resv.bo.DeskOrderBo;
 import com.zhidianfan.pig.yd.moduler.resv.bo.MessageOrderBO;
 import com.zhidianfan.pig.yd.moduler.resv.bo.OrderBO;
+import com.zhidianfan.pig.yd.moduler.resv.bo.PerformanceBO;
 import com.zhidianfan.pig.yd.moduler.resv.dto.*;
 import com.zhidianfan.pig.yd.moduler.resv.qo.AllResvOrderQO;
 import com.zhidianfan.pig.yd.moduler.resv.qo.LockTablQO;
@@ -167,6 +168,27 @@ public class ResvOrderAndroidServiceImpl extends ServiceImpl<ResvOrderAndroidMap
     @Override
     public ResvOrderAndroid selectBrandLastEatTime(String phone, Integer brandId) {
         return baseMapper.selectBrandLastEatTime(phone, brandId);
+    }
+
+    @Override
+    public List<PerformanceBO> selectPerformanceStatisticsWithAndroidPhone(PerformanceDTO performanceDTO) {
+
+        List<PerformanceBO> bos = baseMapper.selectPerformanceStatisticsWithAndroidPhone(performanceDTO);
+
+        return bos;
+    }
+
+    @Override
+    public List<PerformanceBO> selectPerformanceStatisticsWithThird(PerformanceDTO performanceDTO) {
+
+        List<PerformanceBO> bos = baseMapper.selectPerformanceStatisticsWithThird(performanceDTO);
+
+        return bos;
+    }
+
+    @Override
+    public List<PerformanceBO> selectPerformanceStatisticsWithSmallApp(PerformanceDTO performanceDTO) {
+        return baseMapper.selectPerformanceStatisticsWithSmallApp(performanceDTO);
     }
 
 

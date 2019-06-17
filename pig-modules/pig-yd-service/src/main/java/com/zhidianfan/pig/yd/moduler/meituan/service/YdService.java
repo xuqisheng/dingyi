@@ -363,6 +363,9 @@ public class YdService {
                     resvOrderAndroid.setExternalSourceId(2);
                     resvOrderAndroid.setExternalSourceName(resvOrderThird.getSource());
 
+                    //设置为deviceType 为 1 默认为电话机
+                    resvOrderAndroid.setDeviceType(1);
+
                     resvOrderAndroid.setVipId(0);
                     boolean insert = iResvOrderAndroidService.insert(resvOrderAndroid);
                     //插入订单自动接单日志
@@ -871,6 +874,8 @@ public class YdService {
             resvOrderAndroid.setVipSex(resvOrderThird.getVipSex().equals("先生") ? "男" : "女");
             resvOrderAndroid.setVipId(vip1.getId());
 
+            //设置为deviceType 为 1 默认为电话机
+            resvOrderAndroid.setDeviceType(1);
 
             boolean insert = iResvOrderAndroidService.insert(resvOrderAndroid);
             //插入订单自动接单日志

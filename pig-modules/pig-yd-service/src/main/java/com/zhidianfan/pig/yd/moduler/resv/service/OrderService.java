@@ -1,6 +1,7 @@
 package com.zhidianfan.pig.yd.moduler.resv.service;
 
 
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.baomidou.mybatisplus.plugins.Page;
 import com.google.common.collect.Lists;
@@ -469,4 +470,33 @@ public class OrderService {
 
         return batchOrderBos;
     }
+
+    /**
+     * 筛选条件
+     *
+     */
+    public JSONObject performanceStatistics(PerformanceDTO performanceDTO) {
+
+
+        // 1. 查询各种第三方订单统计
+        List<PerformanceBO> thirdPerformanceBOs  = resvOrderService.selectPerformanceStatisticsWithThird(performanceDTO);
+
+
+        // 2. 查询电话机统计
+        List<PerformanceBO> androidPerformanceBOs = resvOrderService.selectPerformanceStatisticsWithAndroidPhone(performanceDTO);
+
+
+
+        // 3. 查询小程序业绩统计
+        List<PerformanceBO> appPerformanceBOs  = resvOrderService.selectPerformanceStatisticsWithSmallApp(performanceDTO);
+
+        JSONObject result = new JSONObject();
+
+        result.put("third",thirdPerformanceBOs);
+        result.put("android",androidPerformanceBOs);
+        result.put("app",appPerformanceBOs);
+
+        return  result;
+    }
 }
+

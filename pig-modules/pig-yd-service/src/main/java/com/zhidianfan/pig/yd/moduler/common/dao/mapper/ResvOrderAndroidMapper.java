@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.mapper.BaseMapper;
 import com.zhidianfan.pig.yd.moduler.resv.bo.DeskOrderBo;
 import com.zhidianfan.pig.yd.moduler.resv.bo.MessageOrderBO;
 import com.zhidianfan.pig.yd.moduler.resv.bo.OrderBO;
+import com.zhidianfan.pig.yd.moduler.resv.bo.PerformanceBO;
 import com.zhidianfan.pig.yd.moduler.resv.dto.*;
 import com.zhidianfan.pig.yd.moduler.resv.qo.AllResvOrderQO;
 import com.zhidianfan.pig.yd.moduler.resv.qo.LockTablQO;
@@ -83,4 +84,10 @@ public interface ResvOrderAndroidMapper extends BaseMapper<ResvOrderAndroid> {
     List<DeskOrderBo> selectListWithAllergen(@Param("batchNo")String batchNo);
 
     ResvOrderAndroid selectBrandLastEatTime(@Param("phone")String phone,@Param("brandId") Integer brandId);
+
+    List<PerformanceBO> selectPerformanceStatisticsWithAndroidPhone(PerformanceDTO performanceDTO);
+
+    List<PerformanceBO> selectPerformanceStatisticsWithThird(PerformanceDTO performanceDTO);
+
+    List<PerformanceBO> selectPerformanceStatisticsWithSmallApp(PerformanceDTO performanceDTO);
 }

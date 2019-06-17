@@ -1,5 +1,6 @@
 package com.zhidianfan.pig.yd.moduler.resv.controller;
 
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.baomidou.mybatisplus.plugins.Page;
 import com.google.common.collect.Lists;
@@ -271,8 +272,6 @@ public class OrderController {
 
 
 
-
-
     /**
      * 分类订单查询
      * @param bean
@@ -285,6 +284,21 @@ public class OrderController {
         List<BatchOrderBo> orderSearchStatus = orderService.orderSearchStatus(bean);
         return ResponseEntity.ok(orderSearchStatus);
     }
+
+
+    /**
+     * 小程序业绩统计
+     */
+    @GetMapping(value = "/performanceStatistics")
+    public ResponseEntity performanceStatistics(@Valid PerformanceDTO performanceDTO) {
+
+        JSONObject jsonObject = orderService.performanceStatistics(performanceDTO);
+
+        return ResponseEntity.ok(jsonObject);
+    }
+
+
+
 
 
 
