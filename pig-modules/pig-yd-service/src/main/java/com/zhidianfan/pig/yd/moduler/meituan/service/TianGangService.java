@@ -191,7 +191,7 @@ public class TianGangService {
             resvMeetingKey.setResvDate(format.parse(tianGangOrderBO.getResvDate()));
             String keyNo = IdUtils.makeOrderNo();
             resvMeetingKey.setKeyNo("XS"+keyNo);
-            resvMeetingKey.setKeyNoBusiness("钉钉");
+            resvMeetingKey.setKeyNoBusiness(tianGangOrderBO.getThirdOrderNo().substring(tianGangOrderBO.getThirdOrderNo().length()-3));
 
             boolean insert = resvMeetingKeyService.insert(resvMeetingKey);
 
