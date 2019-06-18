@@ -23,11 +23,11 @@ public class MyBatisConfig {
         return new PaginationInterceptor();
     }
 
-    @Bean
-    @Profile({"dev", "test"})// 设置 dev test 环境开启
-    public PerformanceInterceptor performanceInterceptor() {
-        PerformanceInterceptor performanceInterceptor = new PerformanceInterceptor();
-        performanceInterceptor.setFormat(true);//SQL是否格式化，默认false
-        return performanceInterceptor;
-    }
+//    @Bean
+//    @Profile({"dev", "test"})// 设置 dev test 环境开启
+//    public PerformanceInterceptor performanceInterceptor() {
+//        PerformanceInterceptor performanceInterceptor = new PerformanceInterceptor();
+//        performanceInterceptor.setFormat(true);//SQL是否格式化，默认false
+//        return performanceInterceptor;
+//    }
 }

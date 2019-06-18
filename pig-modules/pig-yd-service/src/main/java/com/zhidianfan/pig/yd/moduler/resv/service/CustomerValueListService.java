@@ -1,5 +1,6 @@
 package com.zhidianfan.pig.yd.moduler.resv.service;
 
+import com.google.common.collect.Lists;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.*;
 import com.zhidianfan.pig.yd.moduler.common.service.IAppUserService;
 import com.zhidianfan.pig.yd.moduler.resv.constants.CustomerValueConstants;
@@ -178,7 +179,7 @@ public class CustomerValueListService {
      */
     public int getCustomerCount(List<ResvOrder> resvOrders, Vip vip) {
         if (CollectionUtils.isEmpty(resvOrders)) {
-            log.error("订单数量为空-vipId:[{}]", vip.getId());
+            log.info("订单数量为空-vipId:[{}]", vip.getId());
             return 0;
         }
         List<ResvOrder> collect = resvOrders.stream()
@@ -220,7 +221,7 @@ public class CustomerValueListService {
      */
     public int getPersonAvg(List<ResvOrder> resvOrders, Vip vip) {
         if (CollectionUtils.isEmpty(resvOrders)){
-            log.error("该 VIP ，vipId:[{}] 订单不存在", vip.getId());
+            log.info("该 VIP ，vipId:[{}] 订单不存在", vip.getId());
             return 0;
         }
         //消费总金额
@@ -305,7 +306,14 @@ public class CustomerValueListService {
             log.error("-------配置出错，请检查配置 businessId:[{}]-------------", hotelId);
             return -1;
         }
-        if (CollectionUtils.isEmpty(resvOrders)) {
+
+        List<ResvOrder> orderList = Optional.ofNullable(resvOrders).orElse(Lists.newArrayList());
+        List<ResvOrder> consumerOrder = orderList.stream()
+                .filter(Objects::nonNull)
+                .filter(order -> "2".equals(order.getStatus()) || "3".equals(order.getStatus()))
+                .collect(Collectors.toList());
+
+        if (CollectionUtils.isEmpty(resvOrders) || CollectionUtils.isEmpty(consumerOrder)) {
             //意向客户 未消费客户
             return CustomerValueConstants.INTENTION_CUSTOMER;
         }

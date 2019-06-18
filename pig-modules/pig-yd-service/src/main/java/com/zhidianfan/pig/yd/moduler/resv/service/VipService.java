@@ -4,7 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.baomidou.mybatisplus.mapper.Wrapper;
 import com.baomidou.mybatisplus.plugins.Page;
-import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.zhidianfan.pig.common.util.PageFactory;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.*;
 import com.zhidianfan.pig.yd.moduler.common.dto.ErrorTip;
@@ -658,6 +658,50 @@ public class VipService {
     }
 
     /**
+     * 计算客户资料完整度
+     * @param vips vip 信息
+     * @return 完整度，15 的字样
+     */
+    public Map<Integer, Integer> getProfile2(List<Vip> vips) {
+        // 查询 vip 表
+        if (vips == null) {
+            log.error("vip 信息不存在");
+            return Maps.newHashMap();
+        }
+
+        Object[] vipIdArray = vips.stream()
+                .filter(vip -> vip.getId() != null)
+                .map(Vip::getId)
+                .toArray();
+
+        // -1 查询不到，不作处理
+        // 查询纪念日表
+        Wrapper<Anniversary> wrapper = new EntityWrapper<>();
+        wrapper.eq("vip_id", vipIdArray);
+        List<Anniversary> anniversaries = anniversaryMapper.selectList(wrapper);
+        // 去除相同的 vipId,每个 vipId 只有一条信息
+        ArrayList<Anniversary> distinctAnniversariesList = anniversaries.stream()
+                .collect(Collectors.collectingAndThen(
+                        Collectors.toCollection(
+                                () -> new TreeSet<>(Comparator.comparing(Anniversary::getVipId))
+                        ), ArrayList::new
+                ));
+
+        // key-vipId, v-true, 该 vip 有纪念日
+        Map<Integer, Boolean> existAnniversariesVip = distinctAnniversariesList.stream()
+                .collect(Collectors.toMap(Anniversary::getVipId, result -> Boolean.TRUE));
+
+        Map<Integer, Integer> hash = new HashMap<>(vips.size());
+        for (Vip vip : vips) {
+            Integer id = vip.getId();
+            int profileScore2 = getProfileScore2(vip, existAnniversariesVip);
+            hash.put(id, profileScore2);
+        }
+
+        return hash;
+    }
+
+    /**
      * 资料完整度
      * @param vip vip 信息
      * @param profileCount 纪念日
@@ -705,6 +749,57 @@ public class VipService {
 
         if (profileCount >= 0) {
             score += 15;
+        }
+
+        return score;
+    }
+
+    private int getProfileScore2(Vip vip, Map<Integer, Boolean> anniversariesMap) {
+        int score = 0;
+        String vipName = vip.getVipName();
+        if (StringUtils.isNotBlank(vipName)) {
+            score += 10;
+        }
+
+        String vipPhone = vip.getVipPhone();
+        if (StringUtils.isNotBlank(vipPhone)) {
+            score += 10;
+        }
+
+        String hobby = vip.getHobby();
+        if (StringUtils.isNotBlank(hobby)) {
+            score += 15;
+        }
+
+        String detest = vip.getDetest();
+        if (StringUtils.isNotBlank(detest)) {
+            score += 15;
+        }
+
+        String tag = vip.getTag();
+        if (StringUtils.isNotBlank(tag)) {
+            score += 10;
+        }
+
+        String vipCompany = vip.getVipCompany();
+        if (StringUtils.isNotBlank(vipCompany)) {
+            score += 10;
+        }
+
+        String vipBirthday = vip.getVipBirthday();
+        String vipBirthdayNl = vip.getVipBirthdayNl();
+        if (StringUtils.isNotBlank(vipBirthday)) {
+            score += 15;
+        } else if (StringUtils.isNotBlank(vipBirthdayNl)) {
+            score += 15;
+        }
+
+        for (Map.Entry<Integer, Boolean> entry : anniversariesMap.entrySet()) {
+            Integer vipId = entry.getKey();
+            Boolean b = entry.getValue();
+            if (vip.getId().equals(vipId) && b) {
+                score += 15;
+            }
         }
 
         return score;

@@ -210,7 +210,7 @@ public class CustomerValueService {
 
         Map<Integer, List<CustomerRecord>> customerRecordList = customerRecordService.getCustomerRecord(vip, resvOrders, customerValueList);
 
-        Map<Integer, NowChangeInfo> nowChangeInfo = getProfile(vip);
+        Map<Integer, NowChangeInfo> nowChangeInfo = getProfile2(vip);
 
         Optional.ofNullable(customerValueList)
                 .ifPresent(map -> {
@@ -287,6 +287,43 @@ public class CustomerValueService {
 
 
         return map;
+    }
+
+    private Map<Integer, NowChangeInfo> getProfile2(List<Vip> vips) {
+
+        Map<Integer, NowChangeInfo> map = new HashMap<>();
+        Map<Integer, Integer> profile2 = vipService.getProfile2(vips);
+
+        Map<Integer, NowChangeInfo> nowChangeInfoMap = vips.stream()
+                .filter(vip -> {
+                    if (vip == null) {
+                        log.error("getProfile2() vip 信息为空");
+                    }
+                    return vip != null;
+                })
+                .map(vip -> {
+                    try {
+                        Integer vipId = vip.getId();
+                        Integer profile = profile2.get(vipId);
+                        NowChangeInfo nowChangeInfo = new NowChangeInfo();
+                        nowChangeInfo.setVipId(vipId);
+                        nowChangeInfo.setValue(profile);
+                        nowChangeInfo.setType(CustomerValueChangeFieldDTO.PROFILE);
+                        nowChangeInfo.setChangeTime(LocalDateTime.now());
+                        nowChangeInfo.setRemark(StringUtils.EMPTY);
+                        nowChangeInfo.setCreateTime(LocalDateTime.now());
+                        nowChangeInfo.setUpdateTime(LocalDateTime.now());
+//                        map.put(vipId, nowChangeInfo);
+                        return nowChangeInfo;
+                    } catch (Exception e) {
+                        log.error(e.getMessage(), e);
+                        return new NowChangeInfo();
+                    }
+                })
+                .collect(Collectors.toMap(NowChangeInfo::getVipId, nowChangeInfo -> nowChangeInfo));
+
+
+        return nowChangeInfoMap;
     }
 
     /**

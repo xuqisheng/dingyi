@@ -2,6 +2,7 @@ package com.zhidianfan.pig.yd.moduler.resv.service;
 
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.baomidou.mybatisplus.mapper.Wrapper;
+import com.google.common.collect.Lists;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.*;
 import com.zhidianfan.pig.yd.moduler.common.service.IAppUserService;
 import com.zhidianfan.pig.yd.moduler.common.service.IBusinessCustomerAnalysisDetailService;
@@ -118,6 +119,20 @@ public class BusinessCustomerAnalysisInfoService {
         AppUser appUser = appuserMapper.selectById(appUserId);
         Optional<AppUser> optional = Optional.ofNullable(appUser);
         return optional.orElse(new AppUser());
+    }
+
+    public List<AppUser> getAppUserList(List<Integer> appUserIds) {
+        if (appUserIds == null) {
+            return Lists.newArrayList();
+        }
+        List<Integer> appUserList = appUserIds.stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+        Wrapper<AppUser> wrapper = new EntityWrapper<>();
+        wrapper.in("id", appUserList.toArray());
+
+
+        return appuserMapper.selectList(wrapper);
     }
 
     private boolean checkParam(String resvDate) {
