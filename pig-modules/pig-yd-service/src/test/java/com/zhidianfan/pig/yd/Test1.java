@@ -40,12 +40,12 @@ public class Test1 {
     private String url = "http://47.99.14.92:9999/auth/oauth/token";
 
     @Test
-    public void test45(){
+    public void test45() {
         Integer integer = new Integer(10);
         Integer integer1 = new Integer(10000);
-        Map<Integer,String> map = new HashMap<>();
-        map.put(integer,"10");
-        map.put(integer1,"101");
+        Map<Integer, String> map = new HashMap<>();
+        map.put(integer, "10");
+        map.put(integer1, "101");
         System.out.println(map.get(new Integer("10")));
         System.out.println(map.get(new Integer("10000")));
 
@@ -77,29 +77,47 @@ public class Test1 {
 
     @Test
     public void test43() {
-        int nThreads = 500;
-        Stream<Integer> limit = Stream.iterate(0, n -> n + 2)
-                .limit(200);
+        int nThreads = 10;
+        List<Integer> limit = Stream.iterate(0, n -> n + 2)
+                .limit(20)
+                .collect(Collectors.toList());
         ExecutorService executorService = new ThreadPoolExecutor(nThreads, nThreads,
                 0L, TimeUnit.MILLISECONDS,
                 new LinkedBlockingQueue<Runnable>());
 
         LocalDateTime start = LocalDateTime.now();
-//        String property = System.getProperty("java.util.concurrent.ForkJoinPool.common.parallelism");
-//        System.out.println(property);
-        System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "100");
-        List<Integer> collect = limit.map(count -> CompletableFuture.supplyAsync(() -> {
-            try {
-                System.out.println("等待开始");
-                TimeUnit.SECONDS.sleep(2);
-                System.out.println("等待结束一个");
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            return count;
-        }, executorService))
-                .map(CompletableFuture::join)
-                .collect(Collectors.toList());
+        List<CompletableFuture<Integer>> completableFutures = new ArrayList<>(nThreads);
+        for (int i = 0; i < limit.size(); i++) {
+            Integer tmp = limit.get(i);
+            CompletableFuture<Integer> integerCompletableFuture = CompletableFuture.supplyAsync(() -> {
+                try {
+                    System.out.println("等待开始");
+                    TimeUnit.SECONDS.sleep(2);
+                    System.out.println("等待结束一个");
+                    return tmp;
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                return tmp;
+            }, executorService);
+            completableFutures.add(integerCompletableFuture);
+        }
+
+
+        CompletableFuture[] completableFutures1 = new CompletableFuture[completableFutures.size()];
+        CompletableFuture<Void> voidCompletableFuture = CompletableFuture.allOf(completableFutures.toArray(completableFutures1));
+        try {
+//                堵塞，等待这批任务全部完成，再进行下一批
+            voidCompletableFuture.get();
+            completableFutures.stream()
+                    .forEach(tmp -> {
+                        System.out.println(tmp);
+                    });
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
 
         LocalDateTime end = LocalDateTime.now();
         System.out.println("执行结束,耗时：" + (Duration.between(start, end).getSeconds() + "秒"));

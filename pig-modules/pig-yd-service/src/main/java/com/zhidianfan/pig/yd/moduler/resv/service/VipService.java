@@ -601,10 +601,10 @@ public class VipService {
         try {
             localDate = LocalDate.parse(vipBirthday, dateTimeFormatter);
         } catch (DateTimeParseException e) {
-            log.error("格式转换失败", e);
+            log.error("格式转换失败:{}", vipBirthday);
             return CustomerValueConstants.DEFAULT_NON_AGE;
         } catch (RuntimeException e) {
-            log.error("其他运行时的异常", e);
+            log.error("其他运行时的异常:{}", vipBirthday);
             return CustomerValueConstants.DEFAULT_NON_AGE;
         }
         LocalDate now = LocalDate.now();

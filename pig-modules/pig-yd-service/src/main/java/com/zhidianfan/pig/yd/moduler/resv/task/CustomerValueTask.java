@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.*;
@@ -75,39 +76,43 @@ public class CustomerValueTask {
             Optional.ofNullable(customerValuesValueTask)
                     .ifPresent(customerValueTasks -> {
 
-                        int nThreads = 8;
+                        int nThreads = 16;
                         AtomicInteger count = new AtomicInteger(customerValuesValueTask.size());
                         log.info("本次有:{}家酒店需要计算客户价值", count);
                         ExecutorService executorService = new ThreadPoolExecutor(nThreads, nThreads,
                                 0L, TimeUnit.MILLISECONDS,
                                 new LinkedBlockingQueue<Runnable>());
 
-                        System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "8");
+                        List<CompletableFuture<Long>> completableFutures = new ArrayList<>(customerValuesValueTask.size());
+                        for (int i = 0; i < customerValuesValueTask.size(); i++) {
 
-                        List<Long> collect = customerValueTasks.parallelStream()
-                                .map(customerValueTask -> CompletableFuture.supplyAsync(() -> {
-                                    log.info("{}开始被处理，剩余{}家待处理", customerValueTask.getHotelId(), count);
-                                    if (LocalTime.now().isAfter(startTime1) || LocalTime.now().isBefore(startTime2)) {
-                                        customerValueService.getCustomerValueBaseInfo2(customerValueTask,10);
-                                        count.addAndGet(-1);
-                                        log.info("{}处理结束，剩余{}家待处理", customerValueTask.getHotelId(), count);
-                                    } else {
-                                        while (!(LocalTime.now().isAfter(startTime1) || LocalTime.now().isBefore(startTime2))) {
-                                            log.info("非客户价值计算时间暂停执行======");
-                                            try {
-                                                TimeUnit.MINUTES.sleep(10);
-                                            } catch (InterruptedException e) {
-                                                e.printStackTrace();
-                                            }
+                            com.zhidianfan.pig.yd.moduler.common.dao.entity.CustomerValueTask tmp = customerValuesValueTask.get(i);
+                            CompletableFuture<Long> integerCompletableFuture = CompletableFuture.supplyAsync(() -> {
+                                customerValueService.getCustomerValueBaseInfo2(tmp, 1000);
+                                return tmp.getHotelId();
+                            }, executorService);
+                            completableFutures.add(integerCompletableFuture);
+                        }
+
+                        CompletableFuture[] completableFutures1 = new CompletableFuture[completableFutures.size()];
+                        CompletableFuture<Void> voidCompletableFuture = CompletableFuture.allOf(completableFutures.toArray(completableFutures1));
+                        try {
+                            voidCompletableFuture.get();
+                            completableFutures.stream()
+                                    .forEach(tmp -> {
+                                        try {
+                                            log.info("酒店id：{}执行结束", tmp.get());
+                                        } catch (InterruptedException e) {
+                                            e.printStackTrace();
+                                        } catch (ExecutionException e) {
+                                            e.printStackTrace();
                                         }
-                                    }
-
-                                    return customerValueTask.getHotelId();
-                                }, executorService))
-                                .map(CompletableFuture::join)
-                                .collect(Collectors.toList());
-
-                        log.info("处理结束，本次计算:{}这些酒店", collect);
+                                    });
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        } catch (ExecutionException e) {
+                            e.printStackTrace();
+                        }
 
                         executorService.shutdown();
 
@@ -116,7 +121,6 @@ public class CustomerValueTask {
             log.info("未到执行客户价值时间......");
         }
 
-        System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "32");
     }
 
 
