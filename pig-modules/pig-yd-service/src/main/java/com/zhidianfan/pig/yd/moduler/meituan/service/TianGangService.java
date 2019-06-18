@@ -88,6 +88,9 @@ public class TianGangService {
     @Autowired
     private IResvMeetingOrderService resvMeetingOrderService;
 
+    @Autowired
+    private IBillSyncService billSyncService;
+
     /**
      * 创建天港订单
      * @param tianGangOrderBO
@@ -625,7 +628,19 @@ public class TianGangService {
                 tgOrderSubmitDTO.setYdOrderNumber(resvOrder.getBatchNo());
                 tgOrderSubmitDTO.setOrderNumber(resvOrderSync.getThirdOrderNo());
                 tgOrderSubmitDTO.setMealCategoryId(2);
-                tgOrderSubmitDTO.setBill(Integer.valueOf(resvOrder.getPayamount()));
+                if(StringUtils.isNotBlank(resvOrder.getPayamount())){
+                    tgOrderSubmitDTO.setBill(Integer.valueOf(resvOrder.getPayamount()));
+                }
+                if(StringUtils.isNotBlank(resvOrder.getDeposit())){
+                    tgOrderSubmitDTO.setBookingBill(Integer.valueOf(resvOrder.getDeposit()));
+                }
+                if(StringUtils.isNotBlank(resvOrder.getReceiptNo())){
+                    tgOrderSubmitDTO.setBookingBillRecipe(resvOrder.getReceiptNo());
+                }
+                BillSync billSync = billSyncService.selectOne(new EntityWrapper<BillSync>().eq("resv_order",resvOrder.getResvOrder()));
+                if(billSync != null){
+                    tgOrderSubmitDTO.setPaymentRecipe(billSync.getZdbh());
+                }
                 boolean b = submitTianGangOrder(tgOrderSubmitDTO);
                 if(b){
                     updateOrderSyncStatus(resvOrder.getBatchNo(),null);
@@ -746,7 +761,29 @@ public class TianGangService {
                 tgOrderSubmitDTO.setYdOrderNumber(resvMeetingOrder.getBatchNo());
                 tgOrderSubmitDTO.setOrderNumber(resvMeetingOrder.getTgOrderNo());
                 tgOrderSubmitDTO.setMealCategoryId(1);
-                tgOrderSubmitDTO.setBill(Integer.valueOf(resvMeetingOrder.getPayAmount()));
+                if(StringUtils.isNotBlank(resvMeetingOrder.getPayAmount())){
+                    tgOrderSubmitDTO.setBill(Integer.valueOf(resvMeetingOrder.getPayAmount()));
+                }
+                Integer bill = 0;
+                if(StringUtils.isNotBlank(resvMeetingOrder.getDeposit())){
+                    bill += Integer.valueOf(resvMeetingOrder.getDeposit());
+                }
+                if(StringUtils.isNotBlank(resvMeetingOrder.getDeposit1())){
+                    bill += Integer.valueOf(resvMeetingOrder.getDeposit1());
+                }
+                if(StringUtils.isNotBlank(resvMeetingOrder.getDeposit2())){
+                    bill += Integer.valueOf(resvMeetingOrder.getDeposit2());
+                }
+                if(bill != 0){
+                    tgOrderSubmitDTO.setBookingBill(bill);
+                }
+                if(StringUtils.isNotBlank(resvMeetingOrder.getReceiptNo())){
+                    tgOrderSubmitDTO.setBookingBillRecipe(resvMeetingOrder.getReceiptNo());
+                }
+                BillSync billSync = billSyncService.selectOne(new EntityWrapper<BillSync>().eq("resv_order",resvMeetingOrder.getResvOrder()));
+                if(billSync != null){
+                    tgOrderSubmitDTO.setPaymentRecipe(billSync.getZdbh());
+                }
                 boolean b = submitTianGangOrder(tgOrderSubmitDTO);
                 if(b){
                     updateMeetingOrderSyncStatus(resvMeetingOrder.getBatchNo(),null);
