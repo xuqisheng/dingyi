@@ -625,7 +625,15 @@ public class TianGangService {
                 tgOrderSubmitDTO.setYdOrderNumber(resvOrder.getBatchNo());
                 tgOrderSubmitDTO.setOrderNumber(resvOrderSync.getThirdOrderNo());
                 tgOrderSubmitDTO.setMealCategoryId(2);
-                tgOrderSubmitDTO.setBill(Integer.valueOf(resvOrder.getPayamount()));
+                if(StringUtils.isNotBlank(resvOrder.getPayamount())){
+                    tgOrderSubmitDTO.setBill(Integer.valueOf(resvOrder.getPayamount()));
+                }
+                if(StringUtils.isNotBlank(resvOrder.getDeposit())){
+                    tgOrderSubmitDTO.setBookingBill(Integer.valueOf(resvOrder.getDeposit()));
+                }
+                if(StringUtils.isNotBlank(resvOrder.getReceiptNo())){
+                    tgOrderSubmitDTO.setBookingBillRecipe(resvOrder.getReceiptNo());
+                }
                 boolean b = submitTianGangOrder(tgOrderSubmitDTO);
                 if(b){
                     updateOrderSyncStatus(resvOrder.getBatchNo(),null);
@@ -746,7 +754,25 @@ public class TianGangService {
                 tgOrderSubmitDTO.setYdOrderNumber(resvMeetingOrder.getBatchNo());
                 tgOrderSubmitDTO.setOrderNumber(resvMeetingOrder.getTgOrderNo());
                 tgOrderSubmitDTO.setMealCategoryId(1);
-                tgOrderSubmitDTO.setBill(Integer.valueOf(resvMeetingOrder.getPayAmount()));
+                if(StringUtils.isNotBlank(resvMeetingOrder.getPayAmount())){
+                    tgOrderSubmitDTO.setBill(Integer.valueOf(resvMeetingOrder.getPayAmount()));
+                }
+                Integer bill = 0;
+                if(StringUtils.isNotBlank(resvMeetingOrder.getDeposit())){
+                    bill += Integer.valueOf(resvMeetingOrder.getDeposit());
+                }
+                if(StringUtils.isNotBlank(resvMeetingOrder.getDeposit1())){
+                    bill += Integer.valueOf(resvMeetingOrder.getDeposit1());
+                }
+                if(StringUtils.isNotBlank(resvMeetingOrder.getDeposit2())){
+                    bill += Integer.valueOf(resvMeetingOrder.getDeposit2());
+                }
+                if(bill != 0){
+                    tgOrderSubmitDTO.setBookingBill(bill);
+                }
+                if(StringUtils.isNotBlank(resvMeetingOrder.getReceiptNo())){
+                    tgOrderSubmitDTO.setBookingBillRecipe(resvMeetingOrder.getReceiptNo());
+                }
                 boolean b = submitTianGangOrder(tgOrderSubmitDTO);
                 if(b){
                     updateMeetingOrderSyncStatus(resvMeetingOrder.getBatchNo(),null);
