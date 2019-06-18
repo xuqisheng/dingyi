@@ -262,6 +262,7 @@ public class CustomerRecordService {
      */
     private CustomerRecord valueChange(Vip vip, CustomerValueList customerValueList) {
         // 1-意向客户，2-活跃客户，3-沉睡客户，4-流失客户
+        // 1活跃用户 2沉睡用户 3流失用户 4意向用户 5恶意用户 6高价值用户
         String customerValue = getCustomerValue(vip);
         Integer firstClassValue;
         if (customerValueList != null) {
@@ -345,7 +346,7 @@ public class CustomerRecordService {
      */
     private String getCustomerValue(Vip vip) {
         Integer vipValueId = vip.getVipValueId();
-        String vipName = vip.getVipName();
+        String vipName = vip.getVipValueName();
 
         return vipName;
     }
