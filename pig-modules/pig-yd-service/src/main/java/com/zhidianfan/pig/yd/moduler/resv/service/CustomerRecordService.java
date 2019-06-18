@@ -48,7 +48,7 @@ public class CustomerRecordService {
         List<AppUser> userList = businessCustomerAnalysisInfoService.getAppUserList(appUserList);
         for (Vip vip : vips) {
             try {
-                cleanData(vip);
+                // cleanData(vip);
                 List<CustomerRecord> recordList = Lists.newArrayList();
                 List<CustomerRecord> customerRecords = reserveOrderCustomer(vip, resvOrdersMap.get(vip.getId()));
                 List<CustomerRecord> customerRecords1 = reserveOrderESC(vip, resvOrdersMap.get(vip.getId()));
