@@ -33,21 +33,30 @@ public class CustomerRecordService {
     @Autowired
     private IGuestCustomerVipMappingService iGuestCustomerVipMappingService;
 
+    @Autowired
+    private ICustomerRecordService customerRecordMapper;
+
+    @Autowired
+    private BusinessCustomerAnalysisInfoService businessCustomerAnalysisInfoService;
+
 
     public Map<Integer, List<CustomerRecord>> getCustomerRecord(List<Vip> vips, Map<Integer, List<ResvOrder>> resvOrdersMap, Map<Integer, CustomerValueList> customerValueListMap) {
         Map<Integer, List<CustomerRecord>> map = new HashMap<>();
 
 
+        List<Integer> appUserList = getAppUser(vips);
+        List<AppUser> userList = businessCustomerAnalysisInfoService.getAppUserList(appUserList);
         for (Vip vip : vips) {
             try {
-                cleanData(vip);
+                // cleanData(vip);
                 List<CustomerRecord> recordList = Lists.newArrayList();
                 List<CustomerRecord> customerRecords = reserveOrderCustomer(vip, resvOrdersMap.get(vip.getId()));
                 List<CustomerRecord> customerRecords1 = reserveOrderESC(vip, resvOrdersMap.get(vip.getId()));
                 List<CustomerRecord> customerRecords2 = manOrder(vip, resvOrdersMap.get(vip.getId()));
                 List<CustomerRecord> customerRecords3 = guestOrder(vip, resvOrdersMap.get(vip.getId()));
                 CustomerRecord valueChangeRecord = valueChange(vip, customerValueListMap.get(vip.getId()));
-                CustomerRecord userChangeRecord = appUserChange(vip, customerValueListMap.get(vip.getId()));
+                // CustomerRecord userChangeRecord = appUserChange(vip, customerValueListMap.get(vip.getId()));
+                CustomerRecord userChangeRecord = appUserChange2(vip, customerValueListMap.get(vip.getId()), userList);
 
                 recordList.addAll(customerRecords);
                 recordList.addAll(customerRecords1);
@@ -69,6 +78,13 @@ public class CustomerRecordService {
 
 
         return map;
+    }
+
+    private List<Integer> getAppUser(List<Vip> vips) {
+        return vips.stream()
+                .filter(Objects::nonNull)
+                .map(Vip::getId)
+                .collect(Collectors.toList());
     }
 
     /**
@@ -192,7 +208,7 @@ public class CustomerRecordService {
             return Lists.newArrayList();
         }
         if (CollectionUtils.isEmpty(resvOrders)) {
-            log.error("订单信息不存在:{}", vip.getId());
+            log.info("订单信息不存在:{}", vip.getId());
             return Lists.newArrayList();
         }
 
@@ -246,8 +262,14 @@ public class CustomerRecordService {
      */
     private CustomerRecord valueChange(Vip vip, CustomerValueList customerValueList) {
         // 1-意向客户，2-活跃客户，3-沉睡客户，4-流失客户
+        // 1活跃用户 2沉睡用户 3流失用户 4意向用户 5恶意用户 6高价值用户
         String customerValue = getCustomerValue(vip);
-        Integer firstClassValue = customerValueList.getFirstClassValue();
+        Integer firstClassValue;
+        if (customerValueList != null) {
+            firstClassValue = customerValueList.getFirstClassValue();
+        } else {
+            firstClassValue = 1;
+        }
         String value = getFirstClassValueStr(firstClassValue);
 
         customerValue = customerValue == null ? "" : customerValue;
@@ -262,7 +284,7 @@ public class CustomerRecordService {
         if (StringUtils.isNotBlank(value) && value.length() >= 2) {
             lastValue = value.substring(0, 2);
         }
-        if (!customerValueNameS.equals(lastValue)) {
+        if (customerValueList != null && !customerValueNameS.equals(lastValue)) {
             CustomerRecord record = new CustomerRecord();
             record.setVipId(customerValueList.getVipId());
             record.setLogType(CustomerValueConstants.RECORD_TYPE_VALUE_CHANGE);
@@ -324,16 +346,11 @@ public class CustomerRecordService {
      */
     private String getCustomerValue(Vip vip) {
         Integer vipValueId = vip.getVipValueId();
-        String vipName = vip.getVipName();
+        String vipName = vip.getVipValueName();
 
         return vipName;
     }
 
-    @Autowired
-    private ICustomerRecordService customerRecordMapper;
-
-    @Autowired
-    private BusinessCustomerAnalysisInfoService businessCustomerAnalysisInfoService;
 
     /**
      * 营销经理变更
@@ -351,6 +368,29 @@ public class CustomerRecordService {
             AppUser appUser = businessCustomerAnalysisInfoService.getAppUser(appUserId);
             return setCustomerRecord(customerValueList, appUserId, appUser);
         }
+
+        return null;
+    }
+
+    private CustomerRecord appUserChange2(Vip vip, CustomerValueList customerValueList, List<AppUser> appUserList) {
+        Integer appUserId = getAppUserId(vip);
+        if (appUserId < 1) {
+            return null;
+        }
+
+        CustomerRecord customerRecord = getCustomerRecord(vip.getId());
+        Integer changeAppUserId = customerRecord.getAppUserId();
+
+        List<AppUser> collect = appUserList.stream()
+                .filter(appUser -> appUser.getId().equals(appUserId))
+                .collect(Collectors.toList());
+
+        for (AppUser appUser : collect) {
+            if (!appUserId.equals(changeAppUserId)) {
+                return setCustomerRecord(customerValueList, appUserId, appUser);
+            }
+        }
+
 
         return null;
     }

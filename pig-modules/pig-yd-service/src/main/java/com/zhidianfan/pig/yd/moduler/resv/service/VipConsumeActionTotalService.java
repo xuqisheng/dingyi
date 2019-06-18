@@ -190,8 +190,7 @@ public class VipConsumeActionTotalService {
         });
         Integer month = optional.orElse(1);
         month = Math.max(month, 1);
-        Number divide = MathUtils.divide(customerSize, month);
-
+        Number divide = MathUtils.divide(customerSize, (float)month);
         BigDecimal bigDecimal = new BigDecimal(divide.doubleValue()).setScale(1, RoundingMode.HALF_UP);
         return bigDecimal.floatValue();
     }
@@ -223,7 +222,6 @@ public class VipConsumeActionTotalService {
     }
 
     /**
-     * todo 计算逻辑再确认
      * 人均消费,单位:分
      *
      * @param resvOrders 订单列表
@@ -330,7 +328,6 @@ public class VipConsumeActionTotalService {
      * @param value 首次消费时间，yyy-MM-dd HH:mm:ss
      */
     public void updateFirstConsumeTime(Integer vipId, String value) {
-        // todo 逻辑修改，客户结账时角发该操作，然后在重新查询订单表
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         LocalDateTime dateTime = LocalDateTime.parse(value, formatter);
         VipConsumeActionTotal total = new VipConsumeActionTotal();

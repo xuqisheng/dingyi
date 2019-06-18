@@ -10,7 +10,12 @@ import com.zhidianfan.pig.yd.moduler.resv.dto.CustomerValueChangeFieldDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -18,7 +23,6 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
@@ -64,6 +68,9 @@ public class CustomerValueService {
 
     @Autowired
     private INowChangeInfoService nowChangeInfoMapper;
+
+    @Autowired
+    private DataSourceTransactionManager transactionManager;
 
     //    @Async
 //    @Transactional(rollbackFor = Exception.class)
@@ -210,7 +217,25 @@ public class CustomerValueService {
 
         Map<Integer, List<CustomerRecord>> customerRecordList = customerRecordService.getCustomerRecord(vip, resvOrders, customerValueList);
 
-        Map<Integer, NowChangeInfo> nowChangeInfo = getProfile(vip);
+        Map<Integer, NowChangeInfo> nowChangeInfo = getProfile2(vip);
+
+        DefaultTransactionDefinition def = new DefaultTransactionDefinition();
+        def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW); // 定义事务传播
+        TransactionStatus status = transactionManager.getTransaction(def);
+        try {
+            save(customerValueList, vipConsumeActionTotal, vipConsumeActionLast60, customerRecordList, nowChangeInfo);
+            log.info("插入 vip:[{}] 完成", vipIds);
+            transactionManager.commit(status);
+        } catch (Exception e) {
+            log.error("发生异常--", e);
+            transactionManager.rollback(status);
+        }
+    }
+
+
+    public void save(Map<Integer, CustomerValueList> customerValueList, Map<Integer, VipConsumeActionTotal> vipConsumeActionTotal,
+                     Map<Integer, VipConsumeActionLast60> vipConsumeActionLast60, Map<Integer, List<CustomerRecord>> customerRecordList,
+                     Map<Integer, NowChangeInfo> nowChangeInfo) {
 
         Optional.ofNullable(customerValueList)
                 .ifPresent(map -> {
@@ -236,7 +261,9 @@ public class CustomerValueService {
         Optional.ofNullable(customerRecordList)
                 .ifPresent(map -> {
                     map.forEach((k, v) -> {
-                        customerRecordMapper.insertBatch(v);
+                        if (v != null && v.size() != 0) {
+                            customerRecordMapper.insertBatch(v);
+                        }
                     });
                 });
 
@@ -249,8 +276,6 @@ public class CustomerValueService {
                         }
                     });
                 });
-
-        log.info("插入 vip:[{}] 完成", vipIds);
     }
 
     /**
@@ -287,6 +312,43 @@ public class CustomerValueService {
 
 
         return map;
+    }
+
+    private Map<Integer, NowChangeInfo> getProfile2(List<Vip> vips) {
+
+        Map<Integer, NowChangeInfo> map = new HashMap<>();
+        Map<Integer, Integer> profile2 = vipService.getProfile2(vips);
+
+        Map<Integer, NowChangeInfo> nowChangeInfoMap = vips.stream()
+                .filter(vip -> {
+                    if (vip == null) {
+                        log.error("getProfile2() vip 信息为空");
+                    }
+                    return vip != null;
+                })
+                .map(vip -> {
+                    try {
+                        Integer vipId = vip.getId();
+                        Integer profile = profile2.get(vipId);
+                        NowChangeInfo nowChangeInfo = new NowChangeInfo();
+                        nowChangeInfo.setVipId(vipId);
+                        nowChangeInfo.setValue(profile);
+                        nowChangeInfo.setType(CustomerValueChangeFieldDTO.PROFILE);
+                        nowChangeInfo.setChangeTime(LocalDateTime.now());
+                        nowChangeInfo.setRemark(StringUtils.EMPTY);
+                        nowChangeInfo.setCreateTime(LocalDateTime.now());
+                        nowChangeInfo.setUpdateTime(LocalDateTime.now());
+//                        map.put(vipId, nowChangeInfo);
+                        return nowChangeInfo;
+                    } catch (Exception e) {
+                        log.error(e.getMessage(), e);
+                        return new NowChangeInfo();
+                    }
+                })
+                .collect(Collectors.toMap(NowChangeInfo::getVipId, nowChangeInfo -> nowChangeInfo));
+
+
+        return nowChangeInfoMap;
     }
 
     /**
