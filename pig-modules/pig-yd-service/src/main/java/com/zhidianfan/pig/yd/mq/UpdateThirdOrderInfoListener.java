@@ -88,7 +88,7 @@ public class UpdateThirdOrderInfoListener {
                 .eq("business_id", businessId));
 
         // 2. 若为发送则根据订单信息发送
-        if (autoReceiptSmsConfig != null && autoReceiptSmsConfig.getStatus().equals(2)) {
+        if (autoReceiptSmsConfig != null && autoReceiptSmsConfig.getStatus().equals(1)) {
             addOrderService.sendResvMessage("order", batchNo);
         }
 
