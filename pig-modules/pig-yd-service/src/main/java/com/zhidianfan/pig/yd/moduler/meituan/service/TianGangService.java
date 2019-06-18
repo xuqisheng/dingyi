@@ -88,6 +88,9 @@ public class TianGangService {
     @Autowired
     private IResvMeetingOrderService resvMeetingOrderService;
 
+    @Autowired
+    private IBillSyncService billSyncService;
+
     /**
      * 创建天港订单
      * @param tianGangOrderBO
@@ -634,6 +637,10 @@ public class TianGangService {
                 if(StringUtils.isNotBlank(resvOrder.getReceiptNo())){
                     tgOrderSubmitDTO.setBookingBillRecipe(resvOrder.getReceiptNo());
                 }
+                BillSync billSync = billSyncService.selectOne(new EntityWrapper<BillSync>().eq("resv_order",resvOrder.getResvOrder()));
+                if(billSync != null){
+                    tgOrderSubmitDTO.setPaymentRecipe(billSync.getZdbh());
+                }
                 boolean b = submitTianGangOrder(tgOrderSubmitDTO);
                 if(b){
                     updateOrderSyncStatus(resvOrder.getBatchNo(),null);
@@ -772,6 +779,10 @@ public class TianGangService {
                 }
                 if(StringUtils.isNotBlank(resvMeetingOrder.getReceiptNo())){
                     tgOrderSubmitDTO.setBookingBillRecipe(resvMeetingOrder.getReceiptNo());
+                }
+                BillSync billSync = billSyncService.selectOne(new EntityWrapper<BillSync>().eq("resv_order",resvMeetingOrder.getResvOrder()));
+                if(billSync != null){
+                    tgOrderSubmitDTO.setPaymentRecipe(billSync.getZdbh());
                 }
                 boolean b = submitTianGangOrder(tgOrderSubmitDTO);
                 if(b){
