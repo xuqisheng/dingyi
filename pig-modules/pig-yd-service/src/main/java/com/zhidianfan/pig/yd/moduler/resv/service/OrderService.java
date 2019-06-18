@@ -3,6 +3,7 @@ package com.zhidianfan.pig.yd.moduler.resv.service;
 
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
+import com.baomidou.mybatisplus.mapper.Wrapper;
 import com.baomidou.mybatisplus.plugins.Page;
 import com.google.common.collect.Lists;
 import com.xiaoleilu.hutool.date.DateUtil;
@@ -83,6 +84,8 @@ public class OrderService {
 
     @Autowired
     private ISmallAppUserService iSmallAppUserService;
+
+
 
     /**
      * 删除普通预订订单
@@ -507,15 +510,20 @@ public class OrderService {
 
 
         // 1. 查询各种第三方订单统计
-        List<PerformanceBO> thirdPerformanceBOs = resvOrderService.selectPerformanceStatisticsWithThird(performanceDTO);
+        List<PerformanceBO> thirdPerformanceBOs = performanceStatisticsWithThird(performanceDTO);
+
 
 
         // 2. 查询电话机统计
-        List<PerformanceBO> androidPerformanceBOs = resvOrderService.selectPerformanceStatisticsWithAndroidPhone(performanceDTO);
+        List<PerformanceBO> androidPerformanceBOs =  performanceStatisticsWithAndroid(performanceDTO);
+//                resvOrderService.selectPerformanceStatisticsWithAndroidPhone(performanceDTO);
 
 
         // 3. 查询小程序业绩统计
-        List<PerformanceBO> appPerformanceBOs = resvOrderService.selectPerformanceStatisticsWithSmallApp(performanceDTO);
+        List<PerformanceBO> appPerformanceBOs = performanceStatisticsWithSmallApp(performanceDTO);
+
+
+
 
         JSONObject result = new JSONObject();
 
@@ -527,18 +535,19 @@ public class OrderService {
     }
 
 
+
     /**
      * 来源
      *
      * @param resvOrderAndroid 订单数据
      * @return 新的来源名字
      */
-    public String getNewResvSource(ResvOrderAndroid resvOrderAndroid) {
+    private String getNewResvSource(ResvOrderAndroid resvOrderAndroid) {
 
 
-        Integer istirdparty = resvOrderAndroid.getIstirdparty();
+        String thirdOrderNo = resvOrderAndroid.getThirdOrderNo();
         //如果是第三方订单
-        if (istirdparty.equals(1)) {
+        if (StringUtils.isNotEmpty(thirdOrderNo)) {
             Integer externalSourceId = resvOrderAndroid.getExternalSourceId();
             if (externalSourceId.equals(2)) return "美团/大众";
             else if (externalSourceId.equals(4)) return "易订公众号";
@@ -558,6 +567,188 @@ public class OrderService {
         return "未知来源";
     }
 
+
+    /**
+     * 查询第三方统计
+     * @param performanceDTO
+     * @return
+     */
+    private List<PerformanceBO> performanceStatisticsWithThird(PerformanceDTO performanceDTO){
+
+
+        /***
+         *  business_id = #{businessId}
+         *                 AND (external_source_id = 2 or  external_source_id = 4)
+         *                 AND `status` IN ( 2, 3, 4 )
+         *                 AND resv_date &lt;= #{endTime} AND resv_date >= #{startTime}
+         */
+
+        //筛选出 美团预定的预定的
+        int mtResvCount = resvOrderService.selectCount( new EntityWrapper<ResvOrderAndroid>()
+                .eq("business_id", performanceDTO.getBusinessId())
+                .le("resv_date",performanceDTO.getEndTime())
+                .ge("resv_date",performanceDTO.getStartTime())
+                .in("status", new Integer[]{2, 3})
+                .eq("external_source_id",2)
+                .isNotNull("third_order_no"));
+
+        PerformanceBO mtpr = new PerformanceBO();
+        mtpr.setAmount(mtResvCount);
+        mtpr.setClientName("美团/大众");
+        mtpr.setStype("resv");
+
+        int mtbackCount = resvOrderService.selectCount( new EntityWrapper<ResvOrderAndroid>()
+                .eq("business_id", performanceDTO.getBusinessId())
+                .le("resv_date",performanceDTO.getEndTime())
+                .ge("resv_date",performanceDTO.getStartTime())
+                .eq("status", 4)
+                .eq("external_source_id",2)
+                .isNotNull("third_order_no"));
+
+
+        PerformanceBO mtpb = new PerformanceBO();
+        mtpb.setAmount(mtbackCount);
+        mtpb.setClientName("美团/大众");
+        mtpb.setStype("chargeback");
+
+
+
+
+        int ydResvCount = resvOrderService.selectCount( new EntityWrapper<ResvOrderAndroid>()
+                .eq("business_id", performanceDTO.getBusinessId())
+                .le("resv_date",performanceDTO.getEndTime())
+                .ge("resv_date",performanceDTO.getStartTime())
+                .in("status", new Integer[]{2, 3})
+                .eq("external_source_id",4)
+                .isNotNull("third_order_no"));
+
+        PerformanceBO ydpr = new PerformanceBO();
+        ydpr.setAmount(ydResvCount);
+        ydpr.setClientName("易订公众号");
+        ydpr.setStype("resv");
+
+
+
+        int ydbackCount = resvOrderService.selectCount( new EntityWrapper<ResvOrderAndroid>()
+                .eq("business_id", performanceDTO.getBusinessId())
+                .le("resv_date",performanceDTO.getEndTime())
+                .ge("resv_date",performanceDTO.getStartTime())
+                .eq("status", 4)
+                .eq("external_source_id",4)
+                .isNotNull("third_order_no"));
+
+        PerformanceBO ydpb = new PerformanceBO();
+        ydpb.setAmount(ydbackCount);
+        ydpb.setClientName("易订公众号/大众");
+        ydpb.setStype("chargeback");
+
+
+
+
+        List<PerformanceBO> thirdPerformanceBOs = new ArrayList<>();
+        thirdPerformanceBOs.add(mtpr);
+        thirdPerformanceBOs.add(mtpb);
+        thirdPerformanceBOs.add(ydpr);
+        thirdPerformanceBOs.add(ydpb);
+
+        return thirdPerformanceBOs;
+    }
+
+
+    /**
+     * 小程序各个用户统计
+     * @param performanceDTO 筛选条件
+     * @return 小程序筛选结果
+     */
+    private List<PerformanceBO> performanceStatisticsWithSmallApp(PerformanceDTO performanceDTO){
+
+        List<SmallAppUser> smallAppUsers = iSmallAppUserService.selectList(new EntityWrapper<SmallAppUser>().eq("business_id", performanceDTO.getBusinessId()));
+
+
+        List<PerformanceBO> appPerformanceBOs = new ArrayList<>();
+
+        //统计查询
+        for (SmallAppUser user : smallAppUsers) {
+
+            //查询一个用户
+            int resvCount = resvOrderService.selectCount(new EntityWrapper<ResvOrderAndroid>()
+                    .eq("business_id", performanceDTO.getBusinessId())
+                    .le("resv_date", performanceDTO.getEndTime())
+                    .ge("resv_date", performanceDTO.getStartTime())
+                    .in("status", new Integer[]{2, 3})
+                    .eq("device_type", 2)
+                    .eq("android_user_id", user.getId()));
+
+            PerformanceBO resvSuBO = new PerformanceBO();
+            resvSuBO.setStype("resv");
+            resvSuBO.setClientName(user.getName());
+            resvSuBO.setAmount(resvCount);
+
+            appPerformanceBOs.add(resvSuBO);
+
+            int backCount = resvOrderService.selectCount(new EntityWrapper<ResvOrderAndroid>()
+                    .eq("business_id", performanceDTO.getBusinessId())
+                    .le("resv_date", performanceDTO.getEndTime())
+                    .ge("resv_date", performanceDTO.getStartTime())
+                    .eq("status", 4)
+                    .eq("device_type", 2)
+                    .eq("android_user_id", user.getId()));
+
+
+            PerformanceBO backSuBO = new PerformanceBO();
+            backSuBO.setStype("chargeback");
+            backSuBO.setClientName(user.getName());
+            backSuBO.setAmount(backCount);
+
+            appPerformanceBOs.add(backSuBO);
+        }
+
+
+        return  appPerformanceBOs;
+    }
+
+
+    /**
+     * 安卓电话机
+     * @param performanceDTO 筛选条件
+     * @return 安卓电话机的预定结果
+     */
+    private List<PerformanceBO> performanceStatisticsWithAndroid(PerformanceDTO performanceDTO) {
+
+
+        List<PerformanceBO> performanceBOList = new ArrayList<>();
+
+        int resvCount = resvOrderService.selectCount(new EntityWrapper<ResvOrderAndroid>()
+                .eq("business_id", performanceDTO.getBusinessId())
+                .le("resv_date", performanceDTO.getEndTime())
+                .ge("resv_date", performanceDTO.getStartTime())
+                .in("status", new Integer[]{2, 3})
+                .isNull("third_order_no")
+                .eq("device_type", 1));
+
+        PerformanceBO resvBO = new PerformanceBO();
+        resvBO.setStype("resv");
+        resvBO.setClientName("电话机");
+        resvBO.setAmount(resvCount);
+
+        int backCount = resvOrderService.selectCount(new EntityWrapper<ResvOrderAndroid>()
+                .eq("business_id", performanceDTO.getBusinessId())
+                .le("resv_date", performanceDTO.getEndTime())
+                .ge("resv_date", performanceDTO.getStartTime())
+                .eq("status", 4)
+                .isNull("third_order_no")
+                .eq("device_type", 1));
+
+        PerformanceBO backBO = new PerformanceBO();
+        backBO.setStype("resv");
+        backBO.setClientName("电话机");
+        backBO.setAmount(backCount);
+
+        performanceBOList.add(resvBO);
+        performanceBOList.add(backBO);
+
+        return performanceBOList;
+    }
 
 }
 

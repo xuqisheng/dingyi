@@ -87,9 +87,5 @@ public interface IResvOrderAndroidService extends IService<ResvOrderAndroid> {
 
     ResvOrderAndroid selectBrandLastEatTime(String phone, Integer brandId);
 
-    List<PerformanceBO> selectPerformanceStatisticsWithAndroidPhone(PerformanceDTO performanceDTO);
 
-    List<PerformanceBO> selectPerformanceStatisticsWithThird(PerformanceDTO performanceDTO);
-
-    List<PerformanceBO> selectPerformanceStatisticsWithSmallApp(PerformanceDTO performanceDTO);
 }

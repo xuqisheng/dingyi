@@ -85,9 +85,5 @@ public interface ResvOrderAndroidMapper extends BaseMapper<ResvOrderAndroid> {
 
     ResvOrderAndroid selectBrandLastEatTime(@Param("phone")String phone,@Param("brandId") Integer brandId);
 
-    List<PerformanceBO> selectPerformanceStatisticsWithAndroidPhone(PerformanceDTO performanceDTO);
 
-    List<PerformanceBO> selectPerformanceStatisticsWithThird(PerformanceDTO performanceDTO);
-
-    List<PerformanceBO> selectPerformanceStatisticsWithSmallApp(PerformanceDTO performanceDTO);
 }
