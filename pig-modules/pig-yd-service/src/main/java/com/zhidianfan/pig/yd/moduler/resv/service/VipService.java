@@ -677,7 +677,7 @@ public class VipService {
         // -1 查询不到，不作处理
         // 查询纪念日表
         Wrapper<Anniversary> wrapper = new EntityWrapper<>();
-        wrapper.eq("vip_id", vipIdArray);
+        wrapper.in("vip_id", vipIdArray);
         List<Anniversary> anniversaries = anniversaryMapper.selectList(wrapper);
         // 去除相同的 vipId,每个 vipId 只有一条信息
         ArrayList<Anniversary> distinctAnniversariesList = anniversaries.stream()
