@@ -35,6 +35,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
@@ -517,17 +518,21 @@ public class OrderService {
 
         // 2. 查询电话机统计
         List<PerformanceBO> androidPerformanceBOs = performanceStatisticsWithAndroid(performanceDTO);
+//                resvOrderService.selectPerformanceStatisticsWithAndroidPhone(performanceDTO);
 
 
-        // 3. 查询小程序业绩统计
-        List<PerformanceBO> appPerformanceBOs = performanceStatisticsWithSmallApp(performanceDTO);
+        final CompletableFuture<List<PerformanceBO>> listCompletableFuture2 = CompletableFuture.supplyAsync(() -> performanceStatisticsWithSmallApp(performanceDTO));
 
 
         JSONObject result = new JSONObject();
 
-        result.put("third", thirdPerformanceBOs);
-        result.put("android", androidPerformanceBOs);
-        result.put("app", appPerformanceBOs);
+        try {
+            result.put("third", thirdPerformanceBOs);
+            result.put("android", androidPerformanceBOs);
+            result.put("app", listCompletableFuture2.get());
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
 
         return result;
     }
@@ -649,9 +654,10 @@ public class OrderService {
      */
     private List<PerformanceBO> performanceStatisticsWithSmallApp(PerformanceDTO performanceDTO) {
 
-        ExecutorService executorService = Executors.newFixedThreadPool(20);
+        ExecutorService executorService = Executors.newFixedThreadPool(50);
 
         List<PerformanceBO> resultList1 = null;
+
 
         try {
             List<SmallAppUser> smallAppUsers = iSmallAppUserService.selectList(new EntityWrapper<SmallAppUser>().eq("business_id", performanceDTO.getBusinessId()));
@@ -696,7 +702,9 @@ public class OrderService {
                         resultList.add(backSuBO);
 
                         return user;
-                    }, executorService));
+                    }, executorService))
+                    .map(CompletableFuture::join)
+                    .collect(Collectors.toList());
 
 
             resultList1 = resultList;
