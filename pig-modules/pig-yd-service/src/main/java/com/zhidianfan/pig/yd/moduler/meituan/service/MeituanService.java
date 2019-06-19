@@ -16,6 +16,7 @@ import com.zhidianfan.pig.yd.moduler.meituan.service.rmi.PushFeign;
 import com.zhidianfan.pig.yd.moduler.meituan.service.rmi.dto.JgPush;
 import com.zhidianfan.pig.yd.moduler.sms.service.rmi.SmsFeign;
 import com.zhidianfan.pig.yd.moduler.sms.service.rmi.dto.SmsSendResDTO;
+import com.zhidianfan.pig.yd.moduler.wechat.util.OrderTemplate;
 import com.zhidianfan.pig.yd.utils.SignUtil;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateFormatUtils;
@@ -366,6 +367,12 @@ public class MeituanService {
                 data.put("tableName", tableName);
                 data.put("startTime", startTime1);
                 data.put("endTime", endTime1);
+                if ("XJ".equals(orderSerializedId.substring(0, 2))) {
+                    ResvOrder resvOrder = new ResvOrder();
+                    resvOrder.setTableName(tableName);
+                    resvOrder.setTableAreaName("");
+                    YdService.wechatXjPushMes(resvOrder, resvOrderThird, OrderTemplate.ORDER_RESV_SUCCESS, business);
+                }
             } else if ("2".equals(String.valueOf(resvType))) {
                 resvOrderThird.setStatus(30);
                 resvOrderThird.setResult(2);
@@ -384,6 +391,12 @@ public class MeituanService {
                         }
                     }
                 }
+                if ("XJ".equals(orderSerializedId.substring(0, 2))) {
+                    ResvOrder resvOrder = new ResvOrder();
+                    resvOrder.setTableName("");
+                    resvOrder.setTableAreaName("");
+                    YdService.wechatXjPushMes(resvOrder, resvOrderThird, OrderTemplate.ORDER_RESV_HOTEL_CANCEL, business);
+                }
             } else if ("3".equals(String.valueOf(resvType))) {
                 resvOrderThird.setStatus(50);
                 resvOrderThird.setResult(3);
@@ -397,7 +410,7 @@ public class MeituanService {
                 data.put("operationType", 4);
             }
             basicDTO.setData(data);
-            if (!"KB".equals(orderSerializedId.substring(0, 2))) {
+            if (!"KB".equals(orderSerializedId.substring(0, 2)) && !"XJ".equals(orderSerializedId.substring(0, 2)) && !"QC".equals(orderSerializedId.substring(0, 2))) {
                 tip = restTemplatePost(basicDTO);
             }
             if (tip.getCode() == 200) {
