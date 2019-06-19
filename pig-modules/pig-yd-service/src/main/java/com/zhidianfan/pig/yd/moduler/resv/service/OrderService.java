@@ -556,10 +556,10 @@ public class OrderService {
             else return "未知第三方来源";
         }
 
-        Integer deviceType = resvOrderAndroid.getDeviceType();
-        if (deviceType.equals(1)) {
+        String deviceType = resvOrderAndroid.getDeviceType();
+        if (deviceType.equals("1")) {
             return "安卓电话机";
-        } else if (deviceType.equals(2)) {
+        } else if (deviceType.equals("2")) {
 
             Integer androidUserId = resvOrderAndroid.getAndroidUserId();
             SmallAppUser smallAppUser = iSmallAppUserService.selectById(androidUserId);
@@ -758,7 +758,7 @@ public class OrderService {
                 .eq("device_type", 1));
 
         PerformanceBO backBO = new PerformanceBO();
-        backBO.setStype("resv");
+        backBO.setStype("chargeback");
         backBO.setClientName("电话机");
         backBO.setAmount(backCount);
 

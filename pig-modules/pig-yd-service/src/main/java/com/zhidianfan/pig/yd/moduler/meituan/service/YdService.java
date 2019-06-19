@@ -364,7 +364,7 @@ public class YdService {
                     resvOrderAndroid.setExternalSourceName(resvOrderThird.getSource());
 
                     //设置为deviceType 为 1 默认为电话机
-                    resvOrderAndroid.setDeviceType(1);
+                    resvOrderAndroid.setDeviceType("1");
 
 
                     resvOrderAndroid.setVipId(0);
@@ -876,7 +876,7 @@ public class YdService {
             resvOrderAndroid.setVipId(vip1.getId());
 
             //设置为deviceType 为 1 默认为电话机
-            resvOrderAndroid.setDeviceType(1);
+            resvOrderAndroid.setDeviceType("1");
 
             boolean insert = iResvOrderAndroidService.insert(resvOrderAndroid);
             //插入订单自动接单日志

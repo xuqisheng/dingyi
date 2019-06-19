@@ -274,7 +274,7 @@ public class ResvOrderAndroid extends Model<ResvOrderAndroid> {
 
 
     @TableField("device_type")
-    private Integer deviceType;
+    private String deviceType;
 
 
     @Override
@@ -933,11 +933,11 @@ public class ResvOrderAndroid extends Model<ResvOrderAndroid> {
         this.androidUserName = androidUserName;
     }
 
-    public Integer getDeviceType() {
+    public String getDeviceType() {
         return deviceType;
     }
 
-    public void setDeviceType(Integer deviceType) {
+    public void setDeviceType(String deviceType) {
         this.deviceType = deviceType;
     }
 
