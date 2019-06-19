@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhidianfan.pig.yd.moduler.common.dao.mapper.VipConsumeActionTotalMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zhidianfan.pig.yd.moduler.common.dao.entity.VipConsumeActionTotal">
+        <id column="id" property="id" />
+        <result column="vip_id" property="vipId" />
+        <result column="total_order_no" property="totalOrderNo" />
+        <result column="total_table_no" property="totalTableNo" />
+        <result column="total_person_no" property="totalPersonNo" />
+        <result column="cancel_order_no" property="cancelOrderNo" />
+        <result column="cancel_table_no" property="cancelTableNo" />
+        <result column="cancel_person_no" property="cancelPersonNo" />
+        <result column="total_consume_avg" property="totalConsumeAvg" />
+        <result column="table_consume_avg" property="tableConsumeAvg" />
+        <result column="person_consume_avg" property="personConsumeAvg" />
+        <result column="first_consume_time" property="firstConsumeTime" />
+        <result column="consume_frequency" property="consumeFrequency" />
+        <result column="last_consume_time" property="lastConsumeTime" />
+        <result column="create_user_id" property="createUserId" />
+        <result column="create_time" property="createTime" />
+        <result column="update_user_id" property="updateUserId" />
+        <result column="update_time" property="updateTime" />
+    </resultMap>
+
+</mapper>
