@@ -28,6 +28,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
@@ -510,6 +511,7 @@ public class TianGangService {
     /**
      * 遍历天港酒店
      */
+    @Scheduled(cron = "0/30 * * * * ?")
     public void tianGangTask(){
 
         log.info("开始----------------");
