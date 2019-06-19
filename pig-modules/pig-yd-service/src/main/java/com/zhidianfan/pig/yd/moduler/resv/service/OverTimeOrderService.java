@@ -1,8 +1,8 @@
 package com.zhidianfan.pig.yd.moduler.resv.service;
 
-import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
+import com.baomidou.mybatisplus.mapper.Wrapper;
 import com.baomidou.mybatisplus.plugins.Page;
 import com.zhidianfan.pig.common.util.JsonUtils;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.Business;
@@ -56,7 +56,7 @@ public class OverTimeOrderService {
     @Async
     public void statisticsOverTimeOrder() {
 
-        log.info("任务开始");
+        log.info("statisticsOverTimeOrder------任务开始");
 
         ExecutorService executorService = Executors.newFixedThreadPool(10);
 
@@ -64,13 +64,14 @@ public class OverTimeOrderService {
             int businessCurrentPage = 1;
             int businessPageSize = 100;
 
+            Wrapper<Business> statusWrapper = new EntityWrapper<Business>().eq("status", 1);
+
 
             while (true) {
                 //翻页查询酒店
                 Page<Business> businessPage = iBusinessService.selectPage(
                         new Page<>(businessCurrentPage, businessPageSize),
-                        new EntityWrapper<Business>().eq("status", 1)
-                );
+                        statusWrapper);
 
                 // 线程池更新订单状态,并且推送
                 executorService.execute(() -> new OverTimeOrderThread(this, businessPage.getRecords()).run());
@@ -94,25 +95,24 @@ public class OverTimeOrderService {
     }
 
     /**
-     * 更新超时订单状态,并且推送
+     * 统计超时订单状态,并且推送
      *
      * @param businessList 酒店id list
      */
 
-    public void updateOverTimeOrderAndPushMessage(List<Business> businessList) {
+    public void countOverTimeOrderAndPushMessage(List<Business> businessList) {
 
-        log.info("updateOverTimeOrderAndPushMessage-----------task start");
+        log.info("统计超时订单数量,并且推送: countOverTimeOrderAndPushMessage-----------task start");
 
         for (Business business : businessList) {
             try {
 
                 LocalDate now = LocalDate.now();
-                Date date = new Date();
 
                 // 1.筛选出订单
                 Integer resvOrderNum = iResvOrderService.selectOverTimeOrder(business.getId(), now.toString(), "1");
 
-                //如果有需要更新的超时订单
+                //如果超时订单数量不为0 ,则推送该酒店的信息
                 if (resvOrderNum != null && resvOrderNum != 0) {
 
 
@@ -167,7 +167,8 @@ public class OverTimeOrderService {
 
         JSONObject jsonObject = new JSONObject();
 
-        ResvOrderAndroid  resvOrderAndroid = new ResvOrderAndroid();
+        ResvOrderAndroid resvOrderAndroid = new ResvOrderAndroid();
+        //数据为空
         String orderMsg = JsonUtils.obj2Json(resvOrderAndroid);
         //数据为空
         jsonObject.put("data", orderMsg);

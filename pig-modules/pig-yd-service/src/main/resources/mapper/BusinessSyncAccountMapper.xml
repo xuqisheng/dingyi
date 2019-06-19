@@ -4,23 +4,34 @@
 
     <!-- 通用查询映射结果 -->
     <resultMap id="BaseResultMap" type="com.zhidianfan.pig.yd.moduler.common.dao.entity.BusinessSyncAccount">
-        <id column="id" property="id" />
-        <result column="business_id" property="businessId" />
-        <result column="business_name" property="businessName" />
-        <result column="appid" property="appid" />
-        <result column="secret" property="secret" />
-        <result column="created_at" property="createdAt" />
-        <result column="updated_at" property="updatedAt" />
-        <result column="status" property="status" />
-        <result column="type_id" property="typeId" />
-        <result column="access_token" property="accessToken" />
-        <result column="shop_id" property="shopId" />
-        <result column="appid_crm" property="appidCrm" />
-        <result column="appkey_crm" property="appkeyCrm" />
-        <result column="username" property="username" />
-        <result column="password" property="password" />
-        <result column="store_id" property="storeId" />
-        <result column="created_id" property="createdId" />
+        <id column="id" property="id"/>
+        <result column="business_id" property="businessId"/>
+        <result column="business_name" property="businessName"/>
+        <result column="appid" property="appid"/>
+        <result column="secret" property="secret"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="status" property="status"/>
+        <result column="type_id" property="typeId"/>
+        <result column="access_token" property="accessToken"/>
+        <result column="shop_id" property="shopId"/>
+        <result column="appid_crm" property="appidCrm"/>
+        <result column="appkey_crm" property="appkeyCrm"/>
+        <result column="username" property="username"/>
+        <result column="password" property="password"/>
+        <result column="store_id" property="storeId"/>
+        <result column="created_id" property="createdId"/>
     </resultMap>
+
+
+    <update id="updateSyncInfo" parameterType="com.zhidianfan.pig.yd.moduler.common.dao.entity.BusinessSyncAccount" >
+       update business_sync_account a,business b set a.`business_name`=b.business_name,a.`appid`=#{appid},
+	     	a.`secret`=#{secret}, a.`updated_at`=now(),a.`type_id`= #{typeId}
+	   where a.business_id=#{businessId}
+	        and a.business_id=b.id
+	     	and not exists (select * from(select 1 from business_sync_account where appid = #{appid} and business_id != #{businessId})t)
+
+
+    </update>
 
 </mapper>

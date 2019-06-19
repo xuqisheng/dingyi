@@ -62,6 +62,44 @@ public class BusinessMarketingSmsTemplate extends Model<BusinessMarketingSmsTemp
     @TableField("use_num")
     private Integer useNum;
 
+    /**
+     * 是否自动发送
+     */
+    @TableField("is_auto_send")
+    private Integer isAutoSend;
+    /**
+     * 纪念日类型
+     */
+    @TableField("anniversary_type")
+    private Integer anniversaryType;
+    /**
+     * 纪念日对象
+     */
+    @TableField("anniversary_obj")
+    private String anniversaryObj;
+    /**
+     * 提前天数
+     */
+    @TableField("advance_day_num")
+    private Integer advanceDayNum;
+
+
+    /**
+     * 发送时间,安卓电话机固定为十点
+     */
+    @TableField("send_time")
+    private String sendTime;
+
+    /**
+     * 短信条数
+     */
+    @TableField("num")
+    private Integer num;
+
+    @TableField("is_eat")
+    private Integer isEat;
+
+
 
     public Integer getId() {
         return id;
@@ -135,23 +173,88 @@ public class BusinessMarketingSmsTemplate extends Model<BusinessMarketingSmsTemp
         this.useNum = useNum;
     }
 
+    public Integer getIsAutoSend() {
+        return isAutoSend;
+    }
+
+    public void setIsAutoSend(Integer isAutoSend) {
+        this.isAutoSend = isAutoSend;
+    }
+
+    public Integer getAnniversaryType() {
+        return anniversaryType;
+    }
+
+    public void setAnniversaryType(Integer anniversaryType) {
+        this.anniversaryType = anniversaryType;
+    }
+
+    public String getAnniversaryObj() {
+        return anniversaryObj;
+    }
+
+    public void setAnniversaryObj(String anniversaryObj) {
+        this.anniversaryObj = anniversaryObj;
+    }
+
+    public Integer getAdvanceDayNum() {
+        return advanceDayNum;
+    }
+
+    public void setAdvanceDayNum(Integer advanceDayNum) {
+        this.advanceDayNum = advanceDayNum;
+    }
+
+    public String getSendTime() {
+        return sendTime;
+    }
+
+    public void setSendTime(String sendTime) {
+        this.sendTime = sendTime;
+    }
+
+    public Integer getIsEat() {
+        return isEat;
+    }
+
+    public void setIsEat(Integer isEat) {
+        this.isEat = isEat;
+    }
+
+
+    public Integer getNum() {
+        return num;
+    }
+
+    public void setNum(Integer num) {
+        this.num = num;
+    }
+
     @Override
     protected Serializable pkVal() {
         return this.id;
     }
 
+
     @Override
     public String toString() {
         return "BusinessMarketingSmsTemplate{" +
-        "id=" + id +
-        ", businessId=" + businessId +
-        ", templateTitle=" + templateTitle +
-        ", templateContent=" + templateContent +
-        ", templateVariable=" + templateVariable +
-        ", createAt=" + createAt +
-        ", updateAt=" + updateAt +
-        ", isEnable=" + isEnable +
+                "id=" + id +
+                ", businessId=" + businessId +
+                ", templateTitle='" + templateTitle + '\'' +
+                ", templateContent='" + templateContent + '\'' +
+                ", templateVariable='" + templateVariable + '\'' +
+                ", createAt=" + createAt +
+                ", updateAt=" + updateAt +
+                ", isEnable=" + isEnable +
                 ", useNum=" + useNum +
-        "}";
+                ", isAutoSend=" + isAutoSend +
+                ", anniversaryType=" + anniversaryType +
+                ", anniversaryObj='" + anniversaryObj + '\'' +
+                ", advanceDayNum=" + advanceDayNum +
+                ", sendTime=" + sendTime +
+                ", num=" + num +
+                ", isEat=" + isEat +
+                '}';
     }
 }

@@ -3,10 +3,7 @@ package com.zhidianfan.pig.yd.moduler.common.service;
 import com.baomidou.mybatisplus.plugins.Page;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.ResvOrderAndroid;
 import com.baomidou.mybatisplus.service.IService;
-import com.zhidianfan.pig.yd.moduler.resv.bo.DeskOrderBo;
-import com.zhidianfan.pig.yd.moduler.resv.bo.MessageOrderBO;
-import com.zhidianfan.pig.yd.moduler.resv.bo.OrderBO;
-import com.zhidianfan.pig.yd.moduler.resv.bo.ResvOrderThirdBO;
+import com.zhidianfan.pig.yd.moduler.resv.bo.*;
 import com.zhidianfan.pig.yd.moduler.resv.dto.*;
 import com.zhidianfan.pig.yd.moduler.resv.qo.AllResvOrderQO;
 import com.zhidianfan.pig.yd.moduler.resv.qo.LockTablQO;
@@ -85,4 +82,10 @@ public interface IResvOrderAndroidService extends IService<ResvOrderAndroid> {
     void updateAndroidOrderStatus1TO4(Integer intervalNum);
 
     void updateAndroidOrderStatus2TO3(Integer intervalNum);
+
+    List<DeskOrderBo> selectListWithAllergen(String batchNo);
+
+    ResvOrderAndroid selectBrandLastEatTime(String phone, Integer brandId);
+
+
 }
