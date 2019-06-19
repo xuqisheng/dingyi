@@ -544,7 +544,7 @@ public class OrderService {
      * @param resvOrderAndroid 订单数据
      * @return 新的来源名字
      */
-    private String getNewResvSource(ResvOrderAndroid resvOrderAndroid) {
+    public String getNewResvSource(ResvOrderAndroid resvOrderAndroid) {
 
 
         String thirdOrderNo = resvOrderAndroid.getThirdOrderNo();
