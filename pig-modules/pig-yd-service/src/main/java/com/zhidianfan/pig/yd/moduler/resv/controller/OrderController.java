@@ -113,6 +113,11 @@ public class OrderController {
         // 增加订单信息携带过敏源
         List<DeskOrderBo> deskOrderBos = iResvOrderService.selectListWithAllergen(batchNo);
 
+        for (DeskOrderBo deskOrderBo : deskOrderBos) {
+            deskOrderBo.setNewResvSource(orderService.getNewResvSource(deskOrderBo));
+        }
+
+
         return ResponseEntity.ok(deskOrderBos);
     }
 
