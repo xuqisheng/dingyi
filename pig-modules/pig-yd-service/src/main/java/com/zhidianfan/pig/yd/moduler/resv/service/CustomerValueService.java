@@ -197,27 +197,30 @@ public class CustomerValueService {
     /**
      * 执行任务的过程
      *
-     * @param vip vip 信息
+     * @param vips vip 信息
      */
-    public void execute(List<Vip> vip) {
+    public void execute(List<Vip> vips) {
 
-        List<Integer> vipIds = vip.stream().map(Vip::getId).collect(Collectors.toList());
+        List<Integer> vipIds = vips.stream().map(Vip::getId).collect(Collectors.toList());
 
         //获取客户的所有订单
 //        List<ResvOrder> resvOrders = getResvOrders(vip.getId());
-        Map<Integer, List<ResvOrder>> resvOrders = getResvOrders(vipIds);
 //        List<ResvOrder> resvOrdersBy60days = getResvOrdersBy60day(vip.getId());
+        Map<Integer, List<ResvOrder>> resvOrders = getResvOrders(vipIds);
         Map<Integer, List<ResvOrder>> resvOrdersBy60days = getResvOrdersBy60day(vipIds);
 
-        Map<Integer, CustomerValueList> customerValueList = customerValueListService.getCustomerValueList(vip, resvOrders);
+        List<MasterCustomerVipMapping> masterCustomerVipMappings = customerRecordService.manOrderList(vips);
+        List<GuestCustomerVipMapping> guestCustomerVipMappings = customerRecordService.guestOrderList(vips);
 
-        Map<Integer, VipConsumeActionTotal> vipConsumeActionTotal = vipConsumeActionTotalService.getVipConsumeActionTotal(vip, resvOrders);
+        Map<Integer, CustomerValueList> customerValueList = customerValueListService.getCustomerValueList(vips, resvOrders, masterCustomerVipMappings);
 
-        Map<Integer, VipConsumeActionLast60> vipConsumeActionLast60 = vipConsumeActionLast60Service.getVipConsumeActionLast60(vip, resvOrdersBy60days);
+        Map<Integer, VipConsumeActionTotal> vipConsumeActionTotal = vipConsumeActionTotalService.getVipConsumeActionTotal(vips, resvOrders, masterCustomerVipMappings);
 
-        Map<Integer, List<CustomerRecord>> customerRecordList = customerRecordService.getCustomerRecord(vip, resvOrders, customerValueList);
+        Map<Integer, VipConsumeActionLast60> vipConsumeActionLast60 = vipConsumeActionLast60Service.getVipConsumeActionLast60(vips, resvOrdersBy60days, masterCustomerVipMappings);
 
-        Map<Integer, NowChangeInfo> nowChangeInfo = getProfile2(vip);
+        Map<Integer, List<CustomerRecord>> customerRecordList = customerRecordService.getCustomerRecord(vips, resvOrders, customerValueList, masterCustomerVipMappings, guestCustomerVipMappings);
+
+        Map<Integer, NowChangeInfo> nowChangeInfo = getProfile2(vips);
 
         DefaultTransactionDefinition def = new DefaultTransactionDefinition();
         def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW); // 定义事务传播
@@ -316,7 +319,6 @@ public class CustomerValueService {
 
     private Map<Integer, NowChangeInfo> getProfile2(List<Vip> vips) {
 
-        Map<Integer, NowChangeInfo> map = new HashMap<>();
         Map<Integer, Integer> profile2 = vipService.getProfile2(vips);
 
         Map<Integer, NowChangeInfo> nowChangeInfoMap = vips.stream()

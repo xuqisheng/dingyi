@@ -40,10 +40,10 @@ public class CustomerRecordService {
     private BusinessCustomerAnalysisInfoService businessCustomerAnalysisInfoService;
 
 
-    public Map<Integer, List<CustomerRecord>> getCustomerRecord(List<Vip> vips, Map<Integer, List<ResvOrder>> resvOrdersMap, Map<Integer, CustomerValueList> customerValueListMap) {
+    public Map<Integer, List<CustomerRecord>> getCustomerRecord(List<Vip> vips, Map<Integer, List<ResvOrder>> resvOrdersMap, Map<Integer, CustomerValueList> customerValueListMap,
+                                                                List<MasterCustomerVipMapping> masterCustomerVipMappings, List<GuestCustomerVipMapping> guestCustomerVipMappings) {
+
         Map<Integer, List<CustomerRecord>> map = new HashMap<>();
-
-
         List<Integer> appUserList = getAppUser(vips);
         List<AppUser> userList = businessCustomerAnalysisInfoService.getAppUserList(appUserList);
         for (Vip vip : vips) {
@@ -52,16 +52,18 @@ public class CustomerRecordService {
                 List<CustomerRecord> recordList = Lists.newArrayList();
                 List<CustomerRecord> customerRecords = reserveOrderCustomer(vip, resvOrdersMap.get(vip.getId()));
                 List<CustomerRecord> customerRecords1 = reserveOrderESC(vip, resvOrdersMap.get(vip.getId()));
-                List<CustomerRecord> customerRecords2 = manOrder(vip, resvOrdersMap.get(vip.getId()));
-                List<CustomerRecord> customerRecords3 = guestOrder(vip, resvOrdersMap.get(vip.getId()));
+                // List<CustomerRecord> customerRecords2 = manOrder(vip, resvOrdersMap.get(vip.getId()));
+                // List<CustomerRecord> customerRecords3 = guestOrder(vip, resvOrdersMap.get(vip.getId()));
+                List<CustomerRecord> customerRecords2 = manOrder2(vip, masterCustomerVipMappings, resvOrdersMap);
+                List<CustomerRecord> customerRecords3 = guestOrder2(vip, guestCustomerVipMappings, resvOrdersMap);
                 CustomerRecord valueChangeRecord = valueChange(vip, customerValueListMap.get(vip.getId()));
                 // CustomerRecord userChangeRecord = appUserChange(vip, customerValueListMap.get(vip.getId()));
                 CustomerRecord userChangeRecord = appUserChange2(vip, customerValueListMap.get(vip.getId()), userList);
 
                 recordList.addAll(customerRecords);
                 recordList.addAll(customerRecords1);
-                recordList.addAll(customerRecords2);
-                recordList.addAll(customerRecords3);
+                 recordList.addAll(customerRecords2);
+                 recordList.addAll(customerRecords3);
                 if (valueChangeRecord != null) {
                     recordList.add(valueChangeRecord);
                 }
@@ -75,7 +77,6 @@ public class CustomerRecordService {
             }
 
         }
-
 
         return map;
     }
@@ -129,6 +130,16 @@ public class CustomerRecordService {
     private CustomerRecord setRecordOrder(ResvOrder order, int type) {
         CustomerRecord record = new CustomerRecord();
         record.setVipId(order.getVipId());
+        return getCustomerRecord(order, type, record);
+    }
+
+    private CustomerRecord setMasterOrGuestRecordOrder(Integer vipId, ResvOrder order, int type) {
+        CustomerRecord record = new CustomerRecord();
+        record.setVipId(vipId);
+        return getCustomerRecord(order, type, record);
+    }
+
+    private CustomerRecord getCustomerRecord(ResvOrder order, int type, CustomerRecord record) {
         record.setLogType(type);
         record.setLogTime(LocalDateTime.now());
         record.setResvOrder(order.getBatchNo());
@@ -230,6 +241,124 @@ public class CustomerRecordService {
         // 主客订单列表
         return collect;
     }
+    /**
+     * 主客订单
+     */
+    public List<CustomerRecord> manOrder2(Vip vip, List<MasterCustomerVipMapping> masterCustomerVipMappingList, Map<Integer, List<ResvOrder>> resvOrdersMap) {
+        if (vip == null) {
+            return Lists.newArrayList();
+        }
+        if (CollectionUtils.isEmpty(masterCustomerVipMappingList)) {
+            return Lists.newArrayList();
+        }
+        if (CollectionUtils.isEmpty(resvOrdersMap)) {
+            return Lists.newArrayList();
+        }
+
+        Integer id = vip.getId();
+        if (id == null) {
+            return Lists.newArrayList();
+        }
+
+        List<ResvOrder> resvOrderList = resvOrdersMap.get(id);
+        if (CollectionUtils.isEmpty(resvOrderList)) {
+            return Lists.newArrayList();
+        }
+
+        List<CustomerRecord> recordList = new ArrayList<>();
+        for (ResvOrder resvOrder : resvOrderList) {
+            for (MasterCustomerVipMapping vipMapping : masterCustomerVipMappingList) {
+                Integer masterCustomerId = vipMapping.getMasterCustomerId();
+                String batchNo = vipMapping.getBatchNo();
+                if (resvOrder.getBatchNo().equals(batchNo)) {
+                    CustomerRecord record = setMasterOrGuestRecordOrder(masterCustomerId, resvOrder, CustomerValueConstants.RECORD_TYPE_MAN);
+                    recordList.add(record);
+                }
+            }
+        }
+
+        return recordList;
+    }
+
+    /**
+     * 主客订单
+     */
+    public List<ResvOrder> getManOrderList(Vip vip, List<MasterCustomerVipMapping> masterCustomerVipMappingList, Map<Integer, List<ResvOrder>> resvOrdersMap) {
+        if (vip == null) {
+            return Lists.newArrayList();
+        }
+        if (CollectionUtils.isEmpty(masterCustomerVipMappingList)) {
+            return Lists.newArrayList();
+        }
+        if (CollectionUtils.isEmpty(resvOrdersMap)) {
+            return Lists.newArrayList();
+        }
+
+        Integer id = vip.getId();
+        if (id == null) {
+            return Lists.newArrayList();
+        }
+
+//        List<ResvOrder> resvOrderList = resvOrdersMap.get(id);
+//        if (CollectionUtils.isEmpty(resvOrderList)) {
+//            return Lists.newArrayList();
+//        }
+        List<ResvOrder> recordList = new ArrayList<>();
+        resvOrdersMap.forEach((k, v) -> {
+            for (ResvOrder resvOrder : v) {
+                for (MasterCustomerVipMapping vipMapping : masterCustomerVipMappingList) {
+                    Integer masterCustomerId = vipMapping.getMasterCustomerId();
+                    String batchNo = vipMapping.getBatchNo();
+                    if (resvOrder.getBatchNo().equals(batchNo)) {
+                        // 将这条订单变更为主客所属的订单
+                        // resvOrder.setVipId(masterCustomerId);
+                        recordList.add(resvOrder);
+                    }
+                }
+            }
+        });
+
+
+        return recordList;
+    }
+
+    public List<MasterCustomerVipMapping> manOrderList(List<Vip> vipList) {
+        if (CollectionUtils.isEmpty(vipList)) {
+            return Lists.newArrayList();
+        }
+
+        Object[] vipIds = vipList.stream()
+                .filter(Objects::nonNull)
+                .map(Vip::getId)
+                .toArray();
+
+        Wrapper<MasterCustomerVipMapping> wrapper = new EntityWrapper<>();
+        wrapper.in("master_customer_id", vipIds);
+        List<MasterCustomerVipMapping> vipMappings = iMasterCustomerVipMappingService.selectList(wrapper);
+        if (CollectionUtils.isEmpty(vipMappings)) {
+            return Lists.newArrayList();
+        }
+        return vipMappings;
+    }
+
+    public List<GuestCustomerVipMapping> guestOrderList(List<Vip> vipList) {
+        if (CollectionUtils.isEmpty(vipList)) {
+            return Lists.newArrayList();
+        }
+
+        Object[] vipIds = vipList.stream()
+                .filter(Objects::nonNull)
+                .map(Vip::getId)
+                .toArray();
+
+        Wrapper<GuestCustomerVipMapping> wrapper = new EntityWrapper<>();
+        wrapper.in("guest_customer_id", vipIds);
+        List<GuestCustomerVipMapping> vipMappings = iGuestCustomerVipMappingService.selectList(wrapper);
+        if (CollectionUtils.isEmpty(vipMappings)) {
+            return Lists.newArrayList();
+        }
+        return vipMappings;
+    }
 
     /**
      * 宾客订单
@@ -254,6 +383,45 @@ public class CustomerRecordService {
             }
         }
 
+        return recordList;
+    }
+    /**
+     * 宾客订单
+     */
+    private List<CustomerRecord> guestOrder2(Vip vip, List<GuestCustomerVipMapping> guestCustomerVipMappingList,  Map<Integer, List<ResvOrder>> resvOrdersMap) {
+        if (vip == null) {
+            return Lists.newArrayList();
+        }
+        if (CollectionUtils.isEmpty(guestCustomerVipMappingList)) {
+            return Lists.newArrayList();
+        }
+        if (CollectionUtils.isEmpty(resvOrdersMap)) {
+            return Lists.newArrayList();
+        }
+
+        Integer id = vip.getId();
+        if (id == null) {
+            return Lists.newArrayList();
+        }
+
+        List<ResvOrder> resvOrderList = resvOrdersMap.get(id);
+        if (CollectionUtils.isEmpty(resvOrderList)) {
+            return Lists.newArrayList();
+        }
+
+        List<CustomerRecord> recordList = new ArrayList<>();
+        for (ResvOrder resvOrder : resvOrderList) {
+            for (GuestCustomerVipMapping vipMapping : guestCustomerVipMappingList) {
+                Integer guestCustomerId = vipMapping.getGuestCustomerId();
+                String batchNo = vipMapping.getBatchNo();
+                if (resvOrder.getBatchNo().equals(batchNo)) {
+                    CustomerRecord record = setMasterOrGuestRecordOrder(guestCustomerId, resvOrder, CustomerValueConstants.RECORD_TYPE_GUEST);
+                    recordList.add(record);
+                }
+            }
+        }
+
+        // 主客订单列表
         return recordList;
     }
 
