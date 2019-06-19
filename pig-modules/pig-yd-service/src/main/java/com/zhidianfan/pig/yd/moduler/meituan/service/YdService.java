@@ -552,9 +552,13 @@ public class YdService {
         MeituanOrderUpdateDTO meituanOrderUpdateDTO = JSONObject.parseObject(orderDTO.getData(), MeituanOrderUpdateDTO.class);
         log.info("meituanOrderUpdateDTO:" + meituanOrderUpdateDTO);
 
+        //不是商户拒单,则设置为消息未读
+        if(meituanOrderUpdateDTO.getStatus() != 30) {
+            resvOrderThird.setFlag(0);
+        }
+
         //如果是客户取消订单,则设置消息为未读
         if(meituanOrderUpdateDTO.getStatus() == 70){
-            resvOrderThird.setFlag(0);
             log.info("如果是客户取消订单,则设置消息为未读: resvOrderThird.getFlag" +resvOrderThird.getFlag());
         }
 
