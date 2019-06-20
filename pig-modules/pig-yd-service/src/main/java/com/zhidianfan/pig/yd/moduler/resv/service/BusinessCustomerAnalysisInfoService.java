@@ -131,7 +131,6 @@ public class BusinessCustomerAnalysisInfoService {
         Wrapper<AppUser> wrapper = new EntityWrapper<>();
         wrapper.in("id", appUserList.toArray());
 
-
         return appuserMapper.selectList(wrapper);
     }
 

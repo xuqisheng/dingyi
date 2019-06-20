@@ -9,11 +9,15 @@ import com.zhidianfan.pig.yd.moduler.common.service.IGuestCustomerVipMappingServ
 import com.zhidianfan.pig.yd.moduler.common.service.IMasterCustomerVipMappingService;
 import com.zhidianfan.pig.yd.moduler.resv.constants.CustomerValueConstants;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
+import org.apache.velocity.runtime.parser.node.MathUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.*;
 import java.util.*;
@@ -43,27 +47,32 @@ public class CustomerRecordService {
     public Map<Integer, List<CustomerRecord>> getCustomerRecord(List<Vip> vips, Map<Integer, List<ResvOrder>> resvOrdersMap, Map<Integer, CustomerValueList> customerValueListMap,
                                                                 List<MasterCustomerVipMapping> masterCustomerVipMappings, List<GuestCustomerVipMapping> guestCustomerVipMappings) {
 
+        cleanData(vips);
         Map<Integer, List<CustomerRecord>> map = new HashMap<>();
         List<Integer> appUserList = getAppUser(vips);
         List<AppUser> userList = businessCustomerAnalysisInfoService.getAppUserList(appUserList);
+
+        Map<Integer, List<CustomerRecord>> nowChangeOrderInfo = getNowChangeOrderInfo(vips);
+
+
         for (Vip vip : vips) {
+            log.info("vip 数量：[{}]", vips.size());
             try {
-                // cleanData(vip);
                 List<CustomerRecord> recordList = Lists.newArrayList();
-                List<CustomerRecord> customerRecords = reserveOrderCustomer(vip, resvOrdersMap.get(vip.getId()));
-                List<CustomerRecord> customerRecords1 = reserveOrderESC(vip, resvOrdersMap.get(vip.getId()));
-                // List<CustomerRecord> customerRecords2 = manOrder(vip, resvOrdersMap.get(vip.getId()));
-                // List<CustomerRecord> customerRecords3 = guestOrder(vip, resvOrdersMap.get(vip.getId()));
-                List<CustomerRecord> customerRecords2 = manOrder2(vip, masterCustomerVipMappings, resvOrdersMap);
-                List<CustomerRecord> customerRecords3 = guestOrder2(vip, guestCustomerVipMappings, resvOrdersMap);
+
+                LocalDateTime lastChangeTime = getLastChangeTime(nowChangeOrderInfo, vip);
+
+                List<CustomerRecord> customerRecords = reserveOrderCustomer(vip, resvOrdersMap.get(vip.getId()), lastChangeTime);
+                List<CustomerRecord> customerRecords1 = reserveOrderESC(vip, resvOrdersMap.get(vip.getId()), lastChangeTime);
+                List<CustomerRecord> customerRecords2 = manOrder2(vip, masterCustomerVipMappings, resvOrdersMap, lastChangeTime);
+                List<CustomerRecord> customerRecords3 = guestOrder2(vip, guestCustomerVipMappings, resvOrdersMap, lastChangeTime);
                 CustomerRecord valueChangeRecord = valueChange(vip, customerValueListMap.get(vip.getId()));
-                // CustomerRecord userChangeRecord = appUserChange(vip, customerValueListMap.get(vip.getId()));
                 CustomerRecord userChangeRecord = appUserChange2(vip, customerValueListMap.get(vip.getId()), userList);
 
                 recordList.addAll(customerRecords);
                 recordList.addAll(customerRecords1);
-                 recordList.addAll(customerRecords2);
-                 recordList.addAll(customerRecords3);
+                recordList.addAll(customerRecords2);
+                recordList.addAll(customerRecords3);
                 if (valueChangeRecord != null) {
                     recordList.add(valueChangeRecord);
                 }
@@ -78,7 +87,57 @@ public class CustomerRecordService {
 
         }
 
-        return map;
+         return map;
+    }
+
+    private LocalDateTime getLastChangeTime(Map<Integer, List<CustomerRecord>> nowChangeOrderInfo, Vip vip) {
+        if (nowChangeOrderInfo != null) {
+            if (vip == null) {
+                return null;
+            }
+            Integer id = vip.getId();
+            if (id == null) {
+                return null;
+            }
+            List<CustomerRecord> recordList = nowChangeOrderInfo.get(id);
+            if (CollectionUtils.isEmpty(recordList)) {
+                return null;
+            }
+            Optional<CustomerRecord> max = recordList.stream()
+                    .max(Comparator.comparing(CustomerRecord::getUpdateTime));
+            CustomerRecord customerRecord = max.orElse(new CustomerRecord());
+            LocalDateTime updateTime = customerRecord.getUpdateTime();
+            return LocalDateTime.of(updateTime.toLocalDate(), LocalTime.MAX);
+        }
+        return null;
+    }
+
+    /**
+     *
+     * @param vips vip 列表
+     * @return
+     */
+    private Map<Integer, List<CustomerRecord>> getNowChangeOrderInfo(List<Vip> vips) {
+        List<Integer> vipIdList = getVipIdList(vips);
+        Wrapper<CustomerRecord> wrapper = new EntityWrapper<>();
+        wrapper.in("vip_id", vipIdList.toArray());
+        wrapper.in("log_type", Arrays.asList(1, 2, 3, 4));
+
+        List<CustomerRecord> recordList = customerRecordMapper.selectList(wrapper);
+        if (CollectionUtils.isEmpty(recordList)) {
+            return null;
+        }
+        return recordList.stream()
+                .collect(Collectors.groupingBy(CustomerRecord::getVipId));
+    }
+
+    private List<Integer> getVipIdList(List<Vip> vips) {
+        List<Integer> vipIdList = vips.stream()
+                .filter(Objects::nonNull)
+                .map(Vip::getId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+        return vipIdList;
     }
 
     private List<Integer> getAppUser(List<Vip> vips) {
@@ -90,121 +149,194 @@ public class CustomerRecordService {
 
     /**
      * 清除指定 vip 的定时任务跑的当天的数据
-     * @param vip
      */
-    private void cleanData(Vip vip) {
-        if (vip == null) {
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void cleanData(List<Vip> vipList) {
+        if (CollectionUtils.isEmpty(vipList)) {
             return;
         }
-        if (vip.getId() == null) {
-            return;
-        }
+        List<Integer> filterVipList = vipList.stream()
+                .map(Vip::getId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
         Wrapper<CustomerRecord> wrapper = new EntityWrapper<>();
-        LocalTime startTime = LocalTime.of(0, 0, 0);
-        LocalTime endTime = LocalTime.of(23, 59, 59);
         LocalDate nowDate = LocalDate.now();
-        LocalDateTime startDateTime = LocalDateTime.of(nowDate, startTime);
-        LocalDateTime endDateTime = LocalDateTime.of(nowDate, endTime);
+        LocalTime nowTime = LocalTime.now();
+        LocalDateTime startDateTime;
+        LocalDateTime endDateTime;
+        // 没有超过 00 点，结束时间 + 1 天，超过了，开始时间 -1 天
+        if (nowTime.isAfter(CustomerValueConstants.TASK_START_TIME) && nowTime.isBefore(LocalTime.MAX)) {
+            startDateTime = LocalDateTime.of(nowDate, CustomerValueConstants.TASK_START_TIME);
+            endDateTime = LocalDateTime.of(nowDate.plusDays(1), CustomerValueConstants.TASK_END_TIME);
+        } else {
+            startDateTime = LocalDateTime.of(nowDate.minusDays(1), CustomerValueConstants.TASK_START_TIME);
+            endDateTime = LocalDateTime.of(nowDate, CustomerValueConstants.TASK_END_TIME);
+        }
+        wrapper.in("vip_id", filterVipList);
         wrapper.ge("create_time", startDateTime);
         wrapper.le("create_time", endDateTime);
         customerRecordMapper.delete(wrapper);
     }
+
 
     /**
      * 预订定单 - 消费订单
      *
      * @param resvOrders 订单列表
      */
-    private List<CustomerRecord> reserveOrderCustomer(Vip vip, List<ResvOrder> resvOrders) {
+    private List<CustomerRecord> reserveOrderCustomer(Vip vip, List<ResvOrder> resvOrders, LocalDateTime changeDate) {
         if (CollectionUtils.isEmpty(resvOrders)){
             return new ArrayList<>();
         }
-        List<CustomerRecord> recordList = resvOrders.stream()
-                .filter(order -> "2".equals(order.getStatus()) || "3".equals(order.getStatus()))
-                .map(order -> setRecordOrder(order, CustomerValueConstants.RECORD_TYPE_CUSTOMER))
-                .collect(Collectors.toList());
 
+        List<CustomerRecord> recordList = resvOrders.stream()
+                .filter(order -> isLastOrder(changeDate, order))
+                .filter(order -> "2".equals(order.getStatus()) || "3".equals(order.getStatus()))
+                .map(order -> setCustomerRecord(order, vip, CustomerValueConstants.RECORD_TYPE_CUSTOMER))
+                .collect(Collectors.toList());
+        log.info("vipId:[{}],消费订单数量：[{}]", vip.getId(), resvOrders.size());
         return recordList;
     }
 
-    private CustomerRecord setRecordOrder(ResvOrder order, int type) {
-        CustomerRecord record = new CustomerRecord();
-        record.setVipId(order.getVipId());
-        return getCustomerRecord(order, type, record);
+    private boolean isLastOrder(LocalDateTime changeDate, ResvOrder order) {
+        if (changeDate == null) {
+            return true;
+        } else {
+            Date updatedAt = order.getUpdatedAt();
+            LocalDateTime localDateTime = getLocalDateTime(updatedAt);
+            return localDateTime.isAfter(changeDate);
+        }
     }
+
+    private LocalDateTime getLocalDateTime(Date date) {
+        Instant instant = date.toInstant();
+        return LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
+    }
+
+    private boolean isNowDate(ResvOrder order) {
+        if (order == null) {
+            return false;
+        }
+        if (order.getUpdatedAt() == null) {
+            return false;
+        }
+        Instant instant = order.getUpdatedAt().toInstant();
+        LocalDateTime updateAt = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
+        LocalDate date = updateAt.toLocalDate();
+        LocalDateTime now = LocalDateTime.now();
+        LocalDate nowDate = now.toLocalDate();
+        LocalTime nowTime = now.toLocalTime();
+        if (LocalTime.now().isBefore(CustomerValueConstants.TASK_START_TIME)) {
+            nowDate = nowDate.minusDays(1);
+        }
+        return date.isEqual(nowDate);
+    }
+
 
     private CustomerRecord setMasterOrGuestRecordOrder(Integer vipId, ResvOrder order, int type) {
         CustomerRecord record = new CustomerRecord();
         record.setVipId(vipId);
-        return getCustomerRecord(order, type, record);
-    }
-
-    private CustomerRecord getCustomerRecord(ResvOrder order, int type, CustomerRecord record) {
-        record.setLogType(type);
-        record.setLogTime(LocalDateTime.now());
-        record.setResvOrder(order.getBatchNo());
         Date updatedAt = order.getUpdatedAt();
-        LocalDateTime resvDate;
-        if (updatedAt != null) {
-            Instant instant = updatedAt.toInstant();
-            resvDate = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
-        } else {
-            resvDate = CustomerValueConstants.DEFAULT_START_TIME;
-        }
+        record.setLogType(type);
+        LocalDateTime logTime = getLocalDateTime(updatedAt);
+        record.setLogTime(logTime);
+        record.setResvOrder(order.getResvOrder());
+        LocalDateTime resvDate = getLocalDateTime(order.getResvDate());
         record.setResvDate(resvDate);
         record.setMealTypeId(order.getMealTypeId());
-        record.setMealTypeName(order.getMealTypeName().trim());
-        String payamount = order.getPayamount();
-        if (StringUtils.isNotBlank(payamount)) {
-            double v = Double.parseDouble(payamount);
-            int amount = (int) (v * 100);
-            record.setConsumeAmount(amount);
-        } else {
-            record.setConsumeAmount(0);
-        }
-        String resvNum = order.getResvNum();
-        int resvNo = 0;
-        if (NumberUtils.isCreatable(resvNum)) {
-            resvNo = Integer.parseInt(resvNum);
-        } else {
-            String actualNum = order.getActualNum();
-            if (NumberUtils.isCreatable(actualNum)) {
-                resvNo = Integer.parseInt(actualNum);
-            }
-        }
+        record.setMealTypeName(order.getMealTypeName());
+        Integer payAmount = getPayAmount(order);
+        record.setConsumeAmount(payAmount);
+        int resvNo = getResvNo(order);
         record.setPersonNo(resvNo);
         record.setTableId(order.getTableId());
         record.setTableName(order.getTableName());
         record.setVipName(order.getVipName());
-        String vipPhone = order.getVipPhone();
-        if (NumberUtils.isCreatable(vipPhone) && vipPhone.length() == 11) {
-            record.setVipPhone(vipPhone);
-        } else {
-            log.error("手机号异常:[{}],订单号 [{}]", vipPhone, order.getId());
-        }
+        record.setVipPhone(order.getVipPhone());
         record.setAppUserName(order.getAppUserName());
         record.setAppUserId(order.getAppUserId());
         record.setAppUserPhone(order.getAppUserPhone());
         record.setOperationLog(StringUtils.EMPTY);
-        record.setCreateUserId(CustomerValueConstants.DEFAULT_USER_ID);
+        record.setCreateUserId(0L);
         record.setCreateTime(LocalDateTime.now());
-        record.setUpdateUserId(CustomerValueConstants.DEFAULT_USER_ID);
+        record.setUpdateUserId(0L);
         record.setUpdateTime(LocalDateTime.now());
         return record;
     }
+
+//    private CustomerRecord getCustomerRecord(ResvOrder order, int type, CustomerRecord record) {
+//        record.setLogType(type);
+//        if (type == CustomerValueConstants.RECORD_TYPE_CUSTOMER || type == CustomerValueConstants.RECORD_TYPE_ESC) {
+//            LocalDateTime logTime = getLocalDateTime(order.getUpdatedAt());
+//            record.setLogTime(logTime);
+//        } else if (type == CustomerValueConstants.RECORD_TYPE_MAN) {
+//
+//        }
+//        record.setResvOrder(order.getBatchNo());
+//        Date updatedAt = order.getUpdatedAt();
+//        LocalDateTime resvDate;
+//        if (updatedAt != null) {
+//            Instant instant = updatedAt.toInstant();
+//            resvDate = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
+//        } else {
+//            resvDate = CustomerValueConstants.DEFAULT_START_TIME;
+//        }
+//        record.setResvDate(resvDate);
+//        record.setMealTypeId(order.getMealTypeId());
+//        record.setMealTypeName(order.getMealTypeName().trim());
+//        String payamount = order.getPayamount();
+//        if (StringUtils.isNotBlank(payamount)) {
+//            double v = Double.parseDouble(payamount);
+//            int amount = (int) (v * 100);
+//            record.setConsumeAmount(amount);
+//        } else {
+//            record.setConsumeAmount(0);
+//        }
+//        String resvNum = order.getResvNum();
+//        int resvNo = 0;
+//        if (NumberUtils.isCreatable(resvNum)) {
+//            resvNo = Integer.parseInt(resvNum);
+//        } else {
+//            String actualNum = order.getActualNum();
+//            if (NumberUtils.isCreatable(actualNum)) {
+//                resvNo = Integer.parseInt(actualNum);
+//            }
+//        }
+//        record.setPersonNo(resvNo);
+//        record.setTableId(order.getTableId());
+//        record.setTableName(order.getTableName());
+//        record.setVipName(order.getVipName());
+//        String vipPhone = order.getVipPhone();
+//        if (NumberUtils.isCreatable(vipPhone) && vipPhone.length() == 11) {
+//            record.setVipPhone(vipPhone);
+//        } else {
+//            log.error("手机号异常:[{}],订单号 [{}]", vipPhone, order.getId());
+//        }
+//        record.setAppUserName(order.getAppUserName());
+//        record.setAppUserId(order.getAppUserId());
+//        record.setAppUserPhone(order.getAppUserPhone());
+//        record.setOperationLog(StringUtils.EMPTY);
+//        record.setCreateUserId(CustomerValueConstants.DEFAULT_USER_ID);
+//        record.setCreateTime(LocalDateTime.now());
+//        record.setUpdateUserId(CustomerValueConstants.DEFAULT_USER_ID);
+//        record.setUpdateTime(LocalDateTime.now());
+//        return record;
+//    }
 
     /**
      * 预订定单-退订订单
      *
      * @param resvOrders 预订订单
      */
-    private List<CustomerRecord> reserveOrderESC(Vip vip, List<ResvOrder> resvOrders) {
+    private List<CustomerRecord> reserveOrderESC(Vip vip, List<ResvOrder> resvOrders, LocalDateTime nowChange) {
         if (CollectionUtils.isEmpty(resvOrders)){
             return new ArrayList<>();
         }
         List<CustomerRecord> recordList = resvOrders.stream()
+                .filter(order -> isLastOrder(nowChange, order))
                 .filter(order -> "4".equals(order.getStatus()))
-                .map(order -> setRecordOrder(order, CustomerValueConstants.RECORD_TYPE_ESC))
+                .map(order -> setCustomerRecord(order, vip, CustomerValueConstants.RECORD_TYPE_ESC))
                 .collect(Collectors.toList());
 
         return recordList;
@@ -235,7 +367,7 @@ public class CustomerRecordService {
         String batchNo = masterCustomerVipMapping.getBatchNo();
         List<CustomerRecord> collect = resvOrders.stream()
                 .filter(order -> order.getBatchNo().equals(batchNo))
-                .map(order -> setRecordOrder(order, CustomerValueConstants.RECORD_TYPE_MAN))
+                .map(order -> setMasterOrGuestRecordOrder(masterCustomerVipMapping.getId(), order, CustomerValueConstants.RECORD_TYPE_MAN))
                 .collect(Collectors.toList());
 
         // 主客订单列表
@@ -244,29 +376,19 @@ public class CustomerRecordService {
     /**
      * 主客订单
      */
-    public List<CustomerRecord> manOrder2(Vip vip, List<MasterCustomerVipMapping> masterCustomerVipMappingList, Map<Integer, List<ResvOrder>> resvOrdersMap) {
-        if (vip == null) {
-            return Lists.newArrayList();
-        }
-        if (CollectionUtils.isEmpty(masterCustomerVipMappingList)) {
-            return Lists.newArrayList();
-        }
-        if (CollectionUtils.isEmpty(resvOrdersMap)) {
+    public List<CustomerRecord> manOrder2(Vip vip, List<MasterCustomerVipMapping> masterCustomerVipMappingList, Map<Integer, List<ResvOrder>> resvOrdersMap, LocalDateTime nowChangeTime) {
+        boolean checkParam = checkParam(vip, masterCustomerVipMappingList, resvOrdersMap);
+        if (!checkParam) {
             return Lists.newArrayList();
         }
 
-        Integer id = vip.getId();
-        if (id == null) {
-            return Lists.newArrayList();
-        }
-
-        List<ResvOrder> resvOrderList = resvOrdersMap.get(id);
-        if (CollectionUtils.isEmpty(resvOrderList)) {
-            return Lists.newArrayList();
-        }
+        List<ResvOrder> resvOrderList = resvOrdersMap.get(vip.getId());
+        List<ResvOrder> orderList = resvOrderList.stream()
+                .filter(order -> isLastOrder(nowChangeTime, order))
+                .collect(Collectors.toList());
 
         List<CustomerRecord> recordList = new ArrayList<>();
-        for (ResvOrder resvOrder : resvOrderList) {
+        for (ResvOrder resvOrder : orderList) {
             for (MasterCustomerVipMapping vipMapping : masterCustomerVipMappingList) {
                 Integer masterCustomerId = vipMapping.getMasterCustomerId();
                 String batchNo = vipMapping.getBatchNo();
@@ -281,6 +403,37 @@ public class CustomerRecordService {
     }
 
     /**
+     * 参数检查
+     * @param vip
+     * @param masterCustomerVipMappingList
+     * @param resvOrdersMap
+     * @return false 参数有错误，true 参数正确
+     */
+    private boolean checkParam(Vip vip, List<MasterCustomerVipMapping> masterCustomerVipMappingList, Map<Integer, List<ResvOrder>> resvOrdersMap) {
+        if (vip == null) {
+            return false;
+        }
+        if (CollectionUtils.isEmpty(masterCustomerVipMappingList)) {
+            return false;
+        }
+        if (MapUtils.isEmpty(resvOrdersMap)) {
+            return false;
+        }
+
+        Integer id = vip.getId();
+        if (id == null) {
+            return false;
+        }
+
+        List<ResvOrder> resvOrderList = resvOrdersMap.get(id);
+        if (CollectionUtils.isEmpty(resvOrderList)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * 主客订单
      */
     public List<ResvOrder> getManOrderList(Vip vip, List<MasterCustomerVipMapping> masterCustomerVipMappingList, Map<Integer, List<ResvOrder>> resvOrdersMap) {
@@ -290,7 +443,7 @@ public class CustomerRecordService {
         if (CollectionUtils.isEmpty(masterCustomerVipMappingList)) {
             return Lists.newArrayList();
         }
-        if (CollectionUtils.isEmpty(resvOrdersMap)) {
+        if (MapUtils.isEmpty(resvOrdersMap)) {
             return Lists.newArrayList();
         }
 
@@ -377,7 +530,7 @@ public class CustomerRecordService {
             for (ResvOrder otherResvOrder : otherResvOrders) {
                 Integer vipId1 = otherResvOrder.getVipId();
                 if (guestCustomerId.equals(vipId1)) {
-                    CustomerRecord record = setRecordOrder(otherResvOrder, CustomerValueConstants.RECORD_TYPE_GUEST);
+                    CustomerRecord record = setMasterOrGuestRecordOrder(guestCustomerId, otherResvOrder, CustomerValueConstants.RECORD_TYPE_GUEST);
                     recordList.add(record);
                 }
             }
@@ -388,14 +541,15 @@ public class CustomerRecordService {
     /**
      * 宾客订单
      */
-    private List<CustomerRecord> guestOrder2(Vip vip, List<GuestCustomerVipMapping> guestCustomerVipMappingList,  Map<Integer, List<ResvOrder>> resvOrdersMap) {
+    private List<CustomerRecord> guestOrder2(Vip vip, List<GuestCustomerVipMapping> guestCustomerVipMappingList,  Map<Integer, List<ResvOrder>> resvOrdersMap,
+                                             LocalDateTime nowChangeTime) {
         if (vip == null) {
             return Lists.newArrayList();
         }
         if (CollectionUtils.isEmpty(guestCustomerVipMappingList)) {
             return Lists.newArrayList();
         }
-        if (CollectionUtils.isEmpty(resvOrdersMap)) {
+        if (MapUtils.isEmpty(resvOrdersMap)) {
             return Lists.newArrayList();
         }
 
@@ -404,13 +558,17 @@ public class CustomerRecordService {
             return Lists.newArrayList();
         }
 
+
         List<ResvOrder> resvOrderList = resvOrdersMap.get(id);
         if (CollectionUtils.isEmpty(resvOrderList)) {
             return Lists.newArrayList();
         }
+        List<ResvOrder> orderList = resvOrderList.stream()
+                .filter(order -> isLastOrder(nowChangeTime, order))
+                .collect(Collectors.toList());
 
         List<CustomerRecord> recordList = new ArrayList<>();
-        for (ResvOrder resvOrder : resvOrderList) {
+        for (ResvOrder resvOrder : orderList) {
             for (GuestCustomerVipMapping vipMapping : guestCustomerVipMappingList) {
                 Integer guestCustomerId = vipMapping.getGuestCustomerId();
                 String batchNo = vipMapping.getBatchNo();
@@ -456,7 +614,17 @@ public class CustomerRecordService {
             CustomerRecord record = new CustomerRecord();
             record.setVipId(customerValueList.getVipId());
             record.setLogType(CustomerValueConstants.RECORD_TYPE_VALUE_CHANGE);
-            record.setLogTime(LocalDateTime.now());
+
+            LocalDate nowDate = LocalDate.now();
+            LocalTime nowTime = LocalTime.now();
+            LocalDateTime dateTime;
+            // 没有超过 00 点，结束时间 + 1 天，超过了，开始时间 -1 天
+            if (nowTime.isAfter(CustomerValueConstants.TASK_START_TIME) && nowTime.isBefore(LocalTime.MAX)) {
+                dateTime = LocalDateTime.of(nowDate, nowTime);
+            } else {
+                dateTime = LocalDateTime.of(nowDate.minusDays(1), nowTime);
+            }
+            record.setLogTime(dateTime);
             record.setResvOrder(StringUtils.EMPTY);
             record.setResvDate(LocalDateTime.now());
             record.setMealTypeId(0);
@@ -469,7 +637,6 @@ public class CustomerRecordService {
             record.setVipPhone("");
             record.setAppUserName("");
             record.setAppUserId(0);
-//            String value = getFirstClassValueStr(firstClassValue);
             String customerValueName = getCustomerValueName(vip);
             record.setOperationLog("由" + customerValueName + "变更为" + value);
             record.setCreateUserId(CustomerValueConstants.DEFAULT_USER_ID);
@@ -513,32 +680,31 @@ public class CustomerRecordService {
      * @return
      */
     private String getCustomerValue(Vip vip) {
-        Integer vipValueId = vip.getVipValueId();
         String vipName = vip.getVipValueName();
-
-        return vipName;
+        Optional<String> optionalVipName = Optional.ofNullable(vipName);
+        return optionalVipName.orElse(StringUtils.EMPTY);
     }
 
 
     /**
      * 营销经理变更
      */
-    private CustomerRecord appUserChange(Vip vip, CustomerValueList customerValueList) {
-        Integer appUserId = getAppUserId(vip);
-        if (appUserId < 1) {
-            return null;
-        }
-
-        CustomerRecord customerRecord = getCustomerRecord(vip.getId());
-        Integer changeAppUserId = customerRecord.getAppUserId();
-
-        if (!appUserId.equals(changeAppUserId)) {
-            AppUser appUser = businessCustomerAnalysisInfoService.getAppUser(appUserId);
-            return setCustomerRecord(customerValueList, appUserId, appUser);
-        }
-
-        return null;
-    }
+//    private CustomerRecord appUserChange(Vip vip, CustomerValueList customerValueList) {
+//        Integer appUserId = getAppUserId(vip);
+//        if (appUserId < 1) {
+//            return null;
+//        }
+//
+//        CustomerRecord customerRecord = getCustomerRecord(vip.getId());
+//        Integer changeAppUserId = customerRecord.getAppUserId();
+//
+//        if (!appUserId.equals(changeAppUserId)) {
+//            AppUser appUser = businessCustomerAnalysisInfoService.getAppUser(appUserId);
+//            return setCustomerRecord(customerValueList, appUserId, appUser);
+//        }
+//
+//        return null;
+//    }
 
     private CustomerRecord appUserChange2(Vip vip, CustomerValueList customerValueList, List<AppUser> appUserList) {
         Integer appUserId = getAppUserId(vip);
@@ -555,7 +721,7 @@ public class CustomerRecordService {
 
         for (AppUser appUser : collect) {
             if (!appUserId.equals(changeAppUserId)) {
-                return setCustomerRecord(customerValueList, appUserId, appUser);
+                return setAppUserCustomerRecord(vip, customerValueList, appUserId, appUser);
             }
         }
 
@@ -563,29 +729,92 @@ public class CustomerRecordService {
         return null;
     }
 
-    private CustomerRecord setCustomerRecord(CustomerValueList customerValueList, Integer appUserId, AppUser appUser) {
+    private CustomerRecord setAppUserCustomerRecord(Vip vip, CustomerValueList customerValueList, Integer appUserId, AppUser appUser) {
+        CustomerRecord customerRecord = new CustomerRecord();
+        customerRecord.setVipId(customerValueList.getVipId());
+        customerRecord.setLogType(CustomerValueConstants.RECORD_TYPE_APP_USER_CHANGE);
+        LocalDateTime logTime = getLocalDateTime(vip.getUpdatedAt());
+        customerRecord.setLogTime(logTime);
+        customerRecord.setResvOrder(StringUtils.EMPTY);
+        customerRecord.setResvDate(LocalDateTime.now());
+        customerRecord.setMealTypeId(0);
+        customerRecord.setMealTypeName(StringUtils.EMPTY);
+        customerRecord.setConsumeAmount(0);
+        customerRecord.setPersonNo(0);
+        customerRecord.setTableId(0);
+        customerRecord.setTableName(StringUtils.EMPTY);
+        customerRecord.setVipName(StringUtils.EMPTY);
+        customerRecord.setVipPhone(StringUtils.EMPTY);
+        String appUserName = appUser.getAppUserName();
+        Optional<String> optionalAppUser = Optional.ofNullable(appUserName);
+        appUserName = optionalAppUser.orElse(StringUtils.EMPTY);
+        customerRecord.setAppUserName(appUserName);
+        customerRecord.setAppUserId(appUserId);
+        String appUserPhone = appUser.getAppUserPhone();
+        customerRecord.setAppUserPhone(Optional.ofNullable(appUserPhone).orElse(StringUtils.EMPTY));
+        customerRecord.setOperationLog(StringUtils.EMPTY);
+        customerRecord.setCreateUserId(0L);
+        customerRecord.setCreateTime(LocalDateTime.now());
+        customerRecord.setUpdateUserId(0L);
+        customerRecord.setUpdateTime(LocalDateTime.now());
+
+        return customerRecord;
+    }
+
+    // 设置消费订单 Record
+    private CustomerRecord setCustomerRecord(ResvOrder resvOrder, Vip vip, int type) {
         CustomerRecord record = new CustomerRecord();
-        record.setVipId(customerValueList.getVipId());
-        record.setLogType(CustomerValueConstants.RECORD_TYPE_APP_USER_CHANGE);
-        record.setLogTime(LocalDateTime.now());
-        record.setResvOrder("");
-        record.setResvDate(LocalDateTime.now());
-        record.setMealTypeId(0);
-        record.setMealTypeName("");
-        record.setConsumeAmount(0);
-        record.setPersonNo(0);
-        record.setTableId(0);
-        record.setTableName("");
-        record.setVipName("");
-        record.setVipPhone("");
-        record.setAppUserName(appUser.getAppUserName());
-        record.setAppUserId(appUserId);
-        record.setOperationLog("");
+        record.setVipId(vip.getId());
+        record.setLogType(type);
+        Date updatedAt = resvOrder.getUpdatedAt();
+        LocalDateTime logTime = getLocalDateTime(updatedAt);
+        record.setLogTime(logTime);
+        record.setResvOrder(resvOrder.getResvOrder());
+        LocalDateTime resvDate = getLocalDateTime(resvOrder.getResvDate());
+        record.setResvDate(resvDate);
+        record.setMealTypeId(resvOrder.getMealTypeId());
+        record.setMealTypeName(resvOrder.getMealTypeName());
+        Integer payAmount = getPayAmount(resvOrder);
+        record.setConsumeAmount(payAmount);
+        int resvNo = getResvNo(resvOrder);
+        record.setPersonNo(resvNo);
+        record.setTableId(resvOrder.getTableId());
+        record.setTableName(resvOrder.getTableName());
+        record.setVipName(resvOrder.getVipName());
+        record.setVipPhone(resvOrder.getVipPhone());
+        record.setAppUserName(resvOrder.getAppUserName());
+        record.setAppUserId(resvOrder.getAppUserId());
+        record.setOperationLog(StringUtils.EMPTY);
         record.setCreateUserId(0L);
         record.setCreateTime(LocalDateTime.now());
         record.setUpdateUserId(0L);
         record.setUpdateTime(LocalDateTime.now());
         return record;
+    }
+
+    private int getResvNo(ResvOrder resvOrder) {
+        String resvNum = resvOrder.getResvNum();
+        int resvNo = 0;
+        if (NumberUtils.isCreatable(resvNum)) {
+            resvNo = Integer.parseInt(resvNum);
+        } else {
+            String actualNum = resvOrder.getActualNum();
+            if (NumberUtils.isCreatable(actualNum)) {
+                resvNo = Integer.parseInt(actualNum);
+            }
+        }
+        return resvNo;
+    }
+
+    private Integer getPayAmount(ResvOrder resvOrder) {
+        String payamount = resvOrder.getPayamount();
+        if (StringUtils.isNotBlank(payamount) && NumberUtils.isCreatable(payamount)) {
+            double v = Double.parseDouble(payamount);
+            Number amount = MathUtils.multiply(v, 100);
+            return Math.round(amount.floatValue());
+        } else {
+            return 0;
+        }
     }
 
     private CustomerRecord getCustomerRecord(Integer vipId) {

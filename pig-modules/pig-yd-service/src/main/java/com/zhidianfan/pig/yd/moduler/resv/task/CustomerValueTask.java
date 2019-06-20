@@ -1,5 +1,6 @@
 package com.zhidianfan.pig.yd.moduler.resv.task;
 
+import com.zhidianfan.pig.yd.moduler.resv.constants.CustomerValueConstants;
 import com.zhidianfan.pig.yd.moduler.resv.service.BusinessCustomerAnalysisInfoService;
 import com.zhidianfan.pig.yd.moduler.resv.service.CustomerValueService;
 import com.zhidianfan.pig.yd.moduler.resv.service.CustomerValueTaskService;
@@ -61,8 +62,8 @@ public class CustomerValueTask {
 
     @Scheduled(fixedDelay = 10_000)
     public void customerValue2() {
-        LocalTime startTime1 = LocalTime.of(23, 0, 0);
-        LocalTime startTime2 = LocalTime.of(8, 0, 0);
+        LocalTime startTime1 = CustomerValueConstants.TASK_START_TIME;
+        LocalTime startTime2 = CustomerValueConstants.TASK_END_TIME;
         if (LocalTime.now().isAfter(startTime1) || LocalTime.now().isBefore(startTime2)) {
             LocalDate localDate = LocalDate.now();
             if (LocalTime.now().isBefore(startTime2)) {
@@ -84,6 +85,7 @@ public class CustomerValueTask {
                                 new LinkedBlockingQueue<Runnable>());
 
                         List<CompletableFuture<Long>> completableFutures = new ArrayList<>(customerValuesValueTask.size());
+                        // 循环 1082
                         for (int i = 0; i < customerValuesValueTask.size(); i++) {
 
                             com.zhidianfan.pig.yd.moduler.common.dao.entity.CustomerValueTask tmp = customerValuesValueTask.get(i);
@@ -150,4 +152,5 @@ public class CustomerValueTask {
         }
         log.info("任务执行结束:[{}]", formatter.format(LocalDateTime.now()));
     }
+
 }

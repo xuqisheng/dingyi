@@ -14,6 +14,7 @@ import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 
@@ -111,8 +112,8 @@ public class CustomerValueService {
 //    }
 
     public void getCustomerValueBaseInfo2(CustomerValueTask customerValueTask, int groupNum) {
-        LocalTime startTime1 = LocalTime.of(23, 0, 0);
-        LocalTime startTime2 = LocalTime.of(8, 0, 0);
+        LocalTime startTime1 = CustomerValueConstants.TASK_START_TIME;
+        LocalTime startTime2 = CustomerValueConstants.TASK_END_TIME;
         while (!(LocalTime.now().isAfter(startTime1) || LocalTime.now().isBefore(startTime2))) {
             log.info("非客户价值计算时间暂停执行======");
             try {
@@ -130,7 +131,7 @@ public class CustomerValueService {
         cleanData(hotelId);
         // 1.1 查询属于该酒店的所有客户
         List<Vip> vips = vipService.getVipList(hotelId);
-        //对vips分组，100个vip一组
+        //对vips分组，1000个vip一组， k -> 序号0,1,2,3 v -> 1000个Vip 列表
         Map<String, List<Vip>> map = getVipsMap(vips, groupNum);
 
         Long taskId = customerValueTask.getId();
@@ -185,7 +186,8 @@ public class CustomerValueService {
     }
 
     // 清除脏数据
-    private void cleanData(Long hotelId) {
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void cleanData(Long hotelId) {
         if (hotelId == null) {
             return;
         }
@@ -204,20 +206,22 @@ public class CustomerValueService {
         List<Integer> vipIds = vips.stream().map(Vip::getId).collect(Collectors.toList());
 
         //获取客户的所有订单
-//        List<ResvOrder> resvOrders = getResvOrders(vip.getId());
-//        List<ResvOrder> resvOrdersBy60days = getResvOrdersBy60day(vip.getId());
         Map<Integer, List<ResvOrder>> resvOrders = getResvOrders(vipIds);
         Map<Integer, List<ResvOrder>> resvOrdersBy60days = getResvOrdersBy60day(vipIds);
 
+        // 所有主客订单列表
         List<MasterCustomerVipMapping> masterCustomerVipMappings = customerRecordService.manOrderList(vips);
+        // 所有宾客订单列表
         List<GuestCustomerVipMapping> guestCustomerVipMappings = customerRecordService.guestOrderList(vips);
 
+        // 获取所有的消费订单列表，包括 预订订单和退订订单, map : k -> vipId, v -> 消费订单列表
         Map<Integer, CustomerValueList> customerValueList = customerValueListService.getCustomerValueList(vips, resvOrders, masterCustomerVipMappings);
 
         Map<Integer, VipConsumeActionTotal> vipConsumeActionTotal = vipConsumeActionTotalService.getVipConsumeActionTotal(vips, resvOrders, masterCustomerVipMappings);
 
         Map<Integer, VipConsumeActionLast60> vipConsumeActionLast60 = vipConsumeActionLast60Service.getVipConsumeActionLast60(vips, resvOrdersBy60days, masterCustomerVipMappings);
 
+        // 客户记录， map: k -> vipId, v -> CustomerRecord 客户纪录
         Map<Integer, List<CustomerRecord>> customerRecordList = customerRecordService.getCustomerRecord(vips, resvOrders, customerValueList, masterCustomerVipMappings, guestCustomerVipMappings);
 
         Map<Integer, NowChangeInfo> nowChangeInfo = getProfile2(vips);
@@ -377,7 +381,7 @@ public class CustomerValueService {
      * vip 用户的所有订单
      *
      * @param vipIds vip 主键
-     * @return 所有的订单列表
+     * @return 所有的订单列表, Map : key -> vipId, v -> vipId 对应订单列表
      */
     private Map<Integer, List<ResvOrder>> getResvOrders(List<Integer> vipIds) {
         EntityWrapper<ResvOrder> wrapper = new EntityWrapper<>();

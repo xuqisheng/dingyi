@@ -43,16 +43,17 @@ public class CustomerValueTaskService {
      *
      * @return 酒店 id
      */
-    public CustomerValueTask getCustomerValueTask() {
+    public List<CustomerValueTask> getCustomerValueTask() {
         EntityWrapper<CustomerValueTask> wrapper = new EntityWrapper<>();
         wrapper.eq("flag", 0);
 
         List<CustomerValueTask> customerValueTasks = customerValueTaskMapper.selectList(wrapper);
-        Optional<CustomerValueTask> optionalCustomerValueTask = customerValueTasks.stream()
-                .max(Comparator.comparing(CustomerValueTask::getSort)
+        List<CustomerValueTask> valueTasks = customerValueTasks.stream()
+                .sorted(Comparator.comparing(CustomerValueTask::getSort)
                         .thenComparing(CustomerValueTask::getId, Comparator.reverseOrder())
-                );
-        return optionalCustomerValueTask.orElseThrow(RuntimeException::new);
+                )
+                .collect(Collectors.toList());
+        return valueTasks;
     }
 
     /**

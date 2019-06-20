@@ -2,6 +2,7 @@ package com.zhidianfan.pig.yd.moduler.resv.constants;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 /**
  * @author sjl
@@ -64,4 +65,7 @@ public abstract class CustomerValueConstants {
     public static final int RECORD_TYPE_GUEST = 4;
     public static final int RECORD_TYPE_VALUE_CHANGE = 5;
     public static final int RECORD_TYPE_APP_USER_CHANGE = 6;
+
+    public static final LocalTime TASK_START_TIME = LocalTime.of(22, 0, 0);
+    public static final LocalTime TASK_END_TIME = LocalTime.of(8, 0, 0);
 }
