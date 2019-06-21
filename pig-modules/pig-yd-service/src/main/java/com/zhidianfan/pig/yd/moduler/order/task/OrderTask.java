@@ -1,16 +1,18 @@
 package com.zhidianfan.pig.yd.moduler.order.task;
 
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
+import com.baomidou.mybatisplus.mapper.Wrapper;
 import com.baomidou.mybatisplus.plugins.Page;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.*;
 import com.zhidianfan.pig.yd.moduler.common.service.*;
-import com.zhidianfan.pig.yd.moduler.order.bo.PosReserverBO;
-import com.zhidianfan.pig.yd.moduler.order.bo.TableMenusBO;
+import com.zhidianfan.pig.yd.moduler.order.bo.*;
 import com.zhidianfan.pig.yd.moduler.order.entity.OrderTem;
 import com.zhidianfan.pig.yd.moduler.order.service.XopService;
 import com.zhidianfan.pig.yd.moduler.resv.enums.OrderStatus;
 import com.zhidianfan.pig.yd.utils.IdUtils;
+import lombok.Data;
 import lombok.experimental.var;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -56,6 +58,9 @@ public class OrderTask {
     private IResvOrderService resvOrderService;
 
     @Autowired
+    private IResvOrderLogsService resvOrderLogsService;
+
+    @Autowired
     private IResvMeetingOrderService resvMeetingOrderService;
 
     @Autowired
@@ -69,6 +74,12 @@ public class OrderTask {
 
     @Autowired
     private IBusinessService businessService;
+
+    @Autowired
+    private IBillSyncService billSyncService;
+
+    @Autowired
+    private IBillMxSyncService billMxSyncService;
 
     /**
      * 创建更新普通订单
@@ -108,7 +119,7 @@ public class OrderTask {
     /**
      * 创建更新宴会订单
      */
-//    @Scheduled(initialDelay = 10000, fixedDelay = 10000)
+    @Scheduled(initialDelay = 10000, fixedDelay = 10000)
     public void createOrUpdateMeeting() {
         log.info("======createOrUpdate start========");
         int currentPage = 1;
@@ -128,7 +139,8 @@ public class OrderTask {
                     continue;
                 }
                 orders.forEach(order -> {
-                    if ((order.getXmsUpdateStatus() == 1 && !StringUtils.isEmpty(order.getThirdOrderNo())) || "4".equals(order.getStatus())) {
+
+                    if ((order.getXmsUpdateStatus() == 1 && !StringUtils.isEmpty(order.getThirdOrderNo())) || "4".equals(order.getStatus()) || StringUtils.isEmpty(order.getVipPhone())) {
                         return;
                     }
                     log.info("订单酒店id:{}", order.getBusinessId());
@@ -246,7 +258,7 @@ public class OrderTask {
     /**
      * 取消宴会订单
      */
-//    @Scheduled(initialDelay = 10000, fixedDelay = 10000)
+    @Scheduled(initialDelay = 10000, fixedDelay = 10000)
     public void cancelMeeting() {
         log.info("======cancelMeeting start========");
         int currentPage = 1;
@@ -288,7 +300,7 @@ public class OrderTask {
     public void checkOrder() {
         log.info("======checkOrder start========");
         int currentPage = 1;
-        int pageSize = 1;
+        int pageSize = 1000;
         while (true) {
             Page<XmsBusiness> page = new Page<>(currentPage, pageSize);
             Page<XmsBusiness> xmsBusinessPage = xmsBusinessService.selectPage(page);
@@ -307,6 +319,10 @@ public class OrderTask {
                         }
                         String tableCode = posReserverBO.getResults().get(0).get("tableno");
                         Table table = tableService.selectOne(new EntityWrapper<Table>().eq("business_id", businessId).eq("table_code", tableCode));
+                        //宴会桌位执行下个循环
+                        if (StringUtils.equals(table.getTableType(), "1")) {
+                            return;
+                        }
                         if (table == null) {
                             return;
                         }
@@ -342,8 +358,8 @@ public class OrderTask {
                         //非当天当前餐次可能把退订重新状态改成预定的
                         ResvOrder resvOrder = resvOrderService.selectById(order.getId());
                         if (
-                                !StringUtils.equals(resvOrder.getStatus(),"4") &&
-                                !StringUtils.equals(order.getStatus(), "4")
+                                !StringUtils.equals(resvOrder.getStatus(), "4") &&
+                                        !StringUtils.equals(order.getStatus(), "4")
                                         && StringUtils.equals(currentDate, orderDate)
                                         && order.getMealTypeId().equals(mealType.getId())
                         ) {
@@ -358,9 +374,20 @@ public class OrderTask {
                                 log.info("mealType:{}", mealType);
                                 log.info("checkOrder:{}", order);
                                 log.info("=================checkOrder 订单修改为入座 end===================");
+                                //记录入座日志
+                                Wrapper<ResvOrderLogs> wrapper = new EntityWrapper<ResvOrderLogs>()
+                                        .eq("resv_order", order.getResvOrder()).orderBy("create_at", false);
+                                ResvOrderLogs resvOrderLogs = resvOrderLogsService.selectOne(wrapper);
+                                if (!StringUtils.equals(resvOrderLogs.getStatus(), "2")) {
+                                    ResvOrderLogs logs = new ResvOrderLogs();
+                                    logs.setCreatedAt(new Date());
+                                    logs.setResvOrder(order.getResvOrder());
+                                    logs.setStatusName("已经座");
+                                    logs.setLogs("变更预定状态-resv,由西软入座");
+                                }
                             }
-                        } else if (!StringUtils.equals(order.getStatus(), "4") && !StringUtils.equals(resvOrder.getStatus(),"4")) {
-                                order.setStatus("1");
+                        } else if (!StringUtils.equals(order.getStatus(), "4") && !StringUtils.equals(resvOrder.getStatus(), "4")) {
+                            order.setStatus("1");
                         }
                         resvOrderService.updateById(order);
                     });
@@ -378,11 +405,11 @@ public class OrderTask {
     /**
      * 宴会订单检查
      */
-//    @Scheduled(initialDelay = 10000, fixedDelay = 10000)
+    @Scheduled(initialDelay = 10000, fixedDelay = 10000)
     public void checkMeetingOrder() {
         log.info("======checkMeetingOrder start========");
         int currentPage = 1;
-        int pageSize = 1;
+        int pageSize = 1000;
         while (true) {
             Page<XmsBusiness> page = new Page<>(currentPage, pageSize);
             Page<XmsBusiness> xmsBusinessPage = xmsBusinessService.selectPage(page);
@@ -401,7 +428,7 @@ public class OrderTask {
                         }
                         String tableCode = posReserverBO.getResults().get(0).get("tableno");
                         Table table = tableService.selectOne(new EntityWrapper<Table>().eq("business_id", businessId).eq("table_code", tableCode));
-                        if (table == null) {
+                        if (table == null || !StringUtils.equals(table.getTableType(), "1")) {
                             return;
                         }
                         String changed = posReserverBO.getResults().get(0).get("changed");
@@ -442,7 +469,7 @@ public class OrderTask {
     public void checkTableStatus() {
         log.info("======checkTableStatus start========");
         int currentPage = 1;
-        int pageSize = 1;
+        int pageSize = 1000;
         while (true) {
             Page<XmsBusiness> page = new Page<>(currentPage, pageSize);
             Page<XmsBusiness> xmsBusinessPage = xmsBusinessService.selectPage(page);
@@ -595,5 +622,250 @@ public class OrderTask {
             currentPage++;
         }
         log.info("======checkTableStatus end========");
+    }
+
+    @Scheduled(initialDelay = 10000, fixedDelay = 10000)
+    public void orderMenuMaster() {
+        log.info("======orderMenuMaster start========");
+        int currentPage = 1;
+        int pageSize = 1000;
+        Page<XmsBusiness> page = new Page<>(currentPage, pageSize);
+        Page<XmsBusiness> xmsBusinessPage = xmsBusinessService.selectPage(page);
+        for (XmsBusiness xmsBusiness : xmsBusinessPage.getRecords()) {
+            Integer businessId = xmsBusiness.getBusinessId();
+            Date date = new Date();
+            String format = DateFormatUtils.format(date, "HH:mm");
+            MealType mealType = mealTypeService.selectOne(new EntityWrapper<MealType>().lt("resv_start_time", format).gt("resv_start_time", format));
+            if (mealType == null) {
+                return;
+            }
+            List<ResvOrderTem> orders = resvOrderTemService.selectList(
+                    new EntityWrapper<ResvOrderTem>()
+                            .eq("business_id", businessId)
+                            .eq("resv_date", DateFormatUtils.format(new Date(), "yyyy-MM-dd"))
+                            .eq("meal_type_id", mealType.getId())
+                            .eq("xms_update_status", 0)
+            );
+            orders.forEach(order -> {
+                if (!StringUtils.equalsAnyIgnoreCase(order.getStatus(), "1", "2") || !StringUtils.isNotEmpty(order.getThirdOrderNo()) || !StringUtils.isNotEmpty(order.getMenuOrder())) {
+                    return;
+                }
+                Table table = tableService.selectById(order.getTableId());
+                if (table == null || StringUtils.isEmpty(table.getTableCode())) {
+                    return;
+                }
+                TableMenuBO menuOrder = xopService.getMenuOrder(businessId, table.getTableCode());
+                if (menuOrder.isSuccess()) {
+                    order.setMenuOrder(menuOrder.getResults().get(0).get("menu"));
+                    resvOrderTemService.updateById(order);
+                }
+            });
+        }
+    }
+
+
+    @Scheduled(initialDelay = 10000, fixedDelay = 10000)
+    public void meetingOrderMenuMaster() {
+        log.info("======meetingOrderMenuMaster start========");
+        int currentPage = 1;
+        int pageSize = 1000;
+        Page<XmsBusiness> page = new Page<>(currentPage, pageSize);
+        Page<XmsBusiness> xmsBusinessPage = xmsBusinessService.selectPage(page);
+        for (XmsBusiness xmsBusiness : xmsBusinessPage.getRecords()) {
+            Integer businessId = xmsBusiness.getBusinessId();
+            Date date = new Date();
+            String format = DateFormatUtils.format(date, "HH:mm");
+            MealType mealType = mealTypeService.selectOne(new EntityWrapper<MealType>().lt("resv_start_time", format).gt("resv_start_time", format));
+            if (mealType == null) {
+                return;
+            }
+            List<ResvMeetingOrder> orders = resvMeetingOrderService.selectList(
+                    new EntityWrapper<ResvMeetingOrder>()
+                            .eq("business_id", businessId)
+                            .eq("resv_date", DateFormatUtils.format(new Date(), "yyyy-MM-dd"))
+                            .eq("meal_type_id", mealType.getId())
+                            .eq("xms_update_status", 0)
+            );
+            orders.forEach(order -> {
+                if (!StringUtils.equalsAnyIgnoreCase(order.getStatus(), "1", "2") || !StringUtils.isNotEmpty(order.getThirdOrderNo()) || !StringUtils.isNotEmpty(order.getMenuOrder())) {
+                    return;
+                }
+                Table table = tableService.selectById(order.getTableId());
+                if (table == null || StringUtils.isEmpty(table.getTableCode())) {
+                    return;
+                }
+                TableMenuBO menuOrder = xopService.getMenuOrder(businessId, table.getTableCode());
+                if (menuOrder.isSuccess()) {
+                    order.setMenuOrder(menuOrder.getResults().get(0).get("menu"));
+                    resvMeetingOrderService.updateById(order);
+                }
+            });
+        }
+    }
+
+    /**
+     * 订单结账
+     */
+    @Scheduled(initialDelay = 10000, fixedDelay = 10000)
+    public void orderOver() {
+        log.info("======orderOver start========");
+        int currentPage = 1;
+        int pageSize = 1000;
+        Page<XmsBusiness> page = new Page<>(currentPage, pageSize);
+        Page<XmsBusiness> xmsBusinessPage = xmsBusinessService.selectPage(page);
+        for (XmsBusiness xmsBusiness : xmsBusinessPage.getRecords()) {
+            Integer businessId = xmsBusiness.getBusinessId();
+            Date date = new Date();
+            String format = DateFormatUtils.format(date, "HH:mm");
+            MealType mealType = mealTypeService.selectOne(new EntityWrapper<MealType>().lt("resv_start_time", format).gt("resv_start_time", format));
+            if (mealType == null) {
+                return;
+            }
+            List<ResvOrderTem> orders = resvOrderTemService.selectList(
+                    new EntityWrapper<ResvOrderTem>()
+                            .eq("business_id", businessId)
+                            .eq("resv_date", DateFormatUtils.format(new Date(), "yyyy-MM-dd"))
+                            .eq("meal_type_id", mealType.getId())
+            );
+            HashMap<String, ResvOrderTem> map = Maps.newHashMap();
+            orders.forEach(order -> {
+                if (!StringUtils.equalsAnyIgnoreCase(order.getStatus(), "1", "2") || !StringUtils.isNotEmpty(order.getThirdOrderNo()) || !StringUtils.isNotEmpty(order.getMenuOrder())) {
+                    return;
+                }
+                map.put(order.getMenuOrder(), order);
+            });
+
+            Set<String> menuOrders = map.keySet();
+            OrderStatusBO orderStatus = xopService.getOrderStatus(businessId, menuOrders);
+            if (orderStatus.isSuccess()) {
+                orderStatus.getResults().forEach(result -> {
+                    String sta = result.get("sta");
+                    if (StringUtils.equals(sta, "3")) {
+                        String menu = result.get("menu");
+                        ResvOrderTem resvOrderTem = map.get(menu);
+                        if (resvOrderTem == null) {
+                            return;
+                        }
+
+                        ResvOrder resvOrder = resvOrderService.selectOne(new EntityWrapper<ResvOrder>().eq("resv_order", resvOrderTem.getResvOrder()));
+                        resvOrder.setStatus("3");
+                        String amount = result.get("amount");
+                        resvOrder.setPayamount(amount);
+                        resvOrderService.updateById(resvOrder);
+                        OrderDishBO orderDish = xopService.getOrderDish(businessId, menu);
+                        BillSync billSync = new BillSync();
+                        billSync.setAreaCode(resvOrderTem.getAreaCode());
+                        billSync.setBbbc(resvOrderTem.getMealTypeName());
+                        billSync.setBbrq(new Date());
+                        billSync.setBusinessId(resvOrderTem.getBusinessId());
+                        billSync.setBusinessName(resvOrderTem.getBusinessName());
+                        billSync.setCreatedAt(new Date());
+                        billSync.setSjje(amount);
+                        billSync.setTableCode(resvOrderTem.getTableCode());
+                        billSync.setActualNum(resvOrderTem.getResvNum());
+                        billSync.setZdbh(menu);
+                        billSyncService.insert(billSync);
+                        if (orderDish.isSuccess()) {
+                            List<OrderDishBO.Result> results = orderDish.getResults();
+                            List<Map<String, String>> dishes = results.get(0).getDishes();
+                            dishes.forEach(dish -> {
+                                BillMxSync billMxSync = new BillMxSync();
+                                billMxSync.setBusinessId(resvOrderTem.getBusinessId());
+                                billMxSync.setBusinessName(resvOrderTem.getBusinessName());
+                                billMxSync.setZdbh(result.get("menu"));
+                                billMxSync.setCmbh(dish.get("code"));
+                                billMxSync.setCmmc(dish.get("descript"));
+                                billMxSync.setSjje(Double.valueOf(dish.get("amount")));
+                                billMxSync.setCmsl(Integer.valueOf(dish.get("number")));
+                                billMxSyncService.insert(billMxSync);
+                            });
+                        }
+                    }
+                });
+            }
+        }
+    }
+
+    @Scheduled(initialDelay = 10000, fixedDelay = 10000)
+    public void meetingOrderOver() {
+        log.info("======orderOver start========");
+        int currentPage = 1;
+        int pageSize = 1000;
+        Page<XmsBusiness> page = new Page<>(currentPage, pageSize);
+        Page<XmsBusiness> xmsBusinessPage = xmsBusinessService.selectPage(page);
+        for (XmsBusiness xmsBusiness : xmsBusinessPage.getRecords()) {
+            Integer businessId = xmsBusiness.getBusinessId();
+            Date date = new Date();
+            String format = DateFormatUtils.format(date, "HH:mm");
+            MealType mealType = mealTypeService.selectOne(new EntityWrapper<MealType>().lt("resv_start_time", format).gt("resv_start_time", format));
+            if (mealType == null) {
+                return;
+            }
+            List<ResvMeetingOrder> orders = resvMeetingOrderService.selectList(
+                    new EntityWrapper<ResvMeetingOrder>()
+                            .eq("business_id", businessId)
+                            .eq("resv_date", DateFormatUtils.format(new Date(), "yyyy-MM-dd"))
+                            .eq("meal_type_id", mealType.getId())
+            );
+            HashMap<String, ResvMeetingOrder> map = Maps.newHashMap();
+            orders.forEach(order -> {
+                if (!StringUtils.equalsAnyIgnoreCase(order.getStatus(), "1", "2") || !StringUtils.isNotEmpty(order.getThirdOrderNo()) || !StringUtils.isNotEmpty(order.getMenuOrder())) {
+                    return;
+                }
+                map.put(order.getMenuOrder(), order);
+            });
+
+            Set<String> menuOrders = map.keySet();
+            OrderStatusBO orderStatus = xopService.getOrderStatus(businessId, menuOrders);
+            if (orderStatus.isSuccess()) {
+                orderStatus.getResults().forEach(result -> {
+                    String sta = result.get("sta");
+                    if (StringUtils.equals(sta, "3")) {
+                        String menu = result.get("menu");
+                        ResvMeetingOrder resvMeetingOrder = map.get(menu);
+                        if (resvMeetingOrder == null) {
+                            return;
+                        }
+
+
+                        resvMeetingOrder.setStatus("3");
+                        String amount = result.get("amount");
+                        resvMeetingOrder.setPayAmount(amount);
+                        resvMeetingOrderService.updateById(resvMeetingOrder);
+                        OrderDishBO orderDish = xopService.getOrderDish(businessId, menu);
+                        BillSync billSync = new BillSync();
+                        TableArea tableArea = tableAreaService.selectById(resvMeetingOrder.getTableAreaId());
+                        if (tableArea != null) {
+                            billSync.setAreaCode(tableArea.getAreaCode());
+                        }
+                        billSync.setBbbc(resvMeetingOrder.getMealTypeName());
+                        billSync.setBbrq(new Date());
+                        billSync.setBusinessId(resvMeetingOrder.getBusinessId());
+                        billSync.setBusinessName(resvMeetingOrder.getBusinessName());
+                        billSync.setCreatedAt(new Date());
+                        billSync.setSjje(amount);
+//                        billSync.setTableCode(resvMeetingOrder.getTableCode());
+//                        billSync.setActualNum(resvOrderTem.getResvNum());
+                        billSync.setZdbh(menu);
+                        billSyncService.insert(billSync);
+                        if (orderDish.isSuccess()) {
+                            List<OrderDishBO.Result> results = orderDish.getResults();
+                            List<Map<String, String>> dishes = results.get(0).getDishes();
+                            dishes.forEach(dish -> {
+                                BillMxSync billMxSync = new BillMxSync();
+                                billMxSync.setBusinessId(resvMeetingOrder.getBusinessId());
+                                billMxSync.setBusinessName(resvMeetingOrder.getBusinessName());
+                                billMxSync.setZdbh(result.get("menu"));
+                                billMxSync.setCmbh(dish.get("code"));
+                                billMxSync.setCmmc(dish.get("descript"));
+                                billMxSync.setSjje(Double.valueOf(dish.get("amount")));
+                                billMxSync.setCmsl(Integer.valueOf(dish.get("number")));
+                                billMxSyncService.insert(billMxSync);
+                            });
+                        }
+                    }
+                });
+            }
+        }
     }
 }

@@ -365,6 +365,8 @@ public class ResvMeetingOrder extends Model<ResvMeetingOrder> {
     private Integer xmsUpdateStatus;
     private String thirdOrderNo;
 
+    private String menuOrder;
+
     public Integer getId() {
         return id;
     }
@@ -1053,6 +1055,14 @@ public class ResvMeetingOrder extends Model<ResvMeetingOrder> {
         this.thirdOrderNo = thirdOrderNo;
     }
 
+    public String getMenuOrder() {
+        return menuOrder;
+    }
+
+    public void setMenuOrder(String menuOrder) {
+        this.menuOrder = menuOrder;
+    }
+
     public Integer getTgIsSync() {
         return tgIsSync;
     }
@@ -1161,6 +1171,7 @@ public class ResvMeetingOrder extends Model<ResvMeetingOrder> {
         ", printTime=" + printTime +
         ", serviceItems=" + serviceItems +
         ", confirmRemark=" + confirmRemark +
+        ", menuOrder=" + menuOrder +
         ", tgOrderNo=" + tgOrderNo +
         ", tgIsSync=" + tgIsSync +
         "}";
