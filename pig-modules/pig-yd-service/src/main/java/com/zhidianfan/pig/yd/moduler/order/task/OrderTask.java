@@ -119,7 +119,7 @@ public class OrderTask {
     /**
      * 创建更新宴会订单
      */
-//    @Scheduled(initialDelay = 10000, fixedDelay = 10000)
+    @Scheduled(initialDelay = 10000, fixedDelay = 10000)
     public void createOrUpdateMeeting() {
         log.info("======createOrUpdate start========");
         int currentPage = 1;
@@ -258,7 +258,7 @@ public class OrderTask {
     /**
      * 取消宴会订单
      */
-//    @Scheduled(initialDelay = 10000, fixedDelay = 10000)
+    @Scheduled(initialDelay = 10000, fixedDelay = 10000)
     public void cancelMeeting() {
         log.info("======cancelMeeting start========");
         int currentPage = 1;
@@ -405,7 +405,7 @@ public class OrderTask {
     /**
      * 宴会订单检查
      */
-//    @Scheduled(initialDelay = 10000, fixedDelay = 10000)
+    @Scheduled(initialDelay = 10000, fixedDelay = 10000)
     public void checkMeetingOrder() {
         log.info("======checkMeetingOrder start========");
         int currentPage = 1;
@@ -624,6 +624,7 @@ public class OrderTask {
         log.info("======checkTableStatus end========");
     }
 
+    @Scheduled(initialDelay = 10000, fixedDelay = 10000)
     public void orderMenuMaster() {
         log.info("======orderMenuMaster start========");
         int currentPage = 1;
@@ -663,6 +664,7 @@ public class OrderTask {
     }
 
 
+    @Scheduled(initialDelay = 10000, fixedDelay = 10000)
     public void meetingOrderMenuMaster() {
         log.info("======meetingOrderMenuMaster start========");
         int currentPage = 1;
@@ -704,6 +706,7 @@ public class OrderTask {
     /**
      * 订单结账
      */
+    @Scheduled(initialDelay = 10000, fixedDelay = 10000)
     public void orderOver() {
         log.info("======orderOver start========");
         int currentPage = 1;
@@ -783,7 +786,7 @@ public class OrderTask {
         }
     }
 
-
+    @Scheduled(initialDelay = 10000, fixedDelay = 10000)
     public void meetingOrderOver() {
         log.info("======orderOver start========");
         int currentPage = 1;
@@ -841,8 +844,8 @@ public class OrderTask {
                         billSync.setBusinessName(resvMeetingOrder.getBusinessName());
                         billSync.setCreatedAt(new Date());
                         billSync.setSjje(amount);
-                        billSync.setTableCode(resvOrderTem.getTableCode());
-                        billSync.setActualNum(resvOrderTem.getResvNum());
+//                        billSync.setTableCode(resvMeetingOrder.getTableCode());
+//                        billSync.setActualNum(resvOrderTem.getResvNum());
                         billSync.setZdbh(menu);
                         billSyncService.insert(billSync);
                         if (orderDish.isSuccess()) {
@@ -850,8 +853,8 @@ public class OrderTask {
                             List<Map<String, String>> dishes = results.get(0).getDishes();
                             dishes.forEach(dish -> {
                                 BillMxSync billMxSync = new BillMxSync();
-                                billMxSync.setBusinessId(resvOrderTem.getBusinessId());
-                                billMxSync.setBusinessName(resvOrderTem.getBusinessName());
+                                billMxSync.setBusinessId(resvMeetingOrder.getBusinessId());
+                                billMxSync.setBusinessName(resvMeetingOrder.getBusinessName());
                                 billMxSync.setZdbh(result.get("menu"));
                                 billMxSync.setCmbh(dish.get("code"));
                                 billMxSync.setCmmc(dish.get("descript"));
