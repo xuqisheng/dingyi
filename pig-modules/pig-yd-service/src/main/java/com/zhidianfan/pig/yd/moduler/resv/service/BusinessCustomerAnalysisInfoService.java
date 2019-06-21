@@ -3,22 +3,26 @@ package com.zhidianfan.pig.yd.moduler.resv.service;
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.baomidou.mybatisplus.mapper.Wrapper;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.*;
-import com.zhidianfan.pig.yd.moduler.common.service.IAppUserService;
-import com.zhidianfan.pig.yd.moduler.common.service.IBusinessCustomerAnalysisDetailService;
-import com.zhidianfan.pig.yd.moduler.common.service.IBusinessCustomerAnalysisInfoService;
-import com.zhidianfan.pig.yd.moduler.common.service.IResvOrderService;
+import com.zhidianfan.pig.yd.moduler.common.service.*;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 /**
@@ -47,16 +51,239 @@ public class BusinessCustomerAnalysisInfoService {
     @Autowired
     private IAppUserService appuserMapper;
 
-    /** todo 待测试
+    @Autowired
+    private IBusinessService iBusinessService;
+
+    @Autowired
+    private IBusinessCustomerAnalysisService iBusinessCustomerAnalysisService;
+
+    /**
+     * 执行入口
+     */
+    public void execute() {
+        final DateTimeFormatter formatterShort = DateTimeFormatter.ofPattern("yyyy-MM");
+        final DateTimeFormatter formatterLong = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        // 0. 查询出所有的酒店
+        // 取出所有的酒店 id
+        Wrapper<Business> wrapper = new EntityWrapper<>();
+        List<Business> businessList = iBusinessService.selectList(wrapper);
+        List<Integer> businessIdList = getBusinessIdList(businessList);
+
+        // 1. 批量查询 info 表中的最后一个月的记录
+        Map<Integer, BusinessCustomerAnalysisInfo> businessCustomerAnalysisInfoMap = getBusinessCustomerAnalysisInfo(businessIdList);
+
+        // 2. info 表为空，则取全部数据
+        List<CompletableFuture> completableFutureList = new ArrayList<>();
+        for (Map.Entry<Integer, BusinessCustomerAnalysisInfo> entry: businessCustomerAnalysisInfoMap.entrySet()) {
+            Integer businessId = entry.getKey();
+            cleanData(businessId);
+            BusinessCustomerAnalysisInfo businessCustomerAnalysisInfo = entry.getValue();
+            String date = businessCustomerAnalysisInfo.getDate();
+            LocalDate nowDate = LocalDate.now();
+            if (StringUtils.isBlank(date)) {
+                LocalDate oldDate = LocalDate.of(2018, 10, 1);
+                int month = (int) oldDate.until(nowDate, ChronoUnit.MONTHS);
+                for (int i = 0; i < month; i++) {
+                    int finalI = i;
+                    CompletableFuture<Integer> completableFuture = CompletableFuture.supplyAsync(() -> {
+                        LocalDate newDate = oldDate.plusMonths(finalI);
+                        String resvDate = newDate.format(formatterShort);
+                        saveAnalysisDetail(businessId, resvDate);
+                        return finalI;
+                    });
+                    // completableFuture.join(); // 不需要获取执行结果，只需要线程在后台插入数据即可
+                }
+            } else {
+                //2.1 info 表不空，则取最后的日期 + 1 个月
+                LocalDate localDate = getLocalDate(date);
+                Optional<LocalDate> optionalLocalDate = Optional.ofNullable(localDate);
+                optionalLocalDate.ifPresent((date1) -> {
+                    long until = date1.until(nowDate, ChronoUnit.MONTHS);
+                    for (int i = 0; i < until; i++) {
+                        CompletableFuture<Integer> completableFuture = CompletableFuture.supplyAsync(() -> {
+                            LocalDate plusDate = localDate.plusMonths(1);
+                            String resvDate = plusDate.format(formatterShort);
+                            cleanData(businessId, resvDate);
+                            saveAnalysisDetail(businessId, resvDate);
+                            return 1;
+                        });
+                        // completableFuture.join();
+                    }
+                });
+
+            }
+        }
+    }
+
+    private void cleanData(Integer businessId) {
+        cleanData(businessId, null);
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void cleanData(Integer businessId, String resvDate) {
+        Wrapper<BusinessCustomerAnalysisInfo> wrapper = new EntityWrapper<>();
+        wrapper.eq("business_id", businessId);
+        if (StringUtils.isNotBlank(resvDate)) {
+            wrapper.eq("date", resvDate);
+        }
+        businessCustomerAnalysisInfoMapper.delete(wrapper);
+    }
+
+    private LocalDate getLocalDate(String date) {
+        try {
+            if (StringUtils.isNotBlank(date)) {
+                date = date + "-01";
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                return LocalDate.parse(date, formatter);
+            }
+            return null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private Map<Integer, LocalDate> getBusinessCustomerAnalysis(List<Integer> businessIdList) {
+        if (CollectionUtils.isEmpty(businessIdList)) {
+            return Maps.newHashMap();
+        }
+        Map<Integer, LocalDate> resultMap = new HashMap<>(businessIdList.size());
+        Wrapper<BusinessCustomerAnalysis> wrapper = new EntityWrapper<>();
+        wrapper.in("business_id", businessIdList);
+        List<BusinessCustomerAnalysis> businessCustomerAnalysisList = iBusinessCustomerAnalysisService.selectList(wrapper);
+
+        for (Integer businessId : businessIdList) {
+            for (BusinessCustomerAnalysis businessCustomerAnalysis : businessCustomerAnalysisList) {
+                Integer analysisBusinessId = businessCustomerAnalysis.getBusinessId();
+                if (businessId.equals(analysisBusinessId)) {
+                    String date = businessCustomerAnalysis.getDate();
+                    if (StringUtils.isNotBlank(date)) {
+                        date = date + "-01";
+                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                        LocalDate localDate = LocalDate.parse(date, formatter);
+                        resultMap.put(businessId, localDate);
+                    }
+                }
+            }
+            resultMap.put(businessId, LocalDate.MIN);
+        }
+
+        return resultMap;
+    }
+
+    /**
+     * 查询最大时间的一条条记录
+     * @param businessIdList
+     * @return Map<Integer, BusinessCustomerAnalysisInfo>， k->businessId v->BusinessCustomerAnalysisInfo 最后一条记录
+     */
+    private Map<Integer, BusinessCustomerAnalysisInfo> getBusinessCustomerAnalysisInfo(List<Integer> businessIdList) {
+        if (CollectionUtils.isEmpty(businessIdList)) {
+            return Maps.newHashMap();
+        }
+        Wrapper<BusinessCustomerAnalysisInfo> wrapper = new EntityWrapper<>();
+        wrapper.in("business_id", businessIdList);
+        wrapper.orderBy("date", false);
+        wrapper.last("limit 1");
+        Map<Integer, BusinessCustomerAnalysisInfo> resultMap = new HashMap<>(businessIdList.size());
+        List<BusinessCustomerAnalysisInfo> businessCustomerAnalysisInfos = businessCustomerAnalysisInfoMapper.selectList(wrapper);
+        for (Integer businessId : businessIdList) {
+            for (BusinessCustomerAnalysisInfo businessCustomerAnalysisInfo : businessCustomerAnalysisInfos) {
+                Integer analysisInfoBusinessId = businessCustomerAnalysisInfo.getBusinessId();
+                if (businessId.equals(analysisInfoBusinessId)) {
+                    resultMap.put(businessId, businessCustomerAnalysisInfo);
+                    break;
+                }
+            }
+            resultMap.put(businessId, new BusinessCustomerAnalysisInfo());
+        }
+
+        return resultMap;
+    }
+
+    private BusinessCustomerAnalysisInfo getBusinessCustomerAnalysisInfo(Integer businessId) {
+        Wrapper<BusinessCustomerAnalysisInfo> wrapper = new EntityWrapper<>();
+        wrapper.eq("business_id", businessId);
+        wrapper.orderBy("date", false);
+        wrapper.last("limit 1");
+        BusinessCustomerAnalysisInfo businessCustomerAnalysisInfo = businessCustomerAnalysisInfoMapper.selectOne(wrapper);
+        return businessCustomerAnalysisInfo;
+    }
+
+    private Map<Integer, BusinessCustomerAnalysisDetail> getMaxdateBusinessCustomerAnalysisDetailMap(Map<Integer, List<BusinessCustomerAnalysisDetail>> businessCustomerAnalysisDetailMap) {
+        Map<Integer, BusinessCustomerAnalysisDetail> resultMap = new HashMap<>(businessCustomerAnalysisDetailMap.size());
+        for (Map.Entry<Integer, List<BusinessCustomerAnalysisDetail>> detail : businessCustomerAnalysisDetailMap.entrySet()) {
+            Integer businessId = detail.getKey();
+            List<BusinessCustomerAnalysisDetail> detailList = detail.getValue();
+            // 倒序排序，时间最大的在第一个
+            detailList.sort(Comparator.comparing((BusinessCustomerAnalysisDetail businessCustomerAnalysisDetail) -> {
+                String date = businessCustomerAnalysisDetail.getDate() + "-01";
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                return LocalDate.parse(date, formatter);
+            }).reversed());
+            BusinessCustomerAnalysisDetail businessCustomerAnalysisDetail;
+            if (CollectionUtils.isNotEmpty(detailList)) {
+                businessCustomerAnalysisDetail = detailList.get(0);
+            } else {
+                businessCustomerAnalysisDetail = new BusinessCustomerAnalysisDetail();
+            }
+            resultMap.put(businessId, businessCustomerAnalysisDetail);
+        }
+        return resultMap;
+    }
+
+
+    private Map<Integer, List<BusinessCustomerAnalysisDetail>> groupByBusinessId(List<Integer> businessIdList,
+                                                                           List<BusinessCustomerAnalysisDetail> businessCustomerAnalysisDetailList) {
+        Map<Integer, List<BusinessCustomerAnalysisDetail>> resultMap = new HashMap<>(businessIdList.size());
+        List<BusinessCustomerAnalysisDetail> list;
+        for (Integer businessId : businessIdList) {
+            list = new ArrayList<>();
+            for (BusinessCustomerAnalysisDetail detail : businessCustomerAnalysisDetailList) {
+                Integer detailBusinessId = detail.getBusinessId();
+                if (businessId.equals(detailBusinessId)) {
+                    list.add(detail);
+                }
+            }
+            resultMap.put(businessId, list);
+        }
+        return resultMap;
+    }
+
+    /**
+     * 查询一批 指定businessId 的数据
+     */
+    private List<BusinessCustomerAnalysisDetail> getBusinessCustomerAnalysisList(Integer businessId) {
+        if (businessId == null) {
+            return Lists.newArrayList();
+        }
+        Wrapper<BusinessCustomerAnalysisDetail> wrapper = new EntityWrapper<>();
+        wrapper.eq("business_id", businessId);
+        return businessCustomerAnalysisDetailMapper.selectList(wrapper);
+    }
+
+    /**
+     * 筛选 business 中的 id 作为列表
+     */
+    private List<Integer> getBusinessIdList(List<Business> businessList) {
+        if (CollectionUtils.isEmpty(businessList)) {
+            return Lists.newArrayList();
+        }
+        return businessList.stream()
+                .map(Business::getId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    }
+
+    /**
      * 保存具体的名单数据
      * @param resvDate 执行任务跑的数据，yyyy-MM
      */
-    public void saveAnalysisDetail(String resvDate) {
+    public void saveAnalysisDetail(Integer businessId, String resvDate) {
         if (!checkParam(resvDate)) {
             return;
         }
         Wrapper<BusinessCustomerAnalysisDetail> wrapper = new EntityWrapper<>();
         wrapper.eq("date", resvDate);
+        wrapper.eq("business_id", businessId);
 
         List<BusinessCustomerAnalysisDetail> detailList = businessCustomerAnalysisDetailMapper.selectList(wrapper);
 
@@ -68,9 +295,9 @@ public class BusinessCustomerAnalysisInfoService {
                 .collect(Collectors.toMap(Vip::getId, vip -> vip));
 
         List<BusinessCustomerAnalysisInfo> customerAnalysisInfoList = detailList.stream()
+                .parallel()
                 .map(detail -> {
                     String date = detail.getDate();
-                    Integer businessId = detail.getBusinessId();
                     Integer vipId = detail.getVipId();
                     String vipName = detail.getVipName();
                     String vipPhone = detail.getVipPhone();
@@ -109,7 +336,24 @@ public class BusinessCustomerAnalysisInfoService {
                     return info;
                 })
                 .collect(Collectors.toList());
-        businessCustomerAnalysisInfoMapper.insertBatch(customerAnalysisInfoList);
+        if (CollectionUtils.isNotEmpty(customerAnalysisInfoList)) {
+            businessCustomerAnalysisInfoMapper.insertBatch(customerAnalysisInfoList);
+        }
+    }
+
+
+    public LocalDate existBusinessAnalysis(Integer businessId) {
+        if (businessId == null) {
+            return null;
+        }
+        Wrapper<BusinessCustomerAnalysisInfo> wrapper = new EntityWrapper<>();
+        wrapper.eq("business_id", businessId);
+        List<BusinessCustomerAnalysisInfo> businessCustomerAnalysisInfoList = businessCustomerAnalysisInfoMapper.selectList(wrapper);
+        Optional<LocalDate> optionDate = businessCustomerAnalysisInfoList.stream()
+                .map(BusinessCustomerAnalysisInfo::getDate)
+                .map(LocalDate::parse)
+                .max(Comparator.naturalOrder());
+        return optionDate.orElse(null);
     }
 
     public AppUser getAppUser(Integer appUserId) {

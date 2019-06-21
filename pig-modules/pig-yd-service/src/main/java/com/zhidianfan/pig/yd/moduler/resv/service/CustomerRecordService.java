@@ -38,10 +38,10 @@ public class CustomerRecordService {
     private IGuestCustomerVipMappingService iGuestCustomerVipMappingService;
 
     @Autowired
-    private ICustomerRecordService customerRecordMapper;
+    private BusinessCustomerAnalysisInfoService businessCustomerAnalysisInfoService;
 
     @Autowired
-    private BusinessCustomerAnalysisInfoService businessCustomerAnalysisInfoService;
+    private ICustomerRecordService customerRecordMapper;
 
 
     public Map<Integer, List<CustomerRecord>> getCustomerRecord(List<Vip> vips, Map<Integer, List<ResvOrder>> resvOrdersMap, Map<Integer, CustomerValueList> customerValueListMap,
@@ -49,9 +49,9 @@ public class CustomerRecordService {
 
         cleanData(vips);
         Map<Integer, List<CustomerRecord>> map = new HashMap<>();
-        List<Integer> appUserList = getAppUser(vips);
-        List<AppUser> userList = businessCustomerAnalysisInfoService.getAppUserList(appUserList);
-
+        List<Integer> appUserIdList = getAppUser(vips);
+        List<AppUser> appUserList = businessCustomerAnalysisInfoService.getAppUserList(appUserIdList);
+        List<Integer> vipIdList = getVipIdList(vips);
         Map<Integer, List<CustomerRecord>> nowChangeOrderInfo = getNowChangeOrderInfo(vips);
 
 
@@ -61,13 +61,14 @@ public class CustomerRecordService {
                 List<CustomerRecord> recordList = Lists.newArrayList();
 
                 LocalDateTime lastChangeTime = getLastChangeTime(nowChangeOrderInfo, vip);
+                CustomerRecord customerRecord = getCustomerRecord(vip, nowChangeOrderInfo.get(vip.getId()));
 
                 List<CustomerRecord> customerRecords = reserveOrderCustomer(vip, resvOrdersMap.get(vip.getId()), lastChangeTime);
                 List<CustomerRecord> customerRecords1 = reserveOrderESC(vip, resvOrdersMap.get(vip.getId()), lastChangeTime);
                 List<CustomerRecord> customerRecords2 = manOrder2(vip, masterCustomerVipMappings, resvOrdersMap, lastChangeTime);
                 List<CustomerRecord> customerRecords3 = guestOrder2(vip, guestCustomerVipMappings, resvOrdersMap, lastChangeTime);
                 CustomerRecord valueChangeRecord = valueChange(vip, customerValueListMap.get(vip.getId()));
-                CustomerRecord userChangeRecord = appUserChange2(vip, customerValueListMap.get(vip.getId()), userList);
+                CustomerRecord userChangeRecord = appUserChange2(vip, customerValueListMap.get(vip.getId()), customerRecord, appUserList);
 
                 recordList.addAll(customerRecords);
                 recordList.addAll(customerRecords1);
@@ -706,20 +707,27 @@ public class CustomerRecordService {
 //        return null;
 //    }
 
-    private CustomerRecord appUserChange2(Vip vip, CustomerValueList customerValueList, List<AppUser> appUserList) {
+    /**
+     * 营销经理变更
+     * @param vip 当前 vip
+     * @param customerValueList 最后一条记录
+     * @param customerRecord 最后一条客户记录，其中记录了最后一次经销经理
+     * @param appUserList 所有的营销经理列表
+     * @return CustomerRecord
+     */
+    private CustomerRecord appUserChange2(Vip vip, CustomerValueList customerValueList, CustomerRecord customerRecord, List<AppUser> appUserList) {
+        if (vip == null) {
+            return null;
+        }
+        if (vip.getId() == null) {
+            return null;
+        }
         Integer appUserId = getAppUserId(vip);
         if (appUserId < 1) {
             return null;
         }
-
-        CustomerRecord customerRecord = getCustomerRecord(vip.getId());
         Integer changeAppUserId = customerRecord.getAppUserId();
-
-        List<AppUser> collect = appUserList.stream()
-                .filter(appUser -> appUser.getId().equals(appUserId))
-                .collect(Collectors.toList());
-
-        for (AppUser appUser : collect) {
+        for (AppUser appUser : appUserList) {
             if (!appUserId.equals(changeAppUserId)) {
                 return setAppUserCustomerRecord(vip, customerValueList, appUserId, appUser);
             }
@@ -729,6 +737,14 @@ public class CustomerRecordService {
         return null;
     }
 
+    /**
+     * 设置营销经理变更的对象实体
+     * @param vip
+     * @param customerValueList
+     * @param appUserId
+     * @param appUser
+     * @return CustomerRecord
+     */
     private CustomerRecord setAppUserCustomerRecord(Vip vip, CustomerValueList customerValueList, Integer appUserId, AppUser appUser) {
         CustomerRecord customerRecord = new CustomerRecord();
         customerRecord.setVipId(customerValueList.getVipId());
@@ -824,6 +840,20 @@ public class CustomerRecordService {
         Optional<CustomerRecord> max = customerRecords.stream()
                 .max(Comparator.comparing(CustomerRecord::getUpdateTime));
         return max.orElse(new CustomerRecord());
+    }
+
+    private CustomerRecord getCustomerRecord(Vip vip, List<CustomerRecord> customerRecordList) {
+        if (vip == null) {
+            return null;
+        }
+        if (CollectionUtils.isEmpty(customerRecordList)) {
+            return null;
+        }
+        Integer vipAppuserId = getAppUserId(vip);
+        Optional<CustomerRecord> optionalCustomerRecord = customerRecordList.stream()
+                .filter(appUser -> Objects.nonNull(appUser.getId()))
+                .max(Comparator.comparing(CustomerRecord::getUpdateTime));
+        return optionalCustomerRecord.orElse(new CustomerRecord());
     }
 
     /**

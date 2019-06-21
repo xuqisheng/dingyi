@@ -66,6 +66,12 @@ public abstract class CustomerValueConstants {
     public static final int RECORD_TYPE_VALUE_CHANGE = 5;
     public static final int RECORD_TYPE_APP_USER_CHANGE = 6;
 
-    public static final LocalTime TASK_START_TIME = LocalTime.of(22, 0, 0);
+    /**
+     * 定时任务开始时间
+     */
+    public static final LocalTime TASK_START_TIME = LocalTime.of(21, 30, 0);
+    /**
+     * 定时任务结束时间
+     */
     public static final LocalTime TASK_END_TIME = LocalTime.of(8, 0, 0);
 }
