@@ -1,5 +1,10 @@
 package com.zhidianfan.pig.yd.moduler.resv.task;
+import java.util.Date;
 
+import com.baomidou.mybatisplus.mapper.EntityWrapper;
+import com.baomidou.mybatisplus.mapper.Wrapper;
+import com.zhidianfan.pig.yd.moduler.common.dao.entity.ConfigTaskExec;
+import com.zhidianfan.pig.yd.moduler.common.service.IConfigTaskExecService;
 import com.zhidianfan.pig.yd.moduler.resv.constants.CustomerValueConstants;
 import com.zhidianfan.pig.yd.moduler.resv.service.BusinessCustomerAnalysisInfoService;
 import com.zhidianfan.pig.yd.moduler.resv.service.CustomerValueService;
@@ -10,6 +15,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -40,6 +46,9 @@ public class CustomerValueTask {
     @Autowired
     private CustomerValueTaskService customerValueTaskService;
 
+    @Autowired
+    private IConfigTaskExecService iConfigTaskExecService;
+
 
     @Scheduled(cron = "0 30 20 * * ?")
     public void task() {
@@ -52,9 +61,24 @@ public class CustomerValueTask {
 
     @Scheduled(fixedDelay = 10_000)
     public void customerValue2() {
-        LocalTime startTime1 = CustomerValueConstants.TASK_START_TIME;
-        LocalTime startTime2 = CustomerValueConstants.TASK_END_TIME;
+        ConfigTaskExec execTime = getExecTime();
+        if (execTime == null) {
+            log.error("未添加数据库执行时间，请检查 config_task_exec 配置表");
+            return;
+        }
+        LocalTime startTime1 = execTime.getStartTime();
+        if (startTime1 == null) {
+            log.error("未添加数据库开始执行时间，请检查 config_task_exec 配置表");
+            return;
+        }
+        LocalTime startTime2 = execTime.getEndTime();
+        if (startTime2 == null) {
+            log.error("未添加数据库结束执行时间，请检查 config_task_exec 配置表");
+            return;
+        }
+
         if (LocalTime.now().isAfter(startTime1) || LocalTime.now().isBefore(startTime2)) {
+            LocalDateTime startTime = LocalDateTime.now();
             LocalDate localDate = LocalDate.now();
             if (LocalTime.now().isBefore(startTime2)) {
                 //批次减一天
@@ -77,7 +101,7 @@ public class CustomerValueTask {
                         for (int i = 0; i < customerValuesValueTask.size(); i++) {
                             com.zhidianfan.pig.yd.moduler.common.dao.entity.CustomerValueTask tmp = customerValuesValueTask.get(i);
                             CompletableFuture<Long> integerCompletableFuture = CompletableFuture.supplyAsync(() -> {
-                                customerValueService.getCustomerValueBaseInfo2(tmp, 2000);
+                                customerValueService.getCustomerValueBaseInfo2(tmp, 2000, execTime);
                                 return tmp.getHotelId();
                             }, executorService);
                             completableFutures.add(integerCompletableFuture);
@@ -106,10 +130,17 @@ public class CustomerValueTask {
                         executorService.shutdown();
 
                     });
+            LocalDateTime endTime = LocalDateTime.now();
+            Duration duration = Duration.between(startTime, endTime);
+            log.info("--------------------------------任务执行消耗总时间：[{}] 秒--------------------------------", duration.getSeconds());
         } else {
             log.info("未到执行客户价值时间......");
         }
 
+    }
+
+    private ConfigTaskExec getExecTime() {
+        return iConfigTaskExecService.selectById(1);
     }
 
 

@@ -224,7 +224,6 @@ public class CustomerValueListService {
      */
     public int getCustomerCount(List<ResvOrder> resvOrders, Vip vip) {
         if (CollectionUtils.isEmpty(resvOrders)) {
-            log.info("订单数量为空-vipId:[{}]", vip.getId());
             return 0;
         }
         List<ResvOrder> collect = resvOrders.stream()
@@ -266,7 +265,6 @@ public class CustomerValueListService {
      */
     public int getPersonAvg(List<ResvOrder> resvOrders, Vip vip) {
         if (CollectionUtils.isEmpty(resvOrders)){
-            log.info("该 VIP ，vipId:[{}] 订单不存在", vip.getId());
             return 0;
         }
         //消费总金额

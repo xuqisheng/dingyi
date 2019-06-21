@@ -3,6 +3,7 @@ package com.zhidianfan.pig.yd.moduler.resv.service;
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.baomidou.mybatisplus.mapper.Wrapper;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.*;
 import com.zhidianfan.pig.yd.moduler.common.service.ICustomerRecordService;
 import com.zhidianfan.pig.yd.moduler.common.service.IGuestCustomerVipMappingService;
@@ -45,9 +46,10 @@ public class CustomerRecordService {
 
 
     public Map<Integer, List<CustomerRecord>> getCustomerRecord(List<Vip> vips, Map<Integer, List<ResvOrder>> resvOrdersMap, Map<Integer, CustomerValueList> customerValueListMap,
-                                                                List<MasterCustomerVipMapping> masterCustomerVipMappings, List<GuestCustomerVipMapping> guestCustomerVipMappings) {
+                                                                List<MasterCustomerVipMapping> masterCustomerVipMappings, List<GuestCustomerVipMapping> guestCustomerVipMappings,
+                                                                ConfigTaskExec configTaskExec) {
 
-        cleanData(vips);
+        cleanData(vips, configTaskExec);
         Map<Integer, List<CustomerRecord>> map = new HashMap<>();
         List<Integer> appUserIdList = getAppUser(vips);
         List<AppUser> appUserList = businessCustomerAnalysisInfoService.getAppUserList(appUserIdList);
@@ -67,7 +69,7 @@ public class CustomerRecordService {
                 List<CustomerRecord> customerRecords1 = reserveOrderESC(vip, resvOrdersMap.get(vip.getId()), lastChangeTime);
                 List<CustomerRecord> customerRecords2 = manOrder2(vip, masterCustomerVipMappings, resvOrdersMap, lastChangeTime);
                 List<CustomerRecord> customerRecords3 = guestOrder2(vip, guestCustomerVipMappings, resvOrdersMap, lastChangeTime);
-                CustomerRecord valueChangeRecord = valueChange(vip, customerValueListMap.get(vip.getId()));
+                CustomerRecord valueChangeRecord = valueChange(vip, customerValueListMap.get(vip.getId()), configTaskExec);
                 CustomerRecord userChangeRecord = appUserChange2(vip, customerValueListMap.get(vip.getId()), customerRecord, appUserList);
 
                 recordList.addAll(customerRecords);
@@ -126,7 +128,7 @@ public class CustomerRecordService {
 
         List<CustomerRecord> recordList = customerRecordMapper.selectList(wrapper);
         if (CollectionUtils.isEmpty(recordList)) {
-            return null;
+            return Maps.newHashMap();
         }
         return recordList.stream()
                 .collect(Collectors.groupingBy(CustomerRecord::getVipId));
@@ -152,7 +154,9 @@ public class CustomerRecordService {
      * 清除指定 vip 的定时任务跑的当天的数据
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void cleanData(List<Vip> vipList) {
+    public void cleanData(List<Vip> vipList, ConfigTaskExec configTaskExec) {
+        LocalTime taskStartTime = configTaskExec.getStartTime();
+        LocalTime taskEndTime = configTaskExec.getEndTime();
         if (CollectionUtils.isEmpty(vipList)) {
             return;
         }
@@ -167,12 +171,12 @@ public class CustomerRecordService {
         LocalDateTime startDateTime;
         LocalDateTime endDateTime;
         // 没有超过 00 点，结束时间 + 1 天，超过了，开始时间 -1 天
-        if (nowTime.isAfter(CustomerValueConstants.TASK_START_TIME) && nowTime.isBefore(LocalTime.MAX)) {
-            startDateTime = LocalDateTime.of(nowDate, CustomerValueConstants.TASK_START_TIME);
-            endDateTime = LocalDateTime.of(nowDate.plusDays(1), CustomerValueConstants.TASK_END_TIME);
+        if (nowTime.isAfter(taskStartTime) && nowTime.isBefore(LocalTime.MAX)) {
+            startDateTime = LocalDateTime.of(nowDate, taskStartTime);
+            endDateTime = LocalDateTime.of(nowDate.plusDays(1), taskEndTime);
         } else {
-            startDateTime = LocalDateTime.of(nowDate.minusDays(1), CustomerValueConstants.TASK_START_TIME);
-            endDateTime = LocalDateTime.of(nowDate, CustomerValueConstants.TASK_END_TIME);
+            startDateTime = LocalDateTime.of(nowDate.minusDays(1), taskStartTime);
+            endDateTime = LocalDateTime.of(nowDate, taskEndTime);
         }
         wrapper.in("vip_id", filterVipList);
         wrapper.ge("create_time", startDateTime);
@@ -213,25 +217,6 @@ public class CustomerRecordService {
     private LocalDateTime getLocalDateTime(Date date) {
         Instant instant = date.toInstant();
         return LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
-    }
-
-    private boolean isNowDate(ResvOrder order) {
-        if (order == null) {
-            return false;
-        }
-        if (order.getUpdatedAt() == null) {
-            return false;
-        }
-        Instant instant = order.getUpdatedAt().toInstant();
-        LocalDateTime updateAt = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
-        LocalDate date = updateAt.toLocalDate();
-        LocalDateTime now = LocalDateTime.now();
-        LocalDate nowDate = now.toLocalDate();
-        LocalTime nowTime = now.toLocalTime();
-        if (LocalTime.now().isBefore(CustomerValueConstants.TASK_START_TIME)) {
-            nowDate = nowDate.minusDays(1);
-        }
-        return date.isEqual(nowDate);
     }
 
 
@@ -587,7 +572,8 @@ public class CustomerRecordService {
     /**
      * 价值变更，之前的价值变更与现在的价值进行对比
      */
-    private CustomerRecord valueChange(Vip vip, CustomerValueList customerValueList) {
+    private CustomerRecord valueChange(Vip vip, CustomerValueList customerValueList, ConfigTaskExec configTaskExec) {
+        LocalTime taskStartTime = configTaskExec.getStartTime();
         // 1-意向客户，2-活跃客户，3-沉睡客户，4-流失客户
         // 1活跃用户 2沉睡用户 3流失用户 4意向用户 5恶意用户 6高价值用户
         String customerValue = getCustomerValue(vip);
@@ -620,7 +606,7 @@ public class CustomerRecordService {
             LocalTime nowTime = LocalTime.now();
             LocalDateTime dateTime;
             // 没有超过 00 点，结束时间 + 1 天，超过了，开始时间 -1 天
-            if (nowTime.isAfter(CustomerValueConstants.TASK_START_TIME) && nowTime.isBefore(LocalTime.MAX)) {
+            if (nowTime.isAfter(taskStartTime) && nowTime.isBefore(LocalTime.MAX)) {
                 dateTime = LocalDateTime.of(nowDate, nowTime);
             } else {
                 dateTime = LocalDateTime.of(nowDate.minusDays(1), nowTime);
@@ -724,6 +710,9 @@ public class CustomerRecordService {
         }
         Integer appUserId = getAppUserId(vip);
         if (appUserId < 1) {
+            return null;
+        }
+        if (customerRecord == null) {
             return null;
         }
         Integer changeAppUserId = customerRecord.getAppUserId();
