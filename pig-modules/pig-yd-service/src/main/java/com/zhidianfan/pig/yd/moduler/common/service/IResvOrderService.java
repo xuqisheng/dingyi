@@ -79,4 +79,6 @@ public interface IResvOrderService extends IService<ResvOrder> {
 
     void updateOrderStatus2TO3(Integer intervalNum);
 
+    Integer selectOverTimeOrder(Integer id, String time, String status);
+
 }

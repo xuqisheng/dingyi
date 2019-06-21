@@ -11,10 +11,7 @@ import com.zhidianfan.pig.yd.moduler.common.dto.ErrorTip;
 import com.zhidianfan.pig.yd.moduler.common.dto.SuccessTip;
 import com.zhidianfan.pig.yd.moduler.common.dto.Tip;
 import com.zhidianfan.pig.yd.moduler.common.service.*;
-import com.zhidianfan.pig.yd.moduler.meituan.bo.BasicBO;
-import com.zhidianfan.pig.yd.moduler.meituan.bo.BusinessBo;
-import com.zhidianfan.pig.yd.moduler.meituan.bo.OrderBO;
-import com.zhidianfan.pig.yd.moduler.meituan.bo.OrderQueryBO;
+import com.zhidianfan.pig.yd.moduler.meituan.bo.*;
 import com.zhidianfan.pig.yd.moduler.meituan.constant.MeituanMethod;
 import com.zhidianfan.pig.yd.moduler.meituan.dto.*;
 import com.zhidianfan.pig.yd.moduler.meituan.service.rmi.PushFeign;
@@ -28,7 +25,6 @@ import com.zhidianfan.pig.yd.moduler.wechat.vo.PushMessageVO;
 import com.zhidianfan.pig.yd.utils.IdUtils;
 import com.zhidianfan.pig.yd.utils.SignUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateFormatUtils;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -106,6 +102,9 @@ public class YdService {
      */
     @Autowired
     private IResvOrderLogsService iResvOrderLogsService;
+
+    @Autowired
+    private IBusinessWeixinService businessWeixinService;
 
     /**
      * 易订桌位查询接口
@@ -348,6 +347,9 @@ public class YdService {
                     resvOrderAndroid.setBatchNo("pc" + orderNo);
                     resvOrderAndroid.setVipSex(meituanOrderDTO.getGender() == 10 ? "女" : "男");
 
+                    resvOrderAndroid.setExternalSourceName("2");
+                    resvOrderAndroid.setExternalSourceName(resvOrderThird.getSource());
+
                     resvOrderAndroid.setVipId(0);
                     boolean insert = iResvOrderAndroidService.insert(resvOrderAndroid);
                     //插入订单自动接单日志
@@ -384,7 +386,11 @@ public class YdService {
                     jgPush.setType("ANDROID_PHONE");
                     pushFeign.pushMsg(jgPush.getType(), jgPush.getUsername(), jgPush.getMsgSeq(), jgPush.getBusinessId(), jgPush.getMsg());
                 }
-                List<Business> businessList = businessService.selectList(new EntityWrapper<Business>().eq("brand_id", business.getBrandId()).eq("status", '1'));
+
+                List<Business> businessList = businessService.selectList(new EntityWrapper<Business>()
+                        .eq("brand_id", business.getBrandId())
+                        .eq("status", '1'));
+
                 for (Business business1 : businessList) {
                     if (business1.getIsPcPush() == 1) {
                         jgPush.setType("WEB");
@@ -583,6 +589,7 @@ public class YdService {
 
                     iResvOrderAndroidService.update(resvOrder, new EntityWrapper<ResvOrderAndroid>().eq("batch_no", resvOrderThird1.getBatchNo()));
                     iResvOrderService.update(commonResvOrder, new EntityWrapper<ResvOrder>().eq("batch_no", resvOrderThird1.getBatchNo()));
+                    // todo 顾客取消订单
 
                     List<ResvOrderAndroid> resvOrders = iResvOrderAndroidService.selectList(new EntityWrapper<ResvOrderAndroid>().eq("batch_no", resvOrderThird1.getBatchNo()));
                     if (resvOrders.size() == 0) {
@@ -770,6 +777,55 @@ public class YdService {
         return true;
     }
 
+    /**
+     * 徐记微信公众号接收
+     */
+    public boolean xjCreatOrder(PublicOrderDTO publicOrderDTO) {
+
+        //获得餐别
+        MealType mealType = mealTypeService.selectOne(new EntityWrapper<MealType>().eq("business_id", publicOrderDTO.getBusinessId())
+                .ge("resv_end_time", unixTimeToDate3(publicOrderDTO.getResvDate().getTime()))
+                .le("resv_start_time", unixTimeToDate3(publicOrderDTO.getResvDate().getTime()))
+                .eq("status", '1'));
+
+        if (mealType == null) {
+            log.error("该时间段没有餐别,入库失败");
+            return false;
+        }
+
+        ResvOrderThird resvOrderThird = new ResvOrderThird();
+        resvOrderThird.setBusinessId(publicOrderDTO.getBusinessId());
+        resvOrderThird.setResvNum(publicOrderDTO.getNumber());
+        resvOrderThird.setResvDate(publicOrderDTO.getResvDate());
+        resvOrderThird.setTableType(publicOrderDTO.getTableType());
+        resvOrderThird.setCreatedAt(new Date());
+        resvOrderThird.setStatus(publicOrderDTO.getStatus());
+        resvOrderThird.setTableTypeName(publicOrderDTO.getTableTypeName());
+        resvOrderThird.setVipName(publicOrderDTO.getName());
+        resvOrderThird.setVipPhone(publicOrderDTO.getPhone());
+        resvOrderThird.setSource("徐记公众号");
+        resvOrderThird.setVipSex(publicOrderDTO.getGender() == 10 ? "先生" : "女士");
+        resvOrderThird.setMealTypeId(mealType.getId());
+        resvOrderThird.setMealTypeName(mealType.getMealTypeName());
+        resvOrderThird.setOpenId(publicOrderDTO.getOpenId());
+        resvOrderThird.setRemark(publicOrderDTO.getRemark());
+        //生成订单号
+        resvOrderThird.setThirdOrderNo("XJ" + System.currentTimeMillis());
+
+        boolean success = resvOrderThirdService.insert(resvOrderThird);
+
+        if (success) {
+            Business business = businessService.selectOne(new EntityWrapper<Business>().eq("id", resvOrderThird.getBusinessId()));
+            autoAcceptXjOrder(resvOrderThird, business);
+
+
+        } else {
+            log.error("自动接单失败");
+            return false;
+        }
+        return true;
+    }
+
 
     /**
      * 公众号自动接单
@@ -837,10 +893,15 @@ public class YdService {
             resvOrderAndroid.setTableId(tableId);
             resvOrderAndroid.setTableName(tableName);
             String orderNo = IdUtils.makeOrderNo();
+            //增加ExternalSourceName  ID
+            resvOrderAndroid.setExternalSourceName("4");
+            resvOrderAndroid.setExternalSourceName(resvOrderThird.getSource());
             resvOrderAndroid.setResvOrder(orderNo);
             resvOrderAndroid.setBatchNo("pc" + orderNo);
             resvOrderAndroid.setVipSex(resvOrderThird.getVipSex().equals("先生") ? "男" : "女");
             resvOrderAndroid.setVipId(vip1.getId());
+
+
             boolean insert = iResvOrderAndroidService.insert(resvOrderAndroid);
             //插入订单自动接单日志
             insertAutoAcceptLogs(resvOrderAndroid.getResvOrder());
@@ -869,6 +930,121 @@ public class YdService {
                 //推送接单成功给微信客户
                 log.info("自动接单完成,推送接单成功给微信客户.");
                 wechatPushMes(resvOrderAndroid, resvOrderThird, OrderTemplate.ORDER_RESV_SUCCESS, business);
+
+            }
+        }
+        //如果自动接单则不推送这个消息
+        if (!receiptSign) {
+
+            //推送消息
+            JSONObject jsonObject = new JSONObject();
+            String orderMsg = JsonUtils.obj2Json(resvOrderThird).replaceAll("[\r\n]", "").replaceAll("\\s*", "");
+            jsonObject.put("data", orderMsg);
+            jsonObject.put("type", "8");
+            jgPush.setMsg(jsonObject.toString());
+
+            pushFeign.pushMsg(jgPush.getType(), jgPush.getUsername(), jgPush.getMsgSeq(), jgPush.getBusinessId(), jgPush.getMsg());
+        }
+    }
+
+    /**
+     * 徐记公众号自动接单
+     *
+     * @param resvOrderThird 第三方订单
+     * @param business       酒店
+     */
+    @Transactional
+    public void autoAcceptXjOrder(ResvOrderThird resvOrderThird, Business business) {
+
+        //默认为稍后接单
+        //默认推送自动接单内容
+        //接单标识
+        //1.查询酒店是否满足自动接单条件
+        //查询此时空闲桌的桌位
+        List<Table> tables = tableService.selectFreeTable(resvOrderThird.getBusinessId(), resvOrderThird.getResvDate(), resvOrderThird.getMealTypeId());
+        boolean receiptSign = checkBusinessReceipt(resvOrderThird, tables);
+
+        //能自动接单进行判断
+        //推送自动接单的第三方单号
+        JgPush jgPush = new JgPush();
+        jgPush.setUsername("13777575146");
+        //自动接单推送内容
+        jgPush.setMsgSeq(String.valueOf(getNextDateId("YD_ORDER")));
+        jgPush.setType("PAD");
+        jgPush.setBusinessId(resvOrderThird.getBusinessId().toString());
+
+        if (receiptSign) {
+            //计算哪个桌位来接这个单
+            Table rightTable = calRightTable(tables, resvOrderThird.getResvNum());
+            Integer tableId = rightTable.getId();
+            String tableName = rightTable.getTableName();
+            //查询区域名字
+            TableArea tableArea = iTableAreaService.selectOne(new EntityWrapper<TableArea>()
+                    .eq("id", rightTable.getTableAreaId()));
+
+            //查询客户,没有就插入新客户
+            Vip vip1 = iVipService.selectOne(new EntityWrapper<Vip>()
+                    .eq("business_id", resvOrderThird.getBusinessId())
+                    .eq("vip_phone", resvOrderThird.getVipPhone()));
+
+            if (vip1 == null) {
+
+                Vip vip = new Vip();
+                vip.setVipPhone(resvOrderThird.getVipPhone());
+                vip.setBusinessId(business.getId());
+                vip.setBusinessName(business.getBusinessName());
+                vip.setVipName(resvOrderThird.getVipName());
+                vip.setVipSex(resvOrderThird.getVipSex().equals("先生") ? "男" : "女");
+                iVipService.insert(vip);
+                log.info(vip.toString());
+                vip1 = vip;
+            }
+
+
+            ResvOrder resvOrder = new ResvOrder();
+            BeanUtils.copyProperties(resvOrderThird, resvOrder);
+            //吃饭时间 14:00 之类
+            resvOrder.setDestTime(unixTimeToDate3(resvOrderThird.getResvDate().getTime()));
+            resvOrder.setStatus(OrderStatus.RESERVE.code);
+            resvOrder.setBusinessName(business.getBusinessName());
+            resvOrder.setResvNum(String.valueOf(resvOrderThird.getResvNum()));
+            resvOrder.setTableAreaId(tableArea.getId());
+            resvOrder.setTableAreaName(tableArea.getTableAreaName());
+            resvOrder.setTableId(tableId);
+            resvOrder.setTableName(tableName);
+            String orderNo = IdUtils.makeOrderNo();
+            resvOrder.setResvOrder(orderNo);
+            resvOrder.setBatchNo("pc" + orderNo);
+            resvOrder.setVipSex(resvOrderThird.getVipSex().equals("先生") ? "男" : "女");
+            resvOrder.setVipId(vip1.getId());
+            boolean insert = iResvOrderService.insert(resvOrder);
+            //插入订单自动接单日志
+            insertAutoAcceptLogs(resvOrder.getResvOrder());
+
+
+            if (insert) {
+                //更新批次号
+                resvOrderThird.setBatchNo("pc" + orderNo);
+                resvOrderThird.setFlag(1);
+                resvOrderThird.setStatus(40);
+                iResvOrderThirdService.update(resvOrderThird, new EntityWrapper<ResvOrderThird>().eq("third_order_no", resvOrderThird.getThirdOrderNo()));
+
+                //推送消息
+                String orderMsg1 = JsonUtils.obj2Json(resvOrder).replaceAll("[\r\n]", "").replaceAll("\\s*", "");
+                jgPush.setBusinessId(String.valueOf(resvOrder.getBusinessId()));
+                JSONObject jsonObject1 = new JSONObject();
+                jsonObject1.put("data", orderMsg1);
+                jsonObject1.put("type", "10");
+                jsonObject1.put("orderType", "xj");
+                jgPush.setMsg(jsonObject1.toString());
+
+                //推送给安卓电话机用户
+                log.info("自动接单完成,推送给PAD.");
+                pushFeign.pushMsg(jgPush.getType(), jgPush.getUsername(), jgPush.getMsgSeq(), jgPush.getBusinessId(), jgPush.getMsg());
+
+                //推送接单成功给微信客户
+                log.info("自动接单完成,推送接单成功给微信客户.");
+                wechatXjPushMes(resvOrder, resvOrderThird, OrderTemplate.ORDER_RESV_SUCCESS, business);
 
             }
         }
@@ -1069,7 +1245,7 @@ public class YdService {
      * @param type 类型
      * @return 序列
      */
-    private long getNextDateId(String type) {
+    public long getNextDateId(String type) {
         String todayStr = DateFormatUtils.format(System.currentTimeMillis(), "yyyyMMdd");//历史遗留Key暂不考虑，一天也就一个。
         long l2 = redisTemplate.opsForValue().increment("PUSH:" + type + ":" + todayStr, 1);
         String s1 = StringUtils.leftPad("" + l2, 7, "0");
@@ -1180,6 +1356,104 @@ public class YdService {
         }
     }
 
+    /**
+     * 徐记客户取消订单
+     *
+     * @param thirdOrderId 第三方订单号
+     * @return 操作结果
+     */
+    public Tip xjOrderUpdate(String thirdOrderId) {
+
+        //客户取消订单
+        ResvOrderThird resvOrderThird = iResvOrderThirdService.selectOne(new EntityWrapper<ResvOrderThird>()
+                .eq("third_order_no", thirdOrderId));
+
+
+        Integer result = resvOrderThird.getResult();
+        //如果是未处理或者已经接单取消订单
+        if (result == 0 || result == 1) {
+
+            //修改第三方订单状态,设置为客户拒单
+            resvOrderThird.setStatus(70);
+            resvOrderThird.setRemark("客户取消徐记公众号订单");
+            iResvOrderThirdService.updateById(resvOrderThird);
+
+            //根据有无订单是否修改订单状态
+            List<ResvOrder> resvOrderList = iResvOrderService.selectList(new EntityWrapper<ResvOrder>()
+                    .eq("third_order_no", thirdOrderId));
+
+
+            ArrayList<ResvOrderLogs> resvOrderLogsList = new ArrayList<>();
+
+            //如果存在订单,就更新订单信息
+            if (resvOrderList.size() != 0) {
+                for (ResvOrder resvOrder : resvOrderList) {
+
+                    //退订
+                    resvOrder.setStatus("4");
+                    resvOrder.setRemark("顾客取消徐记订单");
+
+                    ResvOrderLogs resvOrderLogs = new ResvOrderLogs();
+                    String log = "变更订单状态为退订-徐记公众号";
+                    //将订单操作日志插入订单日志表
+                    resvOrderLogs.setResvOrder(resvOrder.getResvOrder());
+                    resvOrderLogs.setCreatedAt(new Date());
+                    resvOrderLogs.setStatus("4");
+                    resvOrderLogs.setStatusName("已退订");
+                    resvOrderLogs.setLogs(log);
+
+                    resvOrderLogsList.add(resvOrderLogs);
+                }
+
+                //批量更新
+                iResvOrderService.updateBatchById(resvOrderList);
+
+                //批量插入订单日志
+                iResvOrderLogsService.insertBatch(resvOrderLogsList);
+
+            }
+
+            //推送商家
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("type", "7");
+
+            //分类推送信息类型 yd公众号 和 美团
+            jsonObject.put("orderType", "xj");
+            JgPush jgPush = new JgPush();
+            jgPush.setBusinessId(resvOrderThird.getBusinessId().toString());
+            jgPush.setMsgSeq(String.valueOf(getNextDateId("YD_ORDER")));
+            jgPush.setUsername("13777575146");
+            String orderMsg = JsonUtils.obj2Json(resvOrderThird).replaceAll("[\r\n]", "").replaceAll("\\s*", "");
+            jsonObject.put("data", orderMsg);
+            jgPush.setType("PAD");
+            jgPush.setMsg(jsonObject.toString());
+            pushFeign.pushMsg(jgPush.getType(), jgPush.getUsername(), jgPush.getMsgSeq(), jgPush.getBusinessId(), jgPush.getMsg());
+
+
+            return SuccessTip.SUCCESS_TIP;
+
+        } else {
+
+            //提示商家已经拒单
+            ErrorTip errorTip = new ErrorTip();
+            errorTip.setCode(500);
+            errorTip.setMsg("商家已经拒单");
+
+            return errorTip;
+        }
+    }
+
+    /**
+     * 获取徐记微信酒店列表
+     * @param brandId
+     * @return
+     */
+    public List<BusinessWeixin> getWeixinBusinessList(Integer brandId){
+
+        return businessWeixinService.selectList(new EntityWrapper<BusinessWeixin>().eq("brand_id",brandId).eq("status",1));
+
+    }
+
 
     /**
      * 微信推送
@@ -1205,6 +1479,42 @@ public class YdService {
         pushMessageVO.setBusinessName(business.getBusinessName());
         pushMessageVO.setTableType(resvOrderThird.getTableTypeName());
         pushMessageVO.setTableArea(resvOrderAndroid.getTableAreaName() + " " + resvOrderAndroid.getTableName());
+        pushMessageVO.setDesc(resvOrderThird.getRemark());
+        pushMessageVO.setBusinessAddr(business.getBusinessAddress());
+
+        log.info("调用微信推送:" + pushMessageVO.toString());
+
+        WeChatUtils.pushMessage(
+                pushMessageVO.getOpenId(),
+                pushMessageVO.getOrderTemplate().getCode(),
+                "http://eding.zhidianfan.com/#/OrderDetail?id=" + resvOrderThird.getThirdOrderNo(),
+                WeChatUtils.getMessageContent(pushMessageVO));
+    }
+
+    /**
+     * 徐记微信推送
+     *
+     * @param resvOrder 订单
+     * @param resvOrderThird   第三方订单信息
+     * @param orderTemplate    模板
+     * @param business         酒店信息
+     */
+    public static void wechatXjPushMes(ResvOrder resvOrder, ResvOrderThird resvOrderThird, OrderTemplate orderTemplate, Business business) {
+
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+
+        PushMessageVO pushMessageVO = new PushMessageVO();
+        pushMessageVO.setDate(sdf.format(resvOrderThird.getResvDate()));
+        pushMessageVO.setName(resvOrderThird.getVipName());
+        pushMessageVO.setOpenId(resvOrderThird.getOpenId());
+        pushMessageVO.setPersonNum(resvOrderThird.getResvNum());
+        pushMessageVO.setPhone(resvOrderThird.getVipPhone());
+        pushMessageVO.setSex(resvOrderThird.getVipSex().equals("先生") ? "1" : "0");
+        pushMessageVO.setOrderTemplate(orderTemplate);
+
+        pushMessageVO.setBusinessName(business.getBusinessName());
+        pushMessageVO.setTableType(resvOrderThird.getTableTypeName());
+        pushMessageVO.setTableArea(resvOrder.getTableAreaName() + " " + resvOrder.getTableName());
         pushMessageVO.setDesc(resvOrderThird.getRemark());
         pushMessageVO.setBusinessAddr(business.getBusinessAddress());
 

@@ -270,7 +270,6 @@ public class ResvOrder extends Model<ResvOrder> {
     private Integer androidUserId;
     @TableField("android_user_name")
     private String androidUserName;
-
     @Override
     public String toString() {
         return new ToStringBuilder(this)
