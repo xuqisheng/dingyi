@@ -76,11 +76,12 @@ public class BusinessCustomerAnalysisInfoService {
         List<CompletableFuture> completableFutureList = new ArrayList<>();
         for (Map.Entry<Integer, BusinessCustomerAnalysisInfo> entry: businessCustomerAnalysisInfoMap.entrySet()) {
             Integer businessId = entry.getKey();
-            cleanData(businessId);
+            log.info("----------------------客户分析任务开始 businessId:[{}], 开始时间:[{}]----------------------", businessId, DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(LocalDateTime.now()));
             BusinessCustomerAnalysisInfo businessCustomerAnalysisInfo = entry.getValue();
             String date = businessCustomerAnalysisInfo.getDate();
             LocalDate nowDate = LocalDate.now();
             if (StringUtils.isBlank(date)) {
+                cleanData(businessId);
                 LocalDate oldDate = LocalDate.of(2018, 10, 1);
                 int month = (int) oldDate.until(nowDate, ChronoUnit.MONTHS);
                 for (int i = 0; i < month; i++) {
@@ -98,6 +99,13 @@ public class BusinessCustomerAnalysisInfoService {
                 LocalDate localDate = getLocalDate(date);
                 Optional<LocalDate> optionalLocalDate = Optional.ofNullable(localDate);
                 optionalLocalDate.ifPresent((date1) -> {
+                    int year = date1.getYear();
+                    int dayOfMonth = date1.getDayOfMonth();
+                    int year1 = nowDate.getYear();
+                    int dayOfMonth1 = nowDate.getDayOfMonth();
+                    if (year == year1 && dayOfMonth == dayOfMonth1) {
+                        return;
+                    }
                     long until = date1.until(nowDate, ChronoUnit.MONTHS);
                     for (int i = 0; i < until; i++) {
                         CompletableFuture<Integer> completableFuture = CompletableFuture.supplyAsync(() -> {
@@ -112,6 +120,7 @@ public class BusinessCustomerAnalysisInfoService {
                 });
 
             }
+            log.info("----------------------客户分析任务完成 businessId:[{}], 结束时间:[{}]----------------------", businessId, DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(LocalDateTime.now()));
         }
     }
 
