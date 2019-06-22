@@ -186,7 +186,7 @@ public class VipConsumeActionLast60Service {
                 .filter(order -> "2".equals(order.getStatus()) || "3".equals(order.getStatus()))
                 .count();
         int customerCount = (int) count;
-        log.info("60天内消费次数：[{}]", count);
+        // log.info("60天内消费次数：[{}]", count);
         return customerCount;
     }
 

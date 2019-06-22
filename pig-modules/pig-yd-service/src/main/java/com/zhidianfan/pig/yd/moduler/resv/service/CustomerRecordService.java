@@ -200,7 +200,7 @@ public class CustomerRecordService {
                 .filter(order -> "2".equals(order.getStatus()) || "3".equals(order.getStatus()))
                 .map(order -> setCustomerRecord(order, vip, CustomerValueConstants.RECORD_TYPE_CUSTOMER))
                 .collect(Collectors.toList());
-        log.info("vipId:[{}],消费订单数量：[{}]", vip.getId(), resvOrders.size());
+        // log.info("vipId:[{}],消费订单数量：[{}]", vip.getId(), resvOrders.size());
         return recordList;
     }
 
