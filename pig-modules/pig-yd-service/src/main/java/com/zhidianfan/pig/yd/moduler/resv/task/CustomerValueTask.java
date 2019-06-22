@@ -147,7 +147,7 @@ public class CustomerValueTask {
     /**
      * 客户分析详情数据
      */
-    @Scheduled(cron = "0 0 3 7 1/1 ?")
+    @Scheduled(cron = "0 0 23 * * ?")
     public void customerAnalysis() {
         DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
         log.info("客户分析详情数据开始执行任务:[{}]", formatter.format(LocalDateTime.now()));

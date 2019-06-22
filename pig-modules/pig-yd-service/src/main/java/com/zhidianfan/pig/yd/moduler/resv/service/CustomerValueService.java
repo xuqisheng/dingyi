@@ -354,7 +354,7 @@ public class CustomerValueService {
         wrapper.le("updated_at", now);
         wrapper.in("status", Arrays.asList(2, 3));
         List<ResvOrder> resvOrders = resvOrderMapper.selectList(wrapper);
-        Map<Integer, List<ResvOrder>> map = resvOrders.stream()
+        Map<Integer, List<ResvOrder>> map = resvOrders.parallelStream()
                 .collect(Collectors.groupingBy(ResvOrder::getVipId));
         return map;
     }
@@ -370,7 +370,7 @@ public class CustomerValueService {
         EntityWrapper<ResvOrder> wrapper = new EntityWrapper<>();
         wrapper.in("vip_id", vipIds);
         List<ResvOrder> resvOrders = resvOrderMapper.selectList(wrapper);
-        Map<Integer, List<ResvOrder>> map = resvOrders.stream()
+        Map<Integer, List<ResvOrder>> map = resvOrders.parallelStream()
                 .collect(Collectors.groupingBy(ResvOrder::getVipId));
         return map;
     }

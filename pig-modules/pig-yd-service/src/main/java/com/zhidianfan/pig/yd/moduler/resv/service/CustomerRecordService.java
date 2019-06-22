@@ -58,7 +58,7 @@ public class CustomerRecordService {
 
 
         for (Vip vip : vips) {
-            log.info("vip 数量：[{}]", vips.size());
+            // log.info("vip 数量：[{}]", vips.size());
             try {
                 List<CustomerRecord> recordList = Lists.newArrayList();
 

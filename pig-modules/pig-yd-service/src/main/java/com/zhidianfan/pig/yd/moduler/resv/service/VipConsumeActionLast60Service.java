@@ -154,14 +154,14 @@ public class VipConsumeActionLast60Service {
                     try {
                         personCount = Integer.parseInt(actualNum);
                     } catch (NumberFormatException e) {
-                        log.warn("用餐人数类型由 String -> int 转换失败,取预订人数, orderId:{}", order.getId());
+                        // log.warn("用餐人数类型由 String -> int 转换失败,取预订人数, orderId:{}", order.getId());
                     }
                     if (personCount <= 0) {
                         String resvNum = order.getResvNum();
                         try {
                             personCount = Integer.parseInt(resvNum);
                         } catch (NumberFormatException e) {
-                            log.warn("预订人数类型由 String -> int 转换失败，取 0， orderId:[{}]", order.getId());
+                            // log.warn("预订人数类型由 String -> int 转换失败，取 0， orderId:[{}]", order.getId());
                             personCount = 0;
                         }
                     }
