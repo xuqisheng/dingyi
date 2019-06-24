@@ -168,7 +168,7 @@ public class CustomerValueListService {
             return StringUtils.EMPTY;
         }
         if (vipPhone.length() > 11) {
-            log.error("vipId: {} 用户手机号数据异常异常,异常数据为:{}", vip.getId(), vipPhone);
+            log.error("vipId: {} 用户手机号数据异常,异常数据为:{}", vip.getId(), vipPhone);
             return StringUtils.EMPTY;
         }
         return vipPhone;

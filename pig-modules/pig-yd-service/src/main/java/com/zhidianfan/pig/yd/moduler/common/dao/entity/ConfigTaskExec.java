@@ -15,7 +15,6 @@ import java.io.Serializable;
  * 
  * </p>
  *
- * @author qqx
  * @since 2019-06-21
  */
 @TableName("config_task_exec")
