@@ -9,9 +9,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.velocity.runtime.parser.node.MathUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.OptionalInt;
 
 import static java.util.stream.Collectors.groupingBy;
@@ -25,32 +28,49 @@ import static java.util.stream.Collectors.groupingBy;
 public class VipConsumeActionLast60Service {
 
 
-    public VipConsumeActionLast60 getVipConsumeActionLast60(Vip vip, List<ResvOrder> resvOrdersBy60days) {
-        VipConsumeActionLast60 vipConsumeActionLast60 = new VipConsumeActionLast60();
+    public Map<Integer,VipConsumeActionLast60> getVipConsumeActionLast60(List<Vip> vips, Map<Integer,List<ResvOrder>> resvOrdersBy60daysMap) {
 
-        vipConsumeActionLast60.setVipId(vip.getId());
-        // 消费完成总订单数
-        vipConsumeActionLast60.setTotalOrderNo(getTotalOrderNo60(resvOrdersBy60days));
-        // 消费完成总桌数
-        vipConsumeActionLast60.setTotalTableNo(getTotalTableNo60(resvOrdersBy60days));
-        // 消费完成总人数
-        vipConsumeActionLast60.setTotalPersonNo(getTotalPersonNo60(resvOrdersBy60days));
-        // 撤单桌数
-        vipConsumeActionLast60.setCancelTableNo(getCancelTableNo60(resvOrdersBy60days));
-        // 消费总金额,单位:分
-        vipConsumeActionLast60.setTotalConsumeAmount(getTotalConsumeAmount60(resvOrdersBy60days));
-        // 桌均消费,单位:分
-        vipConsumeActionLast60.setTableConsumeAvg(getTableConsumeAvg60(resvOrdersBy60days));
-        // 人均消费,单位:分
-        vipConsumeActionLast60.setPersonConsumeAvg(getPersonConsumeAvg(resvOrdersBy60days));
-        // 消费频次
-        vipConsumeActionLast60.setConsumeFrequency(getConsumeFrequency60(resvOrdersBy60days));
-        vipConsumeActionLast60.setCreateUserId(CustomerValueConstants.DEFAULT_USER_ID);
-        vipConsumeActionLast60.setCreateTime(LocalDateTime.now());
-        vipConsumeActionLast60.setUpdateUserId(CustomerValueConstants.DEFAULT_USER_ID);
-        vipConsumeActionLast60.setUpdateTime(LocalDateTime.now());
+        Map<Integer,VipConsumeActionLast60> map = new HashMap<>();
 
-        return vipConsumeActionLast60;
+        for (Vip vip:vips){
+
+            try {
+                List<ResvOrder> resvOrdersBy60days = resvOrdersBy60daysMap.get(vip.getId());
+                VipConsumeActionLast60 vipConsumeActionLast60 = new VipConsumeActionLast60();
+
+                vipConsumeActionLast60.setVipId(vip.getId());
+                // 消费完成总订单数
+                vipConsumeActionLast60.setTotalOrderNo(getTotalOrderNo60(resvOrdersBy60days));
+                // 消费完成总桌数
+                vipConsumeActionLast60.setTotalTableNo(getTotalTableNo60(resvOrdersBy60days));
+                // 消费完成总人数
+                vipConsumeActionLast60.setTotalPersonNo(getTotalPersonNo60(resvOrdersBy60days));
+                // 撤单桌数
+                vipConsumeActionLast60.setCancelTableNo(getCancelTableNo60(resvOrdersBy60days));
+                // 消费总金额,单位:分
+                vipConsumeActionLast60.setTotalConsumeAmount(getTotalConsumeAmount60(resvOrdersBy60days));
+                // 桌均消费,单位:分
+                vipConsumeActionLast60.setTableConsumeAvg(getTableConsumeAvg60(resvOrdersBy60days));
+                // 人均消费,单位:分
+                vipConsumeActionLast60.setPersonConsumeAvg(getPersonConsumeAvg(resvOrdersBy60days));
+                // 消费频次
+                vipConsumeActionLast60.setConsumeFrequency(getConsumeFrequency60(resvOrdersBy60days));
+                vipConsumeActionLast60.setCreateUserId(CustomerValueConstants.DEFAULT_USER_ID);
+                vipConsumeActionLast60.setCreateTime(LocalDateTime.now());
+                vipConsumeActionLast60.setUpdateUserId(CustomerValueConstants.DEFAULT_USER_ID);
+                vipConsumeActionLast60.setUpdateTime(LocalDateTime.now());
+
+
+                map.put(vip.getId(),vipConsumeActionLast60);
+            }catch (Exception e){
+                log.error(e.getMessage(),e);
+            }
+
+        }
+
+
+
+        return map;
     }
 
     /**
@@ -61,6 +81,9 @@ public class VipConsumeActionLast60Service {
      */
     private Integer getTotalOrderNo60(List<ResvOrder> resvOrdersBy60days) {
         // 按批次号，累加该客户的订单（只要一个批次号内有一个桌位入座/完成即可）
+        if (CollectionUtils.isEmpty(resvOrdersBy60days)){
+            return 0;
+        }
         int size = resvOrdersBy60days.stream()
                 .filter(order -> "2".equals(order.getStatus()) || "3".equals(order.getStatus()))
                 .collect(groupingBy(ResvOrder::getBatchNo))
@@ -76,6 +99,9 @@ public class VipConsumeActionLast60Service {
      * @return 0-无
      */
     private Integer getTotalTableNo60(List<ResvOrder> resvOrdersBy60day) {
+        if (CollectionUtils.isEmpty(resvOrdersBy60day)){
+            return 0;
+        }
         // 所有该客户已完成/入座的订单数量
         long count = resvOrdersBy60day.stream()
                 .filter(order -> "2".equals(order.getStatus()) || "3".equals(order.getStatus()))
@@ -90,6 +116,11 @@ public class VipConsumeActionLast60Service {
      * @return 0-无
      */
     public Integer getTotalPersonNo60(List<ResvOrder> resvOrdersBy60day) {
+
+        if (CollectionUtils.isEmpty(resvOrdersBy60day)){
+            return 0;
+        }
+
         // 所有该客户已完成/入座的订单中的实际人数之和。（如果没有实际人数，使用就餐人数）
         int sum = resvOrdersBy60day.stream()
                 // 订单状态:已经入座，已完成
@@ -100,14 +131,14 @@ public class VipConsumeActionLast60Service {
                     try {
                         personCount = Integer.parseInt(actualNum);
                     } catch (NumberFormatException e) {
-                        log.warn("用餐人数类型由 String -> int 转换失败,取预订人数");
+                        log.warn("用餐人数类型由 String -> int 转换失败,取预订人数, orderId:{}", order.getId());
                     }
                     if (personCount <= 0) {
                         String resvNum = order.getResvNum();
                         try {
                             personCount = Integer.parseInt(resvNum);
                         } catch (NumberFormatException e) {
-                            log.warn("预订人数类型由 String -> int 转换失败，取 0:[{}]", e);
+                            log.warn("预订人数类型由 String -> int 转换失败，取 0， orderId:[{}]", order.getId());
                             personCount = 0;
                         }
                     }
@@ -124,12 +155,15 @@ public class VipConsumeActionLast60Service {
      * @return
      */
     private Integer getConsumeFrequency60(List<ResvOrder> resvOrdersBy60day) {
+        if (CollectionUtils.isEmpty(resvOrdersBy60day)){
+            return 0;
+        }
         // 消费总次数
         long count = resvOrdersBy60day.stream()
                 .filter(order -> "2".equals(order.getStatus()) || "3".equals(order.getStatus()))
                 .count();
         int customerCount = (int) count;
-        log.info("60天内消费次数：", count);
+        log.info("60天内消费次数：[{}]", count);
         return customerCount;
     }
 
@@ -141,6 +175,9 @@ public class VipConsumeActionLast60Service {
      * @return
      */
     private Integer getPersonConsumeAvg(List<ResvOrder> resvOrdersBy60day) {
+        if (CollectionUtils.isEmpty(resvOrdersBy60day)){
+            return 0;
+        }
         // 总消费金额/对应批次号的订单实际人数之和。（如果订单没有实际人数，用预订人数代替）
         // 总消费金额
         int sum = getTotalConsumeAmount60(resvOrdersBy60day);
@@ -174,6 +211,9 @@ public class VipConsumeActionLast60Service {
      * @return
      */
     private Integer getTableConsumeAvg60(List<ResvOrder> resvOrdersBy60day) {
+        if (CollectionUtils.isEmpty(resvOrdersBy60day)){
+            return 0;
+        }
         // 总消费金额/对应批次号的订单之和。（仅指已入座/完成的订单）
         int consumerSum = getTotalConsumeAmount60(resvOrdersBy60day);
         Integer totalTableNo = getTotalTableNo60(resvOrdersBy60day);
@@ -189,6 +229,9 @@ public class VipConsumeActionLast60Service {
      * @return
      */
     private Integer getTotalConsumeAmount60(List<ResvOrder> resvOrdersBy60day) {
+        if (CollectionUtils.isEmpty(resvOrdersBy60day)){
+            return 0;
+        }
         return resvOrdersBy60day.stream()
                 .filter(order -> "2".equals(order.getStatus()) || "3".equals(order.getStatus()))
                 .map(ResvOrder::getPayamount)
@@ -200,7 +243,7 @@ public class VipConsumeActionLast60Service {
                         float f = Float.parseFloat(payAmount);
                         return Math.round(f * 100);
                     } catch (NumberFormatException e) {
-                        log.error("转换失败-", e);
+                        log.error("转换失败 支付金额 ：[{}]- 支付金额数据格式错误", payAmount);
                         return CustomerValueConstants.DEFAULT_PAYAMOUNT;
                     }
                 })
@@ -214,6 +257,9 @@ public class VipConsumeActionLast60Service {
      * @return
      */
     private Integer getCancelTableNo60(List<ResvOrder> resvOrdersBy60day) {
+        if (CollectionUtils.isEmpty(resvOrdersBy60day)){
+            return 0;
+        }
         long count = resvOrdersBy60day.stream()
                 .filter(order -> "4".equals(order.getStatus()))
                 .count();

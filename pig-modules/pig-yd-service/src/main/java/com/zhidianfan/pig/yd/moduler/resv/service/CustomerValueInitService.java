@@ -198,9 +198,9 @@ public class CustomerValueInitService {
         config.setCustomerCountStart(customerCountStart);
         config.setCustomerCountEnd(-1);
         if (valueName.equals(VALUE_NAME_1)) {
-            config.setSort(1);
-        } else {
             config.setSort(2);
+        } else {
+            config.setSort(1);
         }
         config.setFlag(1);
         config.setCreateTime(LocalDateTime.now());

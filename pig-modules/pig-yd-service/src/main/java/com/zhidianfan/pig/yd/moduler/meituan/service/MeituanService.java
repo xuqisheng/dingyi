@@ -12,6 +12,7 @@ import com.zhidianfan.pig.yd.moduler.common.service.*;
 import com.zhidianfan.pig.yd.moduler.meituan.bo.OrderQueryBO;
 import com.zhidianfan.pig.yd.moduler.meituan.constant.MeituanMethod;
 import com.zhidianfan.pig.yd.moduler.meituan.dto.BasicDTO;
+import com.zhidianfan.pig.yd.moduler.meituan.dto.TGOrderCanCelDTO;
 import com.zhidianfan.pig.yd.moduler.meituan.service.rmi.PushFeign;
 import com.zhidianfan.pig.yd.moduler.meituan.service.rmi.dto.JgPush;
 import com.zhidianfan.pig.yd.moduler.sms.service.rmi.SmsFeign;
@@ -75,6 +76,9 @@ public class MeituanService {
 
     @Autowired
     private SmsFeign smsFeign;
+
+    @Autowired
+    private TianGangService tianGangService;
 
 
     private Logger log = LoggerFactory.getLogger(getClass());
@@ -396,6 +400,11 @@ public class MeituanService {
                     resvOrder.setTableName("");
                     resvOrder.setTableAreaName("");
                     YdService.wechatXjPushMes(resvOrder, resvOrderThird, OrderTemplate.ORDER_RESV_HOTEL_CANCEL, business);
+                }
+                if ("QC".equals(orderSerializedId.substring(0, 2))) {
+                    TGOrderCanCelDTO tgOrderCanCelDTO = new TGOrderCanCelDTO();
+                    tgOrderCanCelDTO.setOrderNumber(orderSerializedId);
+                    boolean b = tianGangService.cancelTianGangOrder(tgOrderCanCelDTO);
                 }
             } else if ("3".equals(String.valueOf(resvType))) {
                 resvOrderThird.setStatus(50);

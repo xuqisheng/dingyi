@@ -62,7 +62,7 @@ public class CustomerValueBaseInfoServiceTest {
 
     @Test
     public void getCustomerValueBaseInfoTest() {
-        customerValueService.getCustomerValueBaseInfo();
+//        customerValueService.getCustomerValueBaseInfo();
     }
 
     @Test
@@ -73,7 +73,7 @@ public class CustomerValueBaseInfoServiceTest {
 
     @Test
     public void testgetCustomerValueBaseInfo() {
-        customerValueService.getCustomerValueBaseInfo();
+//        customerValueService.getCustomerValueBaseInfo();
         System.err.println("执行完成，去数据库中观察数据");
     }
 
@@ -123,7 +123,7 @@ public class CustomerValueBaseInfoServiceTest {
         Vip vip = new Vip();
         vip.setId(5698542);
         CustomerValueList valueList = new CustomerValueList();
-        recordService.getCustomerRecord(vip, getOrder(), valueList);
+//        recordService.getCustomerRecord(vip, getOrder(), valueList);
     }
 
     @Autowired

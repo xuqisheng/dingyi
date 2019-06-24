@@ -102,7 +102,7 @@ public class CustomerValueList extends Model<CustomerValueList> {
      * 细分价值，取值根据酒店配置项,空字符串代表:无该项配置
      */
     @TableField("sub_value")
-    private String subValue;
+    private Long subValue;
     /**
      * 自定义分类
      */
@@ -240,11 +240,11 @@ public class CustomerValueList extends Model<CustomerValueList> {
         this.firstClassValue = firstClassValue;
     }
 
-    public String getSubValue() {
+    public Long getSubValue() {
         return subValue;
     }
 
-    public void setSubValue(String subValue) {
+    public void setSubValue(Long subValue) {
         this.subValue = subValue;
     }
 
