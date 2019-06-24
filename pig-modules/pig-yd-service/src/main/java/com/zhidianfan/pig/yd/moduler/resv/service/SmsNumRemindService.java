@@ -59,8 +59,8 @@ public class SmsNumRemindService {
         //档次类型
         Integer remindType;
 
-        //如果当前短信数量大于 50 就不需要提醒
-        if (currentSmsNum >= 50){
+        //如果当前短信数量大于 80 就不需要提醒
+        if (currentSmsNum >= 80){
             jsonObject.put("remind",false);
             return jsonObject;
         }else if (currentSmsNum >= 20){
@@ -99,7 +99,7 @@ public class SmsNumRemindService {
             iSmsNumRemindService.updateById(smsNumRemind);
 
             jsonObject.put("remind",true);
-            jsonObject.put("remindType",1);
+            jsonObject.put("remindType",remindType);
             return jsonObject;
         }else {
             jsonObject.put("remind",false);

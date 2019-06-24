@@ -558,7 +558,7 @@ public class OrderService {
 
         String deviceType = resvOrderAndroid.getDeviceType();
         if (deviceType.equals("1")) {
-            return "安卓电话机";
+            return "来电";
         } else if (deviceType.equals("2")) {
 
             Integer androidUserId = resvOrderAndroid.getAndroidUserId();
