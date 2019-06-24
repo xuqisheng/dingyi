@@ -53,8 +53,8 @@ public class ResvOrderAndroidServiceImpl extends ServiceImpl<ResvOrderAndroidMap
     }
 
     @Override
-    public List<DeskOrderBo> findOrders(DeskOrderDTO deskOrderDTO) {
-        return baseMapper.findOrders(deskOrderDTO);
+    public List<DeskOrderBo> findOrders(Page page,DeskOrderDTO deskOrderDTO) {
+        return baseMapper.findOrders(page,deskOrderDTO);
     }
 
     @Override

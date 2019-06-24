@@ -284,9 +284,9 @@ public class OrderController {
      */
     @ApiOperation("分类订单查询")
     @PostMapping(value = "/order/search/status")
-    public ResponseEntity<List<BatchOrderBo>> orderSearchStatus(@RequestBody DeskOrderDTO bean) {
+    public ResponseEntity<Page<BatchOrderBo>> orderSearchStatus(@RequestBody DeskOrderDTO bean) {
 
-        List<BatchOrderBo> orderSearchStatus = orderService.orderSearchStatus(bean);
+        Page<BatchOrderBo> orderSearchStatus = orderService.orderSearchStatus(bean);
         return ResponseEntity.ok(orderSearchStatus);
     }
 

@@ -40,7 +40,7 @@ public interface IResvOrderAndroidService extends IService<ResvOrderAndroid> {
     List<DeskOrderBo> findDeskOrders(Page page, DeskOrderDTO deskOrderDTO);
 
 
-    List<DeskOrderBo> findOrders(DeskOrderDTO deskOrderDTO);
+    List<DeskOrderBo> findOrders(Page page,DeskOrderDTO deskOrderDTO);
 
     Integer  selectResvTimes(Integer id, String status);
 

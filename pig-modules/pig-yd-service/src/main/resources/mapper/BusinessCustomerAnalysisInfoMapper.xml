@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhidianfan.pig.yd.moduler.common.dao.mapper.BusinessCustomerAnalysisInfoMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zhidianfan.pig.yd.moduler.common.dao.entity.BusinessCustomerAnalysisInfo">
+        <id column="id" property="id" />
+        <result column="bca_id" property="bcaId" />
+        <result column="vip_id" property="vipId" />
+        <result column="vip_name" property="vipName" />
+        <result column="vip_phone" property="vipPhone" />
+        <result column="app_user_id" property="appUserId" />
+        <result column="app_user_name" property="appUserName" />
+        <result column="app_user_phone" property="appUserPhone" />
+        <result column="current_app_user_id" property="currentAppUserId" />
+        <result column="current_app_user" property="currentAppUser" />
+        <result column="current_app_user_phone" property="currentAppUserPhone" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+    </resultMap>
+
+</mapper>

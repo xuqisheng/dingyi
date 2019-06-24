@@ -13,4 +13,5 @@ docker.file=pigydsms-YXDockerfile
 # Docker镜像构建之后push的仓库地址
 docker.repo=registry.cn-hangzhou.aliyuncs.com/zhidianfan/pig-yd-sms
 
-docker.tag=0.0.3-${ENV_TESTPACKAGE_LABEL}
+docker.tag=0.0.5-sms-release
+

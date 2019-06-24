@@ -40,7 +40,7 @@ public interface ResvOrderAndroidMapper extends BaseMapper<ResvOrderAndroid> {
 
     List<DeskOrderBo> findDeskOrders(Page page, DeskOrderDTO deskOrderDTO);
 
-    List<DeskOrderBo> findOrders(DeskOrderDTO deskOrderDTO);
+    List<DeskOrderBo> findOrders(Page page,DeskOrderDTO deskOrderDTO);
 
     Integer selectResvTimes(@Param("id")Integer id,@Param("status") String status);
 
