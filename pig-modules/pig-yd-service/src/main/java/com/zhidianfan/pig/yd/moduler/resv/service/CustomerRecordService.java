@@ -110,6 +110,9 @@ public class CustomerRecordService {
                     .max(Comparator.comparing(CustomerRecord::getUpdateTime));
             CustomerRecord customerRecord = max.orElse(new CustomerRecord());
             LocalDateTime updateTime = customerRecord.getUpdateTime();
+            if (updateTime == null) {
+                return null;
+            }
             return LocalDateTime.of(updateTime.toLocalDate(), LocalTime.MAX);
         }
         return null;
@@ -208,13 +211,22 @@ public class CustomerRecordService {
         if (changeDate == null) {
             return true;
         } else {
+            if (order == null) {
+                return false;
+            }
             Date updatedAt = order.getUpdatedAt();
+            if (updatedAt == null) {
+                return false;
+            }
             LocalDateTime localDateTime = getLocalDateTime(updatedAt);
             return localDateTime.isAfter(changeDate);
         }
     }
 
     private LocalDateTime getLocalDateTime(Date date) {
+        if (date == null) {
+            return null;
+        }
         Instant instant = date.toInstant();
         return LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
     }
@@ -556,7 +568,13 @@ public class CustomerRecordService {
         List<CustomerRecord> recordList = new ArrayList<>();
         for (ResvOrder resvOrder : orderList) {
             for (GuestCustomerVipMapping vipMapping : guestCustomerVipMappingList) {
+                if (vipMapping == null) {
+                    return Lists.newArrayList();
+                }
                 Integer guestCustomerId = vipMapping.getGuestCustomerId();
+                if (guestCustomerId == null) {
+                    return Lists.newArrayList();
+                }
                 String batchNo = vipMapping.getBatchNo();
                 if (resvOrder.getBatchNo().equals(batchNo)) {
                     CustomerRecord record = setMasterOrGuestRecordOrder(guestCustomerId, resvOrder, CustomerValueConstants.RECORD_TYPE_GUEST);

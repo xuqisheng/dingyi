@@ -92,7 +92,7 @@ public class CustomerValueService {
         // 1. 从任务表中取出酒店 id
         Long hotelId = customerValueTask.getHotelId();
         // 清空结果表中酒店已存在的数据
-        // cleanData(hotelId);
+        cleanData(hotelId);
         // 1.1 查询属于该酒店的所有客户
         LocalDateTime now = LocalDateTime.now();
         List<Vip> vips = vipService.getVipList(hotelId);
