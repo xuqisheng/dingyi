@@ -140,9 +140,6 @@ public class BusinessCustomerAnalysisInfoService {
     }
 
 
-
-
-
     private void oneBusiness(Integer businessId, List<BusinessCustomerAnalysisInfoTask> taskList) {
         Optional<BusinessCustomerAnalysisInfoTask> min = taskList.stream()
                 .min(Comparator.comparing(BusinessCustomerAnalysisInfoTask::getDate));
