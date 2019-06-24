@@ -455,6 +455,7 @@ public class OrderTask {
                             } else {
                                 order.setStatus("2");
                             }
+                            order.setRemark("西软：checkMeetingOrder");
                             resvMeetingOrderService.updateById(order);
                         }
                     });
@@ -615,6 +616,7 @@ public class OrderTask {
                             meetingOrder.setStatus("1");
                         }
                         meetingOrder.setId(resvMeetingOrder.getId());
+                        meetingOrder.setRemark("西软：checkTableStatus");
                         resvMeetingOrderService.updateById(meetingOrder);
                     }
                 });
@@ -701,6 +703,7 @@ public class OrderTask {
                 TableMenuBO menuOrder = xopService.getMenuOrder(businessId, table.getTableCode());
                 if (menuOrder.isSuccess()) {
                     order.setMenuOrder(menuOrder.getResults().get(0).get("menu"));
+                    order.setRemark("西软：meetingOrderMenuMaster");
                     resvMeetingOrderService.updateById(order);
                 }
             });
@@ -835,6 +838,7 @@ public class OrderTask {
                         resvMeetingOrder.setStatus("3");
                         String amount = result.get("amount");
                         resvMeetingOrder.setPayAmount(amount);
+                        resvMeetingOrder.setRemark("西软：meetingOrderOver");
                         resvMeetingOrderService.updateById(resvMeetingOrder);
                         OrderDishBO orderDish = xopService.getOrderDish(businessId, menu);
                         BillSync billSync = new BillSync();
