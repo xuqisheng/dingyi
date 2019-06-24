@@ -62,13 +62,12 @@ public class CustomerValueController {
 
     /**
      * 客户价值分析
-     * @param resvDate 指定日期
      */
     @PostMapping("/analysis")
-    public ResponseEntity customerAnalysis(String resvDate) {
+    public ResponseEntity customerAnalysis() {
         DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
         log.info("开始执行任务:[{}]", formatter.format(LocalDateTime.now()));
-        businessCustomerAnalysisInfoService.saveAnalysisDetail(resvDate);
+        businessCustomerAnalysisInfoService.execute();
         log.info("任务执行结束:[{}]", formatter.format(LocalDateTime.now()));
         return ResponseEntity.ok(CommonRes.SUCCESS);
     }

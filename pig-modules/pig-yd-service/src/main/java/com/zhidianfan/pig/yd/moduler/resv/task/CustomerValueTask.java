@@ -1,5 +1,10 @@
 package com.zhidianfan.pig.yd.moduler.resv.task;
+import java.util.Date;
 
+import com.baomidou.mybatisplus.mapper.EntityWrapper;
+import com.baomidou.mybatisplus.mapper.Wrapper;
+import com.zhidianfan.pig.yd.moduler.common.dao.entity.ConfigTaskExec;
+import com.zhidianfan.pig.yd.moduler.common.service.IConfigTaskExecService;
 import com.zhidianfan.pig.yd.moduler.resv.constants.CustomerValueConstants;
 import com.zhidianfan.pig.yd.moduler.resv.service.BusinessCustomerAnalysisInfoService;
 import com.zhidianfan.pig.yd.moduler.resv.service.CustomerValueService;
@@ -10,6 +15,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -40,6 +46,9 @@ public class CustomerValueTask {
     @Autowired
     private CustomerValueTaskService customerValueTaskService;
 
+    @Autowired
+    private IConfigTaskExecService iConfigTaskExecService;
+
 
     @Scheduled(cron = "0 30 20 * * ?")
     public void task() {
@@ -49,35 +58,39 @@ public class CustomerValueTask {
         log.info("任务结束，时间[{}]", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(LocalDateTime.now()));
     }
 
-    //    @Scheduled(fixedDelay = 1000)
-    public void customerValue() {
-        LocalTime startTime1 = LocalTime.of(23, 0, 0);
-        LocalTime startTime2 = LocalTime.of(8, 0, 0);
-        LocalTime nowTime = LocalTime.now();
-        if (nowTime.isAfter(startTime1) || nowTime.isBefore(startTime2)) {
-            log.info("开始执行客户价值定时任务，跑客户价值相关数据");
-//            customerValueService.getCustomerValueBaseInfo();
-        }
-    }
 
     @Scheduled(fixedDelay = 10_000)
     public void customerValue2() {
-        LocalTime startTime1 = CustomerValueConstants.TASK_START_TIME;
-        LocalTime startTime2 = CustomerValueConstants.TASK_END_TIME;
+        ConfigTaskExec execTime = getExecTime();
+        if (execTime == null) {
+            log.error("未添加数据库执行时间，请检查 config_task_exec 配置表");
+            return;
+        }
+        LocalTime startTime1 = execTime.getStartTime();
+        if (startTime1 == null) {
+            log.error("未添加数据库开始执行时间，请检查 config_task_exec 配置表");
+            return;
+        }
+        LocalTime startTime2 = execTime.getEndTime();
+        if (startTime2 == null) {
+            log.error("未添加数据库结束执行时间，请检查 config_task_exec 配置表");
+            return;
+        }
+
         if (LocalTime.now().isAfter(startTime1) || LocalTime.now().isBefore(startTime2)) {
+            LocalDateTime startTime = LocalDateTime.now();
             LocalDate localDate = LocalDate.now();
             if (LocalTime.now().isBefore(startTime2)) {
                 //批次减一天
                 localDate = localDate.minusDays(1);
             }
             log.info("准备计算:{} 的客户价值数据", localDate);
-//            指明当前要计算的批次
+            // 指明当前要计算的批次
             List<com.zhidianfan.pig.yd.moduler.common.dao.entity.CustomerValueTask> customerValuesValueTask = customerValueTaskService.getCustomerValuesValueTask(localDate);
 
             Optional.ofNullable(customerValuesValueTask)
                     .ifPresent(customerValueTasks -> {
-
-                        int nThreads = 64;
+                        int nThreads = 16;
                         AtomicInteger count = new AtomicInteger(customerValuesValueTask.size());
                         log.info("本次有:{}家酒店需要计算客户价值", count);
                         ExecutorService executorService = new ThreadPoolExecutor(nThreads, nThreads,
@@ -85,12 +98,10 @@ public class CustomerValueTask {
                                 new LinkedBlockingQueue<Runnable>());
 
                         List<CompletableFuture<Long>> completableFutures = new ArrayList<>(customerValuesValueTask.size());
-                        // 循环 1082
                         for (int i = 0; i < customerValuesValueTask.size(); i++) {
-
                             com.zhidianfan.pig.yd.moduler.common.dao.entity.CustomerValueTask tmp = customerValuesValueTask.get(i);
                             CompletableFuture<Long> integerCompletableFuture = CompletableFuture.supplyAsync(() -> {
-                                customerValueService.getCustomerValueBaseInfo2(tmp, 1000);
+                                customerValueService.getCustomerValueBaseInfo2(tmp, 2000, execTime);
                                 return tmp.getHotelId();
                             }, executorService);
                             completableFutures.add(integerCompletableFuture);
@@ -119,38 +130,29 @@ public class CustomerValueTask {
                         executorService.shutdown();
 
                     });
+            LocalDateTime endTime = LocalDateTime.now();
+            Duration duration = Duration.between(startTime, endTime);
+            log.info("--------------------------------任务执行消耗总时间：[{}] 秒--------------------------------", duration.getSeconds());
         } else {
             log.info("未到执行客户价值时间......");
         }
 
     }
 
+    private ConfigTaskExec getExecTime() {
+        return iConfigTaskExecService.selectById(1);
+    }
+
 
     /**
      * 客户分析详情数据
      */
-    @Scheduled(cron = "2 0 0 * * ?")
+    @Scheduled(cron = "0 30 1 * * ?")
     public void customerAnalysis() {
         DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
-        log.info("开始执行任务:[{}]", formatter.format(LocalDateTime.now()));
-        LocalDate initDate = LocalDate.now();
-        boolean after = initDate.isAfter(LocalDate.of(2019, 6, 1));
-        if (after) {
-            log.info("开始执行初始化数据");
-            LocalDate now = LocalDate.now();
-            String resvDate = now.format(DateTimeFormatter.ofPattern("yyyy-MM"));
-            businessCustomerAnalysisInfoService.saveAnalysisDetail(resvDate);
-        } else {
-            LocalDate starDate = LocalDate.of(2018, 10, 1);
-            LocalDate endDate = LocalDate.now();
-            long month = starDate.until(endDate, ChronoUnit.MONTHS);
-            for (int i = 1; i < month; i++) {
-                LocalDate date = starDate.plusMonths(i);
-                String resvDate = date.format(DateTimeFormatter.ofPattern("yyyy-MM"));
-                businessCustomerAnalysisInfoService.saveAnalysisDetail(resvDate);
-            }
-        }
-        log.info("任务执行结束:[{}]", formatter.format(LocalDateTime.now()));
+        log.info("客户分析详情数据开始执行任务:[{}]", formatter.format(LocalDateTime.now()));
+        businessCustomerAnalysisInfoService.execute();
+        log.info("客户分析详情数据任务执行结束:[{}]", formatter.format(LocalDateTime.now()));
     }
 
 }

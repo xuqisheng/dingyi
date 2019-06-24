@@ -3,6 +3,7 @@ package com.zhidianfan.pig.yd.moduler.resv.service;
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.baomidou.mybatisplus.mapper.Wrapper;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.*;
 import com.zhidianfan.pig.yd.moduler.common.service.ICustomerRecordService;
 import com.zhidianfan.pig.yd.moduler.common.service.IGuestCustomerVipMappingService;
@@ -38,36 +39,38 @@ public class CustomerRecordService {
     private IGuestCustomerVipMappingService iGuestCustomerVipMappingService;
 
     @Autowired
-    private ICustomerRecordService customerRecordMapper;
+    private BusinessCustomerAnalysisInfoService businessCustomerAnalysisInfoService;
 
     @Autowired
-    private BusinessCustomerAnalysisInfoService businessCustomerAnalysisInfoService;
+    private ICustomerRecordService customerRecordMapper;
 
 
     public Map<Integer, List<CustomerRecord>> getCustomerRecord(List<Vip> vips, Map<Integer, List<ResvOrder>> resvOrdersMap, Map<Integer, CustomerValueList> customerValueListMap,
-                                                                List<MasterCustomerVipMapping> masterCustomerVipMappings, List<GuestCustomerVipMapping> guestCustomerVipMappings) {
+                                                                List<MasterCustomerVipMapping> masterCustomerVipMappings, List<GuestCustomerVipMapping> guestCustomerVipMappings,
+                                                                ConfigTaskExec configTaskExec) {
 
-        cleanData(vips);
+        cleanData(vips, configTaskExec);
         Map<Integer, List<CustomerRecord>> map = new HashMap<>();
-        List<Integer> appUserList = getAppUser(vips);
-        List<AppUser> userList = businessCustomerAnalysisInfoService.getAppUserList(appUserList);
-
+        List<Integer> appUserIdList = getAppUser(vips);
+        List<AppUser> appUserList = businessCustomerAnalysisInfoService.getAppUserList(appUserIdList);
+        List<Integer> vipIdList = getVipIdList(vips);
         Map<Integer, List<CustomerRecord>> nowChangeOrderInfo = getNowChangeOrderInfo(vips);
 
 
         for (Vip vip : vips) {
-            log.info("vip 数量：[{}]", vips.size());
+            // log.info("vip 数量：[{}]", vips.size());
             try {
                 List<CustomerRecord> recordList = Lists.newArrayList();
 
                 LocalDateTime lastChangeTime = getLastChangeTime(nowChangeOrderInfo, vip);
+                CustomerRecord customerRecord = getCustomerRecord(vip, nowChangeOrderInfo.get(vip.getId()));
 
                 List<CustomerRecord> customerRecords = reserveOrderCustomer(vip, resvOrdersMap.get(vip.getId()), lastChangeTime);
                 List<CustomerRecord> customerRecords1 = reserveOrderESC(vip, resvOrdersMap.get(vip.getId()), lastChangeTime);
                 List<CustomerRecord> customerRecords2 = manOrder2(vip, masterCustomerVipMappings, resvOrdersMap, lastChangeTime);
                 List<CustomerRecord> customerRecords3 = guestOrder2(vip, guestCustomerVipMappings, resvOrdersMap, lastChangeTime);
-                CustomerRecord valueChangeRecord = valueChange(vip, customerValueListMap.get(vip.getId()));
-                CustomerRecord userChangeRecord = appUserChange2(vip, customerValueListMap.get(vip.getId()), userList);
+                CustomerRecord valueChangeRecord = valueChange(vip, customerValueListMap.get(vip.getId()), configTaskExec);
+                CustomerRecord userChangeRecord = appUserChange2(vip, customerValueListMap.get(vip.getId()), customerRecord, appUserList);
 
                 recordList.addAll(customerRecords);
                 recordList.addAll(customerRecords1);
@@ -125,7 +128,7 @@ public class CustomerRecordService {
 
         List<CustomerRecord> recordList = customerRecordMapper.selectList(wrapper);
         if (CollectionUtils.isEmpty(recordList)) {
-            return null;
+            return Maps.newHashMap();
         }
         return recordList.stream()
                 .collect(Collectors.groupingBy(CustomerRecord::getVipId));
@@ -151,7 +154,9 @@ public class CustomerRecordService {
      * 清除指定 vip 的定时任务跑的当天的数据
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void cleanData(List<Vip> vipList) {
+    public void cleanData(List<Vip> vipList, ConfigTaskExec configTaskExec) {
+        LocalTime taskStartTime = configTaskExec.getStartTime();
+        LocalTime taskEndTime = configTaskExec.getEndTime();
         if (CollectionUtils.isEmpty(vipList)) {
             return;
         }
@@ -166,12 +171,12 @@ public class CustomerRecordService {
         LocalDateTime startDateTime;
         LocalDateTime endDateTime;
         // 没有超过 00 点，结束时间 + 1 天，超过了，开始时间 -1 天
-        if (nowTime.isAfter(CustomerValueConstants.TASK_START_TIME) && nowTime.isBefore(LocalTime.MAX)) {
-            startDateTime = LocalDateTime.of(nowDate, CustomerValueConstants.TASK_START_TIME);
-            endDateTime = LocalDateTime.of(nowDate.plusDays(1), CustomerValueConstants.TASK_END_TIME);
+        if (nowTime.isAfter(taskStartTime) && nowTime.isBefore(LocalTime.MAX)) {
+            startDateTime = LocalDateTime.of(nowDate, taskStartTime);
+            endDateTime = LocalDateTime.of(nowDate.plusDays(1), taskEndTime);
         } else {
-            startDateTime = LocalDateTime.of(nowDate.minusDays(1), CustomerValueConstants.TASK_START_TIME);
-            endDateTime = LocalDateTime.of(nowDate, CustomerValueConstants.TASK_END_TIME);
+            startDateTime = LocalDateTime.of(nowDate.minusDays(1), taskStartTime);
+            endDateTime = LocalDateTime.of(nowDate, taskEndTime);
         }
         wrapper.in("vip_id", filterVipList);
         wrapper.ge("create_time", startDateTime);
@@ -195,7 +200,7 @@ public class CustomerRecordService {
                 .filter(order -> "2".equals(order.getStatus()) || "3".equals(order.getStatus()))
                 .map(order -> setCustomerRecord(order, vip, CustomerValueConstants.RECORD_TYPE_CUSTOMER))
                 .collect(Collectors.toList());
-        log.info("vipId:[{}],消费订单数量：[{}]", vip.getId(), resvOrders.size());
+        // log.info("vipId:[{}],消费订单数量：[{}]", vip.getId(), resvOrders.size());
         return recordList;
     }
 
@@ -212,25 +217,6 @@ public class CustomerRecordService {
     private LocalDateTime getLocalDateTime(Date date) {
         Instant instant = date.toInstant();
         return LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
-    }
-
-    private boolean isNowDate(ResvOrder order) {
-        if (order == null) {
-            return false;
-        }
-        if (order.getUpdatedAt() == null) {
-            return false;
-        }
-        Instant instant = order.getUpdatedAt().toInstant();
-        LocalDateTime updateAt = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
-        LocalDate date = updateAt.toLocalDate();
-        LocalDateTime now = LocalDateTime.now();
-        LocalDate nowDate = now.toLocalDate();
-        LocalTime nowTime = now.toLocalTime();
-        if (LocalTime.now().isBefore(CustomerValueConstants.TASK_START_TIME)) {
-            nowDate = nowDate.minusDays(1);
-        }
-        return date.isEqual(nowDate);
     }
 
 
@@ -586,7 +572,8 @@ public class CustomerRecordService {
     /**
      * 价值变更，之前的价值变更与现在的价值进行对比
      */
-    private CustomerRecord valueChange(Vip vip, CustomerValueList customerValueList) {
+    private CustomerRecord valueChange(Vip vip, CustomerValueList customerValueList, ConfigTaskExec configTaskExec) {
+        LocalTime taskStartTime = configTaskExec.getStartTime();
         // 1-意向客户，2-活跃客户，3-沉睡客户，4-流失客户
         // 1活跃用户 2沉睡用户 3流失用户 4意向用户 5恶意用户 6高价值用户
         String customerValue = getCustomerValue(vip);
@@ -619,7 +606,7 @@ public class CustomerRecordService {
             LocalTime nowTime = LocalTime.now();
             LocalDateTime dateTime;
             // 没有超过 00 点，结束时间 + 1 天，超过了，开始时间 -1 天
-            if (nowTime.isAfter(CustomerValueConstants.TASK_START_TIME) && nowTime.isBefore(LocalTime.MAX)) {
+            if (nowTime.isAfter(taskStartTime) && nowTime.isBefore(LocalTime.MAX)) {
                 dateTime = LocalDateTime.of(nowDate, nowTime);
             } else {
                 dateTime = LocalDateTime.of(nowDate.minusDays(1), nowTime);
@@ -706,20 +693,30 @@ public class CustomerRecordService {
 //        return null;
 //    }
 
-    private CustomerRecord appUserChange2(Vip vip, CustomerValueList customerValueList, List<AppUser> appUserList) {
+    /**
+     * 营销经理变更
+     * @param vip 当前 vip
+     * @param customerValueList 最后一条记录
+     * @param customerRecord 最后一条客户记录，其中记录了最后一次经销经理
+     * @param appUserList 所有的营销经理列表
+     * @return CustomerRecord
+     */
+    private CustomerRecord appUserChange2(Vip vip, CustomerValueList customerValueList, CustomerRecord customerRecord, List<AppUser> appUserList) {
+        if (vip == null) {
+            return null;
+        }
+        if (vip.getId() == null) {
+            return null;
+        }
         Integer appUserId = getAppUserId(vip);
         if (appUserId < 1) {
             return null;
         }
-
-        CustomerRecord customerRecord = getCustomerRecord(vip.getId());
+        if (customerRecord == null) {
+            return null;
+        }
         Integer changeAppUserId = customerRecord.getAppUserId();
-
-        List<AppUser> collect = appUserList.stream()
-                .filter(appUser -> appUser.getId().equals(appUserId))
-                .collect(Collectors.toList());
-
-        for (AppUser appUser : collect) {
+        for (AppUser appUser : appUserList) {
             if (!appUserId.equals(changeAppUserId)) {
                 return setAppUserCustomerRecord(vip, customerValueList, appUserId, appUser);
             }
@@ -729,6 +726,14 @@ public class CustomerRecordService {
         return null;
     }
 
+    /**
+     * 设置营销经理变更的对象实体
+     * @param vip
+     * @param customerValueList
+     * @param appUserId
+     * @param appUser
+     * @return CustomerRecord
+     */
     private CustomerRecord setAppUserCustomerRecord(Vip vip, CustomerValueList customerValueList, Integer appUserId, AppUser appUser) {
         CustomerRecord customerRecord = new CustomerRecord();
         customerRecord.setVipId(customerValueList.getVipId());
@@ -824,6 +829,20 @@ public class CustomerRecordService {
         Optional<CustomerRecord> max = customerRecords.stream()
                 .max(Comparator.comparing(CustomerRecord::getUpdateTime));
         return max.orElse(new CustomerRecord());
+    }
+
+    private CustomerRecord getCustomerRecord(Vip vip, List<CustomerRecord> customerRecordList) {
+        if (vip == null) {
+            return null;
+        }
+        if (CollectionUtils.isEmpty(customerRecordList)) {
+            return null;
+        }
+        Integer vipAppuserId = getAppUserId(vip);
+        Optional<CustomerRecord> optionalCustomerRecord = customerRecordList.stream()
+                .filter(appUser -> Objects.nonNull(appUser.getId()))
+                .max(Comparator.comparing(CustomerRecord::getUpdateTime));
+        return optionalCustomerRecord.orElse(new CustomerRecord());
     }
 
     /**
