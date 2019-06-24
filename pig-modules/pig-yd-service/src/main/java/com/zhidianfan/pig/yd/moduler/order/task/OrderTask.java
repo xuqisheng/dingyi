@@ -455,7 +455,10 @@ public class OrderTask {
                             } else {
                                 order.setStatus("2");
                             }
-                            resvMeetingOrderService.updateById(order);
+                            ResvMeetingOrder meetingOrder = resvMeetingOrderService.selectById(order.getId());
+                            if(StringUtils.equalsAny(meetingOrder.getStatus(),"1","2")){
+                                resvMeetingOrderService.updateById(order);
+                            }
                         }
                     });
                 }
