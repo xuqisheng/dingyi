@@ -14,15 +14,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 /**
@@ -57,6 +56,9 @@ public class BusinessCustomerAnalysisInfoService {
     @Autowired
     private IBusinessCustomerAnalysisService iBusinessCustomerAnalysisService;
 
+    @Autowired
+    private BusinessCustomerAnalysisInfoTaskService infoTaskService;
+
     /**
      * 执行入口
      */
@@ -69,60 +71,216 @@ public class BusinessCustomerAnalysisInfoService {
         List<Business> businessList = iBusinessService.selectList(wrapper);
         List<Integer> businessIdList = getBusinessIdList(businessList);
 
-        // 1. 批量查询 info 表中的最后一个月的记录
-        Map<Integer, BusinessCustomerAnalysisInfo> businessCustomerAnalysisInfoMap = getBusinessCustomerAnalysisInfo(businessIdList);
+        List<List<Integer>> batchBusinessIdList = batchBusinessList(businessIdList, 10);
 
-        // 2. info 表为空，则取全部数据
-        List<CompletableFuture> completableFutureList = new ArrayList<>();
-        for (Map.Entry<Integer, BusinessCustomerAnalysisInfo> entry: businessCustomerAnalysisInfoMap.entrySet()) {
-            Integer businessId = entry.getKey();
-            log.info("----------------------客户分析任务开始 businessId:[{}], 开始时间:[{}]----------------------", businessId, DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(LocalDateTime.now()));
-            BusinessCustomerAnalysisInfo businessCustomerAnalysisInfo = entry.getValue();
-            String date = businessCustomerAnalysisInfo.getDate();
-            LocalDate nowDate = LocalDate.now();
-            if (StringUtils.isBlank(date)) {
-                cleanData(businessId);
-                LocalDate oldDate = LocalDate.of(2018, 10, 1);
-                int month = (int) oldDate.until(nowDate, ChronoUnit.MONTHS);
-                for (int i = 0; i < month; i++) {
-                    int finalI = i;
-                    CompletableFuture<Integer> completableFuture = CompletableFuture.supplyAsync(() -> {
-                        LocalDate newDate = oldDate.plusMonths(finalI);
-                        String resvDate = newDate.format(formatterShort);
-                        saveAnalysisDetail(businessId, resvDate);
-                        return finalI;
-                    });
-                    // completableFuture.join(); // 不需要获取执行结果，只需要线程在后台插入数据即可
-                }
-            } else {
-                //2.1 info 表不空，则取最后的日期 + 1 个月
-                LocalDate localDate = getLocalDate(date);
-                Optional<LocalDate> optionalLocalDate = Optional.ofNullable(localDate);
-                optionalLocalDate.ifPresent((date1) -> {
-                    int year = date1.getYear();
-                    int dayOfMonth = date1.getDayOfMonth();
-                    int year1 = nowDate.getYear();
-                    int dayOfMonth1 = nowDate.getDayOfMonth();
-                    if (year == year1 && dayOfMonth == dayOfMonth1) {
-                        return;
+        int nThreads = 8;
+        ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(nThreads, nThreads,
+                0L, TimeUnit.MILLISECONDS,
+                new LinkedBlockingQueue<Runnable>());
+
+        Lock lock = new ReentrantLock();
+        List<CompletableFuture<List<Integer>>> completableFutureList = new ArrayList<>();
+
+        List<List<Integer>> collect = batchBusinessIdList.stream()
+                .map(businessIds -> {
+//                    return CompletableFuture.supplyAsync(() -> {
+                    LocalDateTime startTime = LocalDateTime.now();
+                    log.info("-------开始计算本批酒店的数据:[{}],开始时间：[{}]-------", businessIds, DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(startTime));
+                    // getBusinessCustomerAnalysisDetails(businessIdList)
+                    List<BusinessCustomerAnalysisInfoTask> taskList = infoTaskService.getTaskList(businessIds);
+                    //                if (CollectionUtils.isEmpty(taskList)) {
+                    //                    return;
+                    //                }
+
+                    for (BusinessCustomerAnalysisInfoTask task : taskList) {
+                        String date = task.getDate();
+                        saveAnalysisDetail(businessIds, date);
+                        infoTaskService.updateUseTag(taskList);
                     }
-                    long until = date1.until(nowDate, ChronoUnit.MONTHS);
-                    for (int i = 0; i < until; i++) {
-                        CompletableFuture<Integer> completableFuture = CompletableFuture.supplyAsync(() -> {
-                            LocalDate plusDate = localDate.plusMonths(1);
-                            String resvDate = plusDate.format(formatterShort);
-                            cleanData(businessId, resvDate);
-                            saveAnalysisDetail(businessId, resvDate);
-                            return 1;
-                        });
-                        // completableFuture.join();
-                    }
+                    LocalDateTime endTime = LocalDateTime.now();
+                    Duration duration = Duration.between(startTime, endTime);
+                    log.info("-------结束计算本批酒店的数据:[{}], 结束时间：[{}], 耗时：{} 秒--------------",
+                            businessIds,
+                            DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(endTime),
+                            duration.getSeconds());
+                    return businessIds;
+//                    }, threadPoolExecutor);
+
+                })
+                .collect(Collectors.toList());
+        collect.stream()
+//                .map(CompletableFuture::join)
+//                .collect(Collectors.toList())
+                .forEach(list -> {
+                    log.info("运行完成:{}", list);
                 });
 
-            }
-            log.info("----------------------客户分析任务完成 businessId:[{}], 结束时间:[{}]----------------------", businessId, DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(LocalDateTime.now()));
-        }
+//        for (List<Integer> businessIds : batchBusinessIdList) {
+//            lock.lock();
+//            try {
+//                CompletableFuture<List<Integer>> completableFuture = CompletableFuture.supplyAsync(() -> {
+//                    LocalDateTime startTime = LocalDateTime.now();
+//                    log.info("-------开始计算本批酒店的数据:[{}],开始时间：[{}]-------", businessIds, DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(startTime));
+//                    // getBusinessCustomerAnalysisDetails(businessIdList)
+//                    List<BusinessCustomerAnalysisInfoTask> taskList = infoTaskService.getTaskList(businessIds);
+//    //                if (CollectionUtils.isEmpty(taskList)) {
+//    //                    return;
+//    //                }
+//
+//                    for (BusinessCustomerAnalysisInfoTask task : taskList) {
+//                        String date = task.getDate();
+//                        saveAnalysisDetail(businessIds, date);
+//                        infoTaskService.updateUseTag(taskList);
+//                    }
+//                    LocalDateTime endTime = LocalDateTime.now();
+//                    Duration duration = Duration.between(startTime, endTime);
+//                    log.info("-------结束计算本批酒店的数据:[{}], 结束时间：[{}], 耗时：{} 秒--------------",
+//                            businessIds,
+//                            DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(endTime),
+//                            duration.getSeconds());
+//                    return businessIds;
+//                }, threadPoolExecutor);
+//                completableFutureList.add(completableFuture);
+//            } finally {
+//                lock.unlock();
+//            }
+//        }
+//        CompletableFuture[] completableFutures = new CompletableFuture[completableFutureList.size()];
+//        CompletableFuture<Void> voidCompletableFuture = CompletableFuture.allOf(completableFutureList.toArray(completableFutures));
+//        try {
+//            voidCompletableFuture.get();
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        } catch (ExecutionException e) {
+//            e.printStackTrace();
+//        }
+//        completableFutureList.forEach( k -> {
+//            log.info("完成:{}", k);
+//            }
+//        );
+        threadPoolExecutor.shutdown();
+//        // Map<Integer, BusinessCustomerAnalysisInfo> businessCustomerAnalysisInfoMap = getBusinessCustomerAnalysisInfo(businessIdList);
+
+//
+//        // k -> 日期， v -> task 列表
+//        Map<String, List<BusinessCustomerAnalysisInfoTask>> monthTaskMap = taskList.stream()
+//                .parallel()
+//                .collect(Collectors.groupingBy(BusinessCustomerAnalysisInfoTask::getDate));
+//
+//        batchTask(monthTaskMap);
+//        monthTaskMap.forEach((k, monthListTask) -> {
+//            batchTask()
+//        });
+//
+//        LocalDate nowDate = LocalDate.now();
+//        for (BusinessCustomerAnalysisInfoTask task : taskList) {
+//            Integer businessId = task.getId();
+//            // List<BusinessCustomerAnalysisInfoTask> businessCustomerAnalysisInfoTasks = entry.getValue();
+//            // cleanData(businessId);
+//            List<CompletableFuture> list = new ArrayList<>();
+//            log.info("----------------------客户分析任务开始 businessId:[{}], 开始时间:[{}]----------------------", businessId, DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(LocalDateTime.now()));
+//            for (int i = 0; i < month; i++) {
+//                int finalI = i;
+//                CompletableFuture<Integer> completableFuture = CompletableFuture.supplyAsync(() -> {
+//                    LocalDate newDate = oldDate.plusMonths(finalI);
+//                    String resvDate = newDate.format(formatterShort);
+//                    saveAnalysisDetail(businessIdList, resvDate);
+//                    log.info("酒店：[{}]， [{}] 月份数据完成", businessId, finalI);
+//                    return finalI;
+//                });
+//                list.add(completableFuture);
+//            }
+//            CompletableFuture[] completableFutures = new CompletableFuture[list.size()];
+//            CompletableFuture<Void> voidCompletableFuture = CompletableFuture.allOf(list.toArray(completableFutures));
+////                try {
+////                    voidCompletableFuture.get();
+////                } catch (InterruptedException e) {
+////                    e.printStackTrace();
+////                } catch (ExecutionException e) {
+////                    e.printStackTrace();
+////                }
+//            // } else {
+//            //2.1 info 表不空，则取最后的日期 + 1 个月
+//            LocalDate localDate = getLocalDate(date);
+//            Optional<LocalDate> optionalLocalDate = Optional.ofNullable(localDate);
+//            optionalLocalDate.ifPresent((date1) -> {
+//                int year = date1.getYear();
+//                int dayOfMonth = date1.getDayOfMonth();
+//                int year1 = nowDate.getYear();
+//                int dayOfMonth1 = nowDate.getDayOfMonth();
+//                if (year == year1 && dayOfMonth == dayOfMonth1) {
+//                    return;
+//                }
+//                long until = date1.until(nowDate, ChronoUnit.MONTHS);
+//                for (int i = 0; i < until; i++) {
+//                    CompletableFuture<Integer> completableFuture = CompletableFuture.supplyAsync(() -> {
+//                        LocalDate plusDate = localDate.plusMonths(1);
+//                        String resvDate = plusDate.format(formatterShort);
+//                        // cleanData(businessId, resvDate);
+//                        // todo 此处要注意
+//                        saveAnalysisDetail(businessIdList, resvDate);
+//                        return 1;
+//                    });
+//                    // completableFuture.join();
+//                }
+//            });
+//
+//        }
+//        log.info("----------------------客户分析任务完成 businessId:[{}], 结束时间:[{}]----------------------", businessId, DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(LocalDateTime.now()));
     }
+
+
+    private List<List<Integer>> batchBusinessList(List<Integer> businessIdList, int batchNo) {
+        int size = businessIdList.size();
+        int batchCount = size % batchNo == 0 ? size / batchNo : size / batchNo + 1;
+        List<List<Integer>> resultList = new ArrayList<>(batchCount);
+        for (int i = 0; i < batchCount; i++) {
+            int startIndex = i * batchNo;
+            int endIndex = (i + 1) * batchNo;
+
+            if (startIndex >= size) {
+                continue;
+            }
+
+            if (endIndex > size) {
+                endIndex = size;
+            }
+
+            List<Integer> subList = businessIdList.subList(startIndex, endIndex);
+            resultList.add(subList);
+        }
+        return resultList;
+    }
+
+
+
+
+
+    private void oneBusiness(Integer businessId, List<BusinessCustomerAnalysisInfoTask> taskList) {
+        Optional<BusinessCustomerAnalysisInfoTask> min = taskList.stream()
+                .min(Comparator.comparing(BusinessCustomerAnalysisInfoTask::getDate));
+        BusinessCustomerAnalysisInfoTask minTask = min.orElse(new BusinessCustomerAnalysisInfoTask());
+        String startDate = minTask.getDate();
+
+        Optional<BusinessCustomerAnalysisInfoTask> max = taskList.stream()
+                .min(Comparator.comparing(BusinessCustomerAnalysisInfoTask::getDate));
+        BusinessCustomerAnalysisInfoTask maxTask = max.orElse(new BusinessCustomerAnalysisInfoTask());
+        String endDate = maxTask.getDate();
+
+        List<BusinessCustomerAnalysisDetail> businessCustomerAnalysisDetails = getBusinessCustomerAnalysisDetails(businessId, startDate, endDate);
+        saveAnalysisDetail2(businessCustomerAnalysisDetails);
+
+    }
+
+    private List<BusinessCustomerAnalysisDetail> getBusinessCustomerAnalysisDetails(Integer businessId, String startDate, String endDate) {
+        Wrapper<BusinessCustomerAnalysisDetail> wrapper = new EntityWrapper<>();
+        wrapper.eq("business_id", businessId);
+        wrapper.ge("date", startDate);
+        wrapper.le("date", endDate);
+        return businessCustomerAnalysisDetailMapper.selectList(wrapper);
+    }
+
+
 
     private void cleanData(Integer businessId) {
         cleanData(businessId, null);
@@ -191,7 +349,7 @@ public class BusinessCustomerAnalysisInfoService {
         Wrapper<BusinessCustomerAnalysisInfo> wrapper = new EntityWrapper<>();
         wrapper.in("business_id", businessIdList);
         wrapper.orderBy("date", false);
-        wrapper.last("limit 1");
+        // wrapper.last("limit 1");
         Map<Integer, BusinessCustomerAnalysisInfo> resultMap = new HashMap<>(businessIdList.size());
         List<BusinessCustomerAnalysisInfo> businessCustomerAnalysisInfos = businessCustomerAnalysisInfoMapper.selectList(wrapper);
         for (Integer businessId : businessIdList) {
@@ -286,15 +444,11 @@ public class BusinessCustomerAnalysisInfoService {
      * 保存具体的名单数据
      * @param resvDate 执行任务跑的数据，yyyy-MM
      */
-    public void saveAnalysisDetail(Integer businessId, String resvDate) {
+    public void saveAnalysisDetail(List<Integer> businessIdList, String resvDate) {
         if (!checkParam(resvDate)) {
             return;
         }
-        Wrapper<BusinessCustomerAnalysisDetail> wrapper = new EntityWrapper<>();
-        wrapper.eq("date", resvDate);
-        wrapper.eq("business_id", businessId);
-
-        List<BusinessCustomerAnalysisDetail> detailList = businessCustomerAnalysisDetailMapper.selectList(wrapper);
+        List<BusinessCustomerAnalysisDetail> detailList = getBusinessCustomerAnalysisDetails(businessIdList, resvDate);
 
         List<Integer> vipIdList = detailList.stream()
                 .map(BusinessCustomerAnalysisDetail::getVipId)
@@ -303,8 +457,7 @@ public class BusinessCustomerAnalysisInfoService {
         Map<Integer, Vip> vipMap = vipList.stream()
                 .collect(Collectors.toMap(Vip::getId, vip -> vip));
 
-        List<BusinessCustomerAnalysisInfo> customerAnalysisInfoList = detailList.stream()
-                .parallel()
+        List<BusinessCustomerAnalysisInfo> customerAnalysisInfoList = detailList.parallelStream()
                 .map(detail -> {
                     String date = detail.getDate();
                     Integer vipId = detail.getVipId();
@@ -325,7 +478,7 @@ public class BusinessCustomerAnalysisInfoService {
                     String currentAppUserPhone = getCurrentAppUserPhone(vipId, resvOrders);
 
                     BusinessCustomerAnalysisInfo info = new BusinessCustomerAnalysisInfo();
-                    info.setBusinessId(businessId);
+                    info.setBusinessId(detail.getBusinessId());
                     info.setVipId(vipId);
                     info.setVipName(vipName);
                     info.setVipSex(vipSex);
@@ -346,8 +499,71 @@ public class BusinessCustomerAnalysisInfoService {
                 })
                 .collect(Collectors.toList());
         if (CollectionUtils.isNotEmpty(customerAnalysisInfoList)) {
-            businessCustomerAnalysisInfoMapper.insertBatch(customerAnalysisInfoList);
+            businessCustomerAnalysisInfoMapper.insertBatch(customerAnalysisInfoList, 500);
         }
+    }
+
+    public void saveAnalysisDetail2(List<BusinessCustomerAnalysisDetail> detailList) {
+
+        List<Integer> vipIdList = detailList.stream()
+                .map(BusinessCustomerAnalysisDetail::getVipId)
+                .collect(Collectors.toList());
+        List<Vip> vipList = vipService.getVipList(vipIdList);
+        Map<Integer, Vip> vipMap = vipList.stream()
+                .collect(Collectors.toMap(Vip::getId, vip -> vip));
+
+        List<BusinessCustomerAnalysisInfo> customerAnalysisInfoList = detailList.stream()
+                .map(detail -> {
+                    String date = detail.getDate();
+                    Integer vipId = detail.getVipId();
+                    String vipName = detail.getVipName();
+                    String vipPhone = detail.getVipPhone();
+                    Integer vipValueType = detail.getVipValueType();
+                    Vip vip = vipMap.get(vipId);
+                    String vipSex = getVipSex(vip);
+                    List<ResvOrder> resvOrders = getResvOrder(vipId);
+                    Optional<Vip> optionalVip = Optional.ofNullable(vip);
+                    vip = optionalVip.orElse(new Vip());
+                    Integer appUserId = vip.getAppUserId();
+                    AppUser appUser = getAppUser(appUserId);
+                    String appUserName = getAppUserName(appUser);
+                    String appUserPhone = getAppUserPhone(appUser);
+                    Integer currentAppUserId = getCurrentAppUserId(vipId, resvOrders);
+                    String currentAppUserName = getCurrentAppUserName(vipId, resvOrders);
+                    String currentAppUserPhone = getCurrentAppUserPhone(vipId, resvOrders);
+
+                    BusinessCustomerAnalysisInfo info = new BusinessCustomerAnalysisInfo();
+                    info.setBusinessId(detail.getBusinessId());
+                    info.setVipId(vipId);
+                    info.setVipName(vipName);
+                    info.setVipSex(vipSex);
+                    info.setVipPhone(vipPhone);
+                    info.setAppUserId(appUserId);
+                    info.setVipValueType(vipValueType);
+                    info.setType(vipValueType);
+                    info.setAppUserName(appUserName);
+                    info.setAppUserPhone(appUserPhone);
+                    info.setCurrentAppUserId(currentAppUserId);
+                    info.setCurrentAppUser(currentAppUserName);
+                    info.setCurrentAppUserPhone(currentAppUserPhone);
+                    info.setDate(date);
+                    info.setCreateTime(LocalDateTime.now());
+                    info.setUpdateTime(LocalDateTime.now());
+
+                    return info;
+                })
+                .collect(Collectors.toList());
+        if (CollectionUtils.isNotEmpty(customerAnalysisInfoList)) {
+            businessCustomerAnalysisInfoMapper.insertBatch(customerAnalysisInfoList, 500);
+        }
+    }
+
+    private List<BusinessCustomerAnalysisDetail> getBusinessCustomerAnalysisDetails(List<Integer> integerList, String resvDate) {
+        Wrapper<BusinessCustomerAnalysisDetail> wrapper = new EntityWrapper<>();
+        wrapper.eq("date", resvDate);
+        wrapper.in("business_id", integerList);
+
+        return businessCustomerAnalysisDetailMapper.selectList(wrapper);
     }
 
 

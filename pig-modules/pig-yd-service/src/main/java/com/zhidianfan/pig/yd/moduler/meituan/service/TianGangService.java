@@ -511,7 +511,7 @@ public class TianGangService {
     /**
      * 遍历天港酒店
      */
-    @Scheduled(cron = "0/30 * * * * ?")
+    // @Scheduled(cron = "0/30 * * * * ?")
     public void tianGangTask(){
 
         log.info("开始----------------");
