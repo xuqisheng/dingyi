@@ -446,13 +446,17 @@ public class OrderTask {
                         } catch (ParseException e) {
                             log.error("日期转换失败:{}", e.getMessage());
                         }
-                        boolean checkTable = xopService.checkTable(businessId, tableCode);
-                        if (checkTable) {
-                            order.setStatus("1");
-                        } else {
-                            order.setStatus("2");
+                        String now = DateFormatUtils.format(new Date(), "yyyy-Mm-dd");
+                        String resvDate = DateFormatUtils.format(order.getResvDate(), "yyyy-Mm-dd");
+                        if(now.equals(resvDate)){
+                            boolean checkTable = xopService.checkTable(businessId, tableCode);
+                            if (checkTable) {
+                                order.setStatus("1");
+                            } else {
+                                order.setStatus("2");
+                            }
+                            resvMeetingOrderService.updateById(order);
                         }
-                        resvMeetingOrderService.updateById(order);
                     });
                 }
             }
