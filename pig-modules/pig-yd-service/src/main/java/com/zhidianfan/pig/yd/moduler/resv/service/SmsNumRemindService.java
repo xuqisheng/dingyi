@@ -64,7 +64,7 @@ public class SmsNumRemindService {
             jsonObject.put("remind",false);
             return jsonObject;
         }else if (currentSmsNum >= 20){
-            // 50 到20 第一档提醒
+            // 80 到20 第一档提醒
             remindType  = 1;
         } else {
             //  小于 20 的提醒
