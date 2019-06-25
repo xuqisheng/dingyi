@@ -6,6 +6,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.*;
 import com.zhidianfan.pig.yd.moduler.common.service.*;
+import com.zhidianfan.pig.yd.utils.PhoneUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -347,7 +348,7 @@ public class BusinessCustomerAnalysisInfoService {
                     Integer vipId = detail.getVipId();
                     String vipName = detail.getVipName();
                     String phone = detail.getVipPhone();
-                    String vipPhone = getVipPhone(phone);
+                    String vipPhone = PhoneUtils.getPhone(phone);
                     Integer vipValueType = detail.getVipValueType();
                     Vip vip = vipMap.get(vipId);
                     String vipSex = getVipSex(vip);
@@ -386,20 +387,6 @@ public class BusinessCustomerAnalysisInfoService {
         if (CollectionUtils.isNotEmpty(customerAnalysisInfoList)) {
             businessCustomerAnalysisInfoMapper.insertBatch(customerAnalysisInfoList, 500);
         }
-    }
-
-    private String getVipPhone(String phone) {
-        if (StringUtils.isBlank(phone)) {
-            return StringUtils.EMPTY;
-        }
-        String vipPhoneTrim = phone.trim();
-        if (!NumberUtils.isCreatable(vipPhoneTrim)) {
-            return StringUtils.EMPTY;
-        }
-        if (vipPhoneTrim.length() > 11) {
-            return StringUtils.EMPTY;
-        }
-        return vipPhoneTrim;
     }
 
     public void saveAnalysisDetail2(List<BusinessCustomerAnalysisDetail> detailList) {
@@ -568,7 +555,7 @@ public class BusinessCustomerAnalysisInfoService {
             return StringUtils.EMPTY;
         }
         String appUserPhone = appUser.getAppUserPhone();
-        appUserPhone = getVipPhone(appUserPhone);
+        appUserPhone = PhoneUtils.getPhone(appUserPhone);
         return Optional.ofNullable(appUserPhone).orElse(StringUtils.EMPTY);
     }
 

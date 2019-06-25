@@ -167,11 +167,15 @@ public class CustomerValueListService {
         if (StringUtils.isBlank(vipPhone)) {
             return StringUtils.EMPTY;
         }
-        if (vipPhone.length() > 11) {
+        String trimPhone = vipPhone.trim();
+        if (trimPhone.startsWith("0")) {
+            trimPhone = trimPhone.substring(1);
+        }
+        if (trimPhone.length() > 11 || NumberUtils.isCreatable(trimPhone)) {
             log.error("vipId: {} 用户手机号数据异常,异常数据为:{}", vip.getId(), vipPhone);
             return StringUtils.EMPTY;
         }
-        return vipPhone;
+        return trimPhone;
     }
 
     /**

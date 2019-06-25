@@ -215,7 +215,9 @@ public class VipConsumeActionTotalService {
 
     private Optional<Date> getFirstCustomerMonth(List<ResvOrder> resvOrders) {
         return resvOrders.stream()
+                .filter(Objects::nonNull)
                 .filter(order -> "3".equals(order.getStatus()))
+                .filter(order -> Objects.nonNull(order.getUpdatedAt()))
                 .min(Comparator.comparing(ResvOrder::getUpdatedAt))
                 .map(ResvOrder::getUpdatedAt);
     }
