@@ -1,8 +1,12 @@
 package com.zhidianfan.pig.yd.moduler.resv.service;
 
+import com.baomidou.mybatisplus.mapper.EntityWrapper;
+import com.baomidou.mybatisplus.mapper.Wrapper;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.*;
 import com.zhidianfan.pig.yd.moduler.common.service.IAppUserService;
+import com.zhidianfan.pig.yd.moduler.common.service.ICustomerValueListService;
 import com.zhidianfan.pig.yd.moduler.resv.constants.CustomerValueConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -50,6 +54,9 @@ public class CustomerValueListService {
     @Autowired
     private CustomerRecordService customerRecordService;
 
+    @Autowired
+    private ICustomerValueListService iCustomerValueListService;
+
     /**
      * 获取客户价值列表实体对象
      *
@@ -89,6 +96,32 @@ public class CustomerValueListService {
         }
 
         return map;
+    }
+
+    /**
+     * 查询旧的客户价值
+     * @param vipList
+     * @return
+     */
+    public Map<Integer, CustomerValueList> getOldCustomerValueList(List<Vip> vipList) {
+        if (CollectionUtils.isEmpty(vipList)) {
+            return Maps.newHashMap();
+        }
+
+        Object[] vipIds = vipList.stream()
+                .filter(Objects::nonNull)
+                .map(Vip::getId)
+                .toArray();
+
+        Wrapper<CustomerValueList> wrapper = new EntityWrapper<>();
+        wrapper.in("vip_id", vipIds);
+        List<CustomerValueList> customerValueLists = iCustomerValueListService.selectList(wrapper);
+        if (CollectionUtils.isEmpty(customerValueLists)) {
+            return Maps.newHashMap();
+        }
+        Map<Integer, CustomerValueList> valueListMap = customerValueLists.stream()
+                .collect(Collectors.toMap(CustomerValueList::getVipId, customerValueList -> customerValueList));
+        return valueListMap;
     }
 
     /**
@@ -171,7 +204,7 @@ public class CustomerValueListService {
         if (trimPhone.startsWith("0")) {
             trimPhone = trimPhone.substring(1);
         }
-        if (trimPhone.length() > 11 || NumberUtils.isCreatable(trimPhone)) {
+        if (trimPhone.length() > 11 || !NumberUtils.isCreatable(trimPhone)) {
             log.error("vipId: {} 用户手机号数据异常,异常数据为:{}", vip.getId(), vipPhone);
             return StringUtils.EMPTY;
         }

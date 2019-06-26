@@ -111,6 +111,16 @@ public class CustomerRecord extends Model<CustomerRecord> {
     @TableField("app_user_phone")
     private String appUserPhone;
     /**
+     * 旧的一级价值
+     */
+    @TableField("old_first_value")
+    private Integer oldFirstValue;
+    /**
+     * 新的一级价值
+     */
+    @TableField("new_first_value")
+    private Integer newFirstValue;
+    /**
      * 操作记录
      */
     @TableField("operation_log")
@@ -281,6 +291,22 @@ public class CustomerRecord extends Model<CustomerRecord> {
         this.operationLog = operationLog;
     }
 
+    public Integer getOldFirstValue() {
+        return oldFirstValue;
+    }
+
+    public void setOldFirstValue(Integer oldFirstValue) {
+        this.oldFirstValue = oldFirstValue;
+    }
+
+    public Integer getNewFirstValue() {
+        return newFirstValue;
+    }
+
+    public void setNewFirstValue(Integer newFirstValue) {
+        this.newFirstValue = newFirstValue;
+    }
+
     public Long getCreateUserId() {
         return createUserId;
     }
@@ -339,7 +365,9 @@ public class CustomerRecord extends Model<CustomerRecord> {
         ", appUserId=" + appUserId +
         ", appUserPhone=" + appUserPhone +
         ", operationLog=" + operationLog +
-        ", createUserId=" + createUserId +
+        ", oldFirstValue=" + oldFirstValue +
+        ", operationLog=" + newFirstValue +
+        ", newFirstValue=" + createUserId +
         ", createTime=" + createTime +
         ", updateUserId=" + updateUserId +
         ", updateTime=" + updateTime +

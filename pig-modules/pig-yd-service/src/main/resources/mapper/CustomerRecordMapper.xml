@@ -19,6 +19,8 @@
         <result column="vip_phone" property="vipPhone" />
         <result column="app_user_name" property="appUserName" />
         <result column="operation_log" property="operationLog" />
+        <result column="old_first_value" property="oldFirstValue" />
+        <result column="new_first_value" property="newFirstValue" />
         <result column="create_user_id" property="createUserId" />
         <result column="create_time" property="createTime" />
         <result column="update_user_id" property="updateUserId" />
