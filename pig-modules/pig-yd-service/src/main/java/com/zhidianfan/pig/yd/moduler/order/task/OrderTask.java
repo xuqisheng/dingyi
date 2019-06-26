@@ -164,6 +164,11 @@ public class OrderTask {
         log.info("======updateOrderTem start========");
         int currentPage = 1;
         int pageSize = 1000;
+
+        List<String> strings = Arrays.asList("1", "2", "4", "6");
+        List<OrderTem> rms = new ArrayList<>();
+
+
         while (true) {
             Page<XmsBusiness> page = new Page<>(currentPage, pageSize);
             Page<XmsBusiness> xmsBusinessPage = xmsBusinessService.selectPage(page);
@@ -174,7 +179,18 @@ public class OrderTask {
                 }
                 //Step 1 查询订单
                 List<OrderTem> orderTems = resvOrderTemService.selectOrderTemInsertData(xmsBusiness.getBusinessId());
-                boolean change = false;
+
+                //优化sql 去除sql 中IsTirdparty不为null status 不在1,2,4,6 中的数据
+                for (OrderTem orderTem : orderTems) {
+                    String status = orderTem.getStatus();
+                    if (!strings.contains(status) || orderTem.getIsTirdparty() != null){
+                        rms.add(orderTem);
+                    }
+                }
+                orderTems.removeAll(rms);
+                rms.clear();
+
+                boolean change ;
                 for (OrderTem orderTem : orderTems) {
                     //Step 2 检查是否需要更新
                     ResvOrderTem resvOrderTem = resvOrderTemService.selectOne(new EntityWrapper<ResvOrderTem>().eq("resv_order", orderTem.getResvOrder()));
