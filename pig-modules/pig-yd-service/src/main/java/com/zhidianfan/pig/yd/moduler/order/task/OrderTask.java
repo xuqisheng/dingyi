@@ -184,7 +184,6 @@ public class OrderTask {
                 for (OrderTem orderTem : orderTems) {
                     String status = orderTem.getStatus();
                     if (!strings.contains(status) || orderTem.getIsTirdparty() != null){
-                        System.out.println(status);
                         rms.add(orderTem);
                     }
                 }
