@@ -39,7 +39,6 @@
         <result column="hide_birthday_year" property="hideBirthdayYear"/>
         <result column="next_vip_birthday" property="nextVipBirthday"/>
         <result column="is_leap" property="isLeap"/>
-        <result column="allergen" property="allergen"/>
     </resultMap>
 
 

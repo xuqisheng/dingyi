@@ -77,6 +77,9 @@ public class VipService {
     @Autowired
     private IAnniversaryService anniversaryMapper;
 
+    @Autowired
+    private VipAllergenService vipAllergenService;
+
     /**
      * 根据酒店id与手机号更新或者新增Vip
      *
@@ -113,6 +116,8 @@ public class VipService {
                 sendMq(vip);
             }
         }
+
+        //todo 如果有该过敏源信息则插入,无则更新
 
 
         return b;
@@ -395,7 +400,7 @@ public class VipService {
      * @param phone      号码
      * @return 模糊查询
      */
-    public Page<Vip> fuzzyQueryVipList(Integer businessId, String phone) {
+    public Page<VipAllergenDTO> fuzzyQueryVipList(Integer businessId, String phone) {
 
         Page<Vip> page = new PageFactory().defaultPage();
 
@@ -406,8 +411,24 @@ public class VipService {
                 .orderBy("updated_at", false)
                 .orderBy("id", false));
 
-        return vipPage;
+        Page<VipAllergenDTO> page1 = new Page<>();
+        BeanUtils.copyProperties(page, page1);
+
+        List<Vip> records = vipPage.getRecords();
+        List<VipAllergenDTO> allergenDTOS = new ArrayList<>();
+
+        for (Vip v : records) {
+
+            VipAllergenDTO vipAllergenDTO = new VipAllergenDTO();
+            BeanUtils.copyProperties(v, vipAllergenDTO);
+            vipAllergenDTO.setAllergen(vipAllergenService.selectvipAllergen(v.getId()));
+            allergenDTOS.add(vipAllergenDTO);
+
+        }
+        page1.setRecords(allergenDTOS);
+        return page1;
     }
+
 
     public Page<StatisticsVipDTO> statisticsViplist(Integer businessId, String queryVal) {
         Page<StatisticsVipDTO> page = new PageFactory().defaultPage();
@@ -683,6 +704,7 @@ public class VipService {
 
     /**
      * 根据酒店 id 查询 vip 表的用户信息
+     *
      * @param hotelId 酒店 id
      * @return 酒店所有 vip 列表
      */
@@ -726,6 +748,7 @@ public class VipService {
 
     /**
      * 根据主键 id 列表，查询 vip 的信息
+     *
      * @param idList 主键集合
      * @return Vip 信息列表
      */
@@ -738,6 +761,7 @@ public class VipService {
 
     /**
      * 计算客户资料完整度
+     *
      * @param vip vip 信息
      * @return 完整度，15% 的字样
      */
@@ -771,6 +795,7 @@ public class VipService {
 
     /**
      * 计算客户资料完整度
+     *
      * @param vips vip 信息
      * @return 完整度，15 的字样
      */
@@ -815,7 +840,8 @@ public class VipService {
 
     /**
      * 资料完整度
-     * @param vip vip 信息
+     *
+     * @param vip          vip 信息
      * @param profileCount 纪念日
      * @return 85% 字样
      */

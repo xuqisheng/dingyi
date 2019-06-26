@@ -231,8 +231,6 @@
         select o.*,
         v.vip_value_name as vipValueName,
         v.vip_class_name as vipClassName,
-        v.allergen as allergen,
-
         ror.id as orderRatingId
         from resv_order_android o
         left join vip v on v.id=o.vip_id

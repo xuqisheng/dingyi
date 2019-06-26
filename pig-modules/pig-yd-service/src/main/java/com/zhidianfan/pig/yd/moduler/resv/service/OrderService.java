@@ -89,6 +89,8 @@ public class OrderService {
     @Autowired
     private ISmallAppUserService iSmallAppUserService;
 
+    @Autowired
+    private VipAllergenService vipAllergenService;
 
     /**
      * 删除普通预订订单
@@ -130,6 +132,8 @@ public class OrderService {
         //循环遍历设置为订单来源
         for (DeskOrderBo deskOrderBo : resvOrders) {
             deskOrderBo.setNewResvSource(getNewResvSource(deskOrderBo));
+            //设置 过敏源
+            deskOrderBo.setAllergen(vipAllergenService.selectvipAllergen(deskOrderBo.getVipId()));
         }
 
         return resvOrders;
@@ -172,9 +176,10 @@ public class OrderService {
                                         () -> new TreeSet<>(
                                                 Comparator.comparing(DeskOrderBo::getBatchNo))), ArrayList::new));
 
-        //循环遍历存储新订单来源
+        //循环遍历存储新订单来源 设置订单过敏源
         for (DeskOrderBo deskOrderBo : resvOrders) {
             deskOrderBo.setNewResvSource(getNewResvSource(deskOrderBo));
+            deskOrderBo.setAllergen(vipAllergenService.selectvipAllergen(deskOrderBo.getVipId()));
         }
 
         page.setRecords(resvOrders);
@@ -221,7 +226,7 @@ public class OrderService {
                 Vip vip = iVipService.selectById(resvOrder.getVipId());
                 if (vip != null) {
                     deskOrderBo.setVipValueName(vip.getVipValueName());
-                    deskOrderBo.setAllergen(vip.getAllergen());
+                    deskOrderBo.setAllergen(vipAllergenService.selectvipAllergen(vip.getId()));
                 }
 
                 //严重超时固定为30分钟

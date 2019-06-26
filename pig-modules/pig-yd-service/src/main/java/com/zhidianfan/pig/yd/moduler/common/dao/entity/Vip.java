@@ -113,8 +113,7 @@ public class Vip extends Model<Vip> {
     @TableField("is_leap")
     private Integer isLeap;
 
-    @TableField("allergen")
-    private String allergen;
+
 
 
     public Integer getId() {
@@ -398,13 +397,7 @@ public class Vip extends Model<Vip> {
         this.isLeap = isLeap;
     }
 
-    public String getAllergen() {
-        return allergen;
-    }
 
-    public void setAllergen(String allergen) {
-        this.allergen = allergen;
-    }
 
     @Override
     protected Serializable pkVal() {
@@ -449,7 +442,6 @@ public class Vip extends Model<Vip> {
                 ", hideBirthdayYear=" + hideBirthdayYear +
                 ", nextVipBirthday=" + nextVipBirthday +
                 ", isLeap=" + isLeap +
-                ", allergen=" + allergen +
                 '}';
     }
 }
