@@ -3,10 +3,7 @@ package com.zhidianfan.pig.yd.moduler.wechat.controller;
 import com.zhidianfan.pig.yd.moduler.common.dto.SuccessTip;
 import com.zhidianfan.pig.yd.moduler.common.dto.Tip;
 import com.zhidianfan.pig.yd.moduler.common.service.IResvOrderAndroidService;
-import com.zhidianfan.pig.yd.moduler.wechat.util.AccessToken;
-import com.zhidianfan.pig.yd.moduler.wechat.util.HessianRedisSerializer;
-import com.zhidianfan.pig.yd.moduler.wechat.util.OrderTemplate;
-import com.zhidianfan.pig.yd.moduler.wechat.util.WeChatUtils;
+import com.zhidianfan.pig.yd.moduler.wechat.util.*;
 import com.zhidianfan.pig.yd.moduler.wechat.vo.PushMessageVO;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -124,6 +121,22 @@ public class WeChatController {
         template.setKeySerializer(new StringRedisSerializer());
         template.afterPropertiesSet();
         return template;
+    }
+
+    /**
+     * 获取微信配置信息
+     * @param url
+     * @return
+     */
+    @GetMapping("/config")
+    public ResponseEntity getWxConfig(String url){
+
+        WxConfig wxConfig = new WxConfig();
+
+        wxConfig = WeChatUtils.getConfigSignature(url);
+
+        return ResponseEntity.ok(wxConfig);
+
     }
 
 }
