@@ -117,7 +117,10 @@
         END  order_result,
         status
         FROM resv_order_third
-        WHERE  business_id = #{businessId}
+        WHERE  1=1
+        <if test="null!=businessId and ''!=businessId">
+            AND  business_id = #{businessId}
+        </if>
         <if test="null!=orderResult and ''!=orderResult">
             AND  `status` = #{orderResult}
         </if>
