@@ -264,7 +264,7 @@ public class WeChatUtils {
      */
     public static String getSignature(String timestamp, String nonceStr, String url, String jsapiTicket) {
         String string1 = "jsapi_ticket=" + jsapiTicket
-                + "&noncestr=" + nonceStr + "×tamp=" + timestamp + "&url="
+                + "&noncestr=" + nonceStr + "&timestamp=" + timestamp + "&url="
                 + url;
 
         String signature = sha1(string1);
