@@ -3,6 +3,7 @@ package com.zhidianfan.pig.yd.moduler.resv.service;
 
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.zhidianfan.pig.common.constant.SuccessTip;
+import com.zhidianfan.pig.yd.moduler.common.dao.entity.Business;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.BusinessSms;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.BusinessSmsRechargeLog;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.SmsInvoiceRecord;
@@ -65,6 +66,9 @@ public class BusinessSmsService {
 
     @Resource
     private AuthFeign authFeign;
+
+    @Resource
+    private IBusinessService ibusinessService;
 
     /**
      * 消耗短信统计
@@ -206,6 +210,12 @@ public class BusinessSmsService {
             if(200==tip.getCode()){
                 redisTemplate.delete("RESET_PASSWORD_CODE_" + mobile);
                 log.info("验证码已被验证："+code+"-"+mobile);
+
+                Business business = new Business();
+                business.setLoginPassword(password);
+                Business condition = new Business();
+                condition.setLoginUser(mobile);
+                ibusinessService.update(business, new EntityWrapper<>(condition));
                 return true;
             }
         }
