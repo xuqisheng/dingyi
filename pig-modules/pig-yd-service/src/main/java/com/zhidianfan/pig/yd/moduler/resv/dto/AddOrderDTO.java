@@ -251,5 +251,8 @@ public class AddOrderDTO {
      * 2 为小程序
      */
     private String deviceType;
-    private String founderId;
+    /**
+     * 订单创建者
+     */
+    private Integer founderId;
 }
