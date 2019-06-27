@@ -71,14 +71,13 @@ public class BusinessCustomerAnalysisInfoService {
         List<Business> businessList = iBusinessService.selectList(wrapper);
         List<Integer> businessIdList = getBusinessIdList(businessList);
 
-        List<List<Integer>> batchBusinessIdList = batchBusinessList(businessIdList, 100);
+        List<List<Integer>> batchBusinessIdList = batchBusinessList(businessIdList, 50);
 
         int nThreads = 16;
         ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(nThreads, nThreads,
                 0L, TimeUnit.MILLISECONDS,
                 new LinkedBlockingQueue<Runnable>());
 
-        Lock lock = new ReentrantLock();
         List<CompletableFuture<List<Integer>>> completableFutureList = new ArrayList<>();
 
         List<CompletableFuture<List<Integer>>> collect = batchBusinessIdList.stream()
