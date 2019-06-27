@@ -1,8 +1,12 @@
 package com.zhidianfan.pig.yd.moduler.resv.service;
 
+import com.baomidou.mybatisplus.mapper.EntityWrapper;
+import com.baomidou.mybatisplus.mapper.Wrapper;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.*;
 import com.zhidianfan.pig.yd.moduler.common.service.IAppUserService;
+import com.zhidianfan.pig.yd.moduler.common.service.ICustomerValueListService;
 import com.zhidianfan.pig.yd.moduler.resv.constants.CustomerValueConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -50,6 +54,9 @@ public class CustomerValueListService {
     @Autowired
     private CustomerRecordService customerRecordService;
 
+    @Autowired
+    private ICustomerValueListService iCustomerValueListService;
+
     /**
      * 获取客户价值列表实体对象
      *
@@ -57,7 +64,8 @@ public class CustomerValueListService {
      * @param resvOrdersMap 订单列表
      * @return CustomerValueList
      */
-    public Map<Integer, CustomerValueList> getCustomerValueList(List<Vip> vips, Map<Integer, List<ResvOrder>> resvOrdersMap, List<MasterCustomerVipMapping> masterCustomerVipMappingList) {
+    public Map<Integer, CustomerValueList> getCustomerValueList(List<Vip> vips, Map<Integer, List<ResvOrder>> resvOrdersMap, List<MasterCustomerVipMapping> masterCustomerVipMappingList,
+                                                                List<LossValueConfig> lossValueConfigs) {
         Map<Integer, CustomerValueList> map = new HashMap<>();
         for (Vip vip : vips) {
             try {
@@ -80,7 +88,7 @@ public class CustomerValueListService {
                         resvOrderList.removeAll(manOrderList);
                     }
                 }
-                CustomerValueList customerValueList = getCustomerValueList(vip, resvOrderList);
+                CustomerValueList customerValueList = getCustomerValueList(vip, resvOrderList, lossValueConfigs);
                 map.put(vip.getId(), customerValueList);
             }catch (Exception e){
                 log.error(e.getMessage(),e);
@@ -89,6 +97,32 @@ public class CustomerValueListService {
         }
 
         return map;
+    }
+
+    /**
+     * 查询旧的客户价值
+     * @param vipList
+     * @return
+     */
+    public Map<Integer, CustomerValueList> getOldCustomerValueList(List<Vip> vipList) {
+        if (CollectionUtils.isEmpty(vipList)) {
+            return Maps.newHashMap();
+        }
+
+        Object[] vipIds = vipList.stream()
+                .filter(Objects::nonNull)
+                .map(Vip::getId)
+                .toArray();
+
+        Wrapper<CustomerValueList> wrapper = new EntityWrapper<>();
+        wrapper.in("vip_id", vipIds);
+        List<CustomerValueList> customerValueLists = iCustomerValueListService.selectList(wrapper);
+        if (CollectionUtils.isEmpty(customerValueLists)) {
+            return Maps.newHashMap();
+        }
+        Map<Integer, CustomerValueList> valueListMap = customerValueLists.stream()
+                .collect(Collectors.toMap(CustomerValueList::getVipId, customerValueList -> customerValueList));
+        return valueListMap;
     }
 
     /**
@@ -112,7 +146,7 @@ public class CustomerValueListService {
         return count > 0;
     }
 
-    public CustomerValueList getCustomerValueList(Vip vip, List<ResvOrder> resvOrders) {
+    public CustomerValueList getCustomerValueList(Vip vip, List<ResvOrder> resvOrders, List<LossValueConfig> lossValueConfigs) {
         Integer businessId = vip.getBusinessId();
         // 消费次数
         int customerCount = getCustomerCount(resvOrders, vip);
@@ -125,7 +159,7 @@ public class CustomerValueListService {
         // 一级价值，意向客户、活跃客户、沉睡客户、流失客户
         int firstValue = getFirstValue(resvOrders, businessId);
         // 细分价值
-        Long lossValue = getLossValue(resvOrders, businessId, vip);
+        Long lossValue = getLossValue(resvOrders, vip, lossValueConfigs);
         // 自定义分类
         String customerClass = vip.getVipClassName();
         customerClass = Optional.ofNullable(customerClass).orElse(StringUtils.EMPTY);
@@ -171,7 +205,7 @@ public class CustomerValueListService {
         if (trimPhone.startsWith("0")) {
             trimPhone = trimPhone.substring(1);
         }
-        if (trimPhone.length() > 11 || NumberUtils.isCreatable(trimPhone)) {
+        if (trimPhone.length() > 11 || !NumberUtils.isCreatable(trimPhone)) {
             log.error("vipId: {} 用户手机号数据异常,异常数据为:{}", vip.getId(), vipPhone);
             return StringUtils.EMPTY;
         }
@@ -403,19 +437,21 @@ public class CustomerValueListService {
      * 细分价值
      *
      * @param resvOrders 用户id
-     * @param hotelId    酒店id
      * @return 1-4 的取值
      */
-    private Long getLossValue(List<ResvOrder> resvOrders, Integer hotelId, Vip vip) {
-        List<LossValueConfig> lossValueConfigList = lossValueConfigService.getLossValueConfig(hotelId);
+    private Long getLossValue(List<ResvOrder> resvOrders, Vip vip,  List<LossValueConfig> lossValueConfigs) {
+        // List<LossValueConfig> lossValueConfigList = lossValueConfigService.getLossValueConfig(hotelId);
+        if (resvOrders == null) {
+            return -1L;
+        }
         // 排序小的在前面
-        lossValueConfigList.sort(Comparator.comparing(LossValueConfig::getSort));
+        lossValueConfigs.sort(Comparator.comparing(LossValueConfig::getSort));
 
         // 单位：分
         int personAvg = getPersonAvg(resvOrders, vip);
         double customerAmount = getCustomerAmount(resvOrders);
         int customerCount = getCustomerCount(resvOrders, vip);
-        for (LossValueConfig lossValueConfig : lossValueConfigList) {
+        for (LossValueConfig lossValueConfig : lossValueConfigs) {
             Long id = lossValueConfig.getId();
             // 单位:分
             Integer customerPersonAvgStart = lossValueConfig.getCustomerPersonAvgStart();

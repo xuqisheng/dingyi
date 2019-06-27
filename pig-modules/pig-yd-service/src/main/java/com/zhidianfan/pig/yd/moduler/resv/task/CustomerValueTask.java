@@ -1,15 +1,19 @@
 package com.zhidianfan.pig.yd.moduler.resv.task;
-import java.util.Date;
+import java.util.*;
 
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.baomidou.mybatisplus.mapper.Wrapper;
+import com.google.common.collect.Lists;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.ConfigTaskExec;
+import com.zhidianfan.pig.yd.moduler.common.dao.entity.LossValueConfig;
 import com.zhidianfan.pig.yd.moduler.common.service.IConfigTaskExecService;
 import com.zhidianfan.pig.yd.moduler.resv.constants.CustomerValueConstants;
 import com.zhidianfan.pig.yd.moduler.resv.service.BusinessCustomerAnalysisInfoService;
 import com.zhidianfan.pig.yd.moduler.resv.service.CustomerValueService;
 import com.zhidianfan.pig.yd.moduler.resv.service.CustomerValueTaskService;
+import com.zhidianfan.pig.yd.moduler.resv.service.LossValueConfigService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.MapUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -21,9 +25,6 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -48,6 +49,9 @@ public class CustomerValueTask {
 
     @Autowired
     private IConfigTaskExecService iConfigTaskExecService;
+
+    @Autowired
+    private LossValueConfigService lossValueConfigService;
 
 
     @Scheduled(cron = "0 30 20 * * ?")
@@ -87,7 +91,7 @@ public class CustomerValueTask {
             log.info("准备计算:{} 的客户价值数据", localDate);
             // 指明当前要计算的批次
             List<com.zhidianfan.pig.yd.moduler.common.dao.entity.CustomerValueTask> customerValuesValueTask = customerValueTaskService.getCustomerValuesValueTask(localDate);
-
+            Map<Integer, List<LossValueConfig>> lossValueConfigMap = lossValueConfigService.getLossValueConfigList();
             Optional.ofNullable(customerValuesValueTask)
                     .ifPresent(customerValueTasks -> {
                         int nThreads = 16;
@@ -100,9 +104,19 @@ public class CustomerValueTask {
                         List<CompletableFuture<Long>> completableFutures = new ArrayList<>(customerValuesValueTask.size());
                         for (int i = 0; i < customerValuesValueTask.size(); i++) {
                             com.zhidianfan.pig.yd.moduler.common.dao.entity.CustomerValueTask tmp = customerValuesValueTask.get(i);
+                            Long hotelId = tmp.getHotelId();
+                            final List<LossValueConfig> lossValueConfigList;
+                            int businessId = 0;
+                            if (hotelId != null) {
+                                try {
+                                    businessId = Integer.parseInt(String.valueOf(hotelId));
+                                } catch (NumberFormatException ignored) {
+                                }
+                            }
+                            lossValueConfigList = lossValueConfigMap.get(businessId);
                             CompletableFuture<Long> integerCompletableFuture = CompletableFuture.supplyAsync(() -> {
-                                customerValueService.getCustomerValueBaseInfo2(tmp, 2000, execTime);
-                                return tmp.getHotelId();
+                                customerValueService.getCustomerValueBaseInfo2(tmp, 2000, execTime, lossValueConfigList);
+                                return hotelId;
                             }, executorService);
                             completableFutures.add(integerCompletableFuture);
                         }
