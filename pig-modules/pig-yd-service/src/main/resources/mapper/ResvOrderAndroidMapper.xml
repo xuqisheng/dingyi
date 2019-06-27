@@ -759,9 +759,8 @@
 
     <select id="selectListWithAllergen"  resultType="com.zhidianfan.pig.yd.moduler.resv.bo.DeskOrderBo">
         SELECT
-            r.*,
-            v.allergen
-        FROM
+            r.*
+            FROM
             resv_order_android r
             LEFT JOIN vip v ON r.vip_id = v.id
         WHERE
