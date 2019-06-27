@@ -518,8 +518,8 @@ public class OrderService {
     public JSONObject performanceStatistics(PerformanceDTO performanceDTO) {
 
 
-        // 1. 查询各种第三方订单统计
-        List<PerformanceBO> thirdPerformanceBOs = performanceStatisticsWithThird(performanceDTO);
+        // 1. 查询各种第三方订单统计 (不在需要)
+//        List<PerformanceBO> thirdPerformanceBOs = performanceStatisticsWithThird(performanceDTO);
 
 
         // 2. 查询电话机统计
@@ -533,7 +533,7 @@ public class OrderService {
         JSONObject result = new JSONObject();
 
         try {
-            result.put("third", thirdPerformanceBOs);
+//            result.put("third", thirdPerformanceBOs);
             result.put("android", androidPerformanceBOs);
             result.put("app", listCompletableFuture2.get());
         } catch (InterruptedException | ExecutionException e) {
@@ -747,7 +747,7 @@ public class OrderService {
                 .le("resv_date", performanceDTO.getEndTime())
                 .ge("resv_date", performanceDTO.getStartTime())
                 .in("status", new Integer[]{2, 3})
-                .isNull("third_order_no")
+//                .isNull("third_order_no")
                 .eq("device_type", 1));
 
         PerformanceBO resvBO = new PerformanceBO();
@@ -760,7 +760,7 @@ public class OrderService {
                 .le("resv_date", performanceDTO.getEndTime())
                 .ge("resv_date", performanceDTO.getStartTime())
                 .eq("status", 4)
-                .isNull("third_order_no")
+//                .isNull("third_order_no")
                 .eq("device_type", 1));
 
         PerformanceBO backBO = new PerformanceBO();
