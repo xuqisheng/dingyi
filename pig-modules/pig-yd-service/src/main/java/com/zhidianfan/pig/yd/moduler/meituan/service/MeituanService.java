@@ -375,7 +375,11 @@ public class MeituanService {
                     ResvOrder resvOrder = new ResvOrder();
                     resvOrder.setTableName(tableName);
                     resvOrder.setTableAreaName("");
-                    YdService.wechatXjPushMes(resvOrder, resvOrderThird, OrderTemplate.ORDER_RESV_SUCCESS, business);
+                    try {
+                        YdService.wechatXjPushMes(resvOrder, resvOrderThird, OrderTemplate.ORDER_RESV_SUCCESS, business);
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
                 }
             } else if ("2".equals(String.valueOf(resvType))) {
                 resvOrderThird.setStatus(30);
@@ -399,7 +403,11 @@ public class MeituanService {
                     ResvOrder resvOrder = new ResvOrder();
                     resvOrder.setTableName("");
                     resvOrder.setTableAreaName("");
-                    YdService.wechatXjPushMes(resvOrder, resvOrderThird, OrderTemplate.ORDER_RESV_HOTEL_CANCEL, business);
+                    try {
+                        YdService.wechatXjPushMes(resvOrder, resvOrderThird, OrderTemplate.ORDER_RESV_HOTEL_CANCEL, business);
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
                 }
                 if ("QC".equals(orderSerializedId.substring(0, 2))) {
                     TGOrderCanCelDTO tgOrderCanCelDTO = new TGOrderCanCelDTO();
