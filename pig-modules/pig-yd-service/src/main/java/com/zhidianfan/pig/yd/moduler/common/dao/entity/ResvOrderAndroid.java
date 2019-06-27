@@ -276,6 +276,8 @@ public class ResvOrderAndroid extends Model<ResvOrderAndroid> {
     @TableField("device_type")
     private String deviceType;
 
+    @TableField("founder_id")
+    private Integer founderId;
 
     @Override
     public String toString() {
@@ -353,6 +355,7 @@ public class ResvOrderAndroid extends Model<ResvOrderAndroid> {
                 .append("androidUserId",androidUserId)
                 .append("androidUserName",androidUserName)
                 .append("deviceType",deviceType)
+                .append("founderId",founderId)
                 .toString();
     }
 
@@ -939,6 +942,15 @@ public class ResvOrderAndroid extends Model<ResvOrderAndroid> {
 
     public void setDeviceType(String deviceType) {
         this.deviceType = deviceType;
+    }
+
+
+    public Integer getFounderId() {
+        return founderId;
+    }
+
+    public void setFounderId(Integer founderId) {
+        this.founderId = founderId;
     }
 
     /**

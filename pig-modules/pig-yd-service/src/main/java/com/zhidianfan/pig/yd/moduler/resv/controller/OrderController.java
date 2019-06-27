@@ -110,7 +110,6 @@ public class OrderController {
     public ResponseEntity orderByBatchNo(String batchNo) {
 
 
-        // 增加订单信息携带过敏源
         List<DeskOrderBo> deskOrderBos = iResvOrderService.selectListWithAllergen(batchNo);
 
         for (DeskOrderBo deskOrderBo : deskOrderBos) {

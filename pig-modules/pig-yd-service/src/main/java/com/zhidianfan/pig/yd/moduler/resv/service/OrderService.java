@@ -567,7 +567,11 @@ public class OrderService {
             return "来电";
         } else if (deviceType.equals("2")) {
 
-            Integer androidUserId = resvOrderAndroid.getAndroidUserId();
+            Integer androidUserId = resvOrderAndroid.getFounderId();
+            if(androidUserId == null){
+                return "未知来源";
+            }
+
             SmallAppUser smallAppUser = iSmallAppUserService.selectById(androidUserId);
             return smallAppUser.getName();
         }
@@ -680,7 +684,7 @@ public class OrderService {
                                 .ge("resv_date", performanceDTO.getStartTime())
                                 .in("status", new Integer[]{2, 3})
                                 .eq("device_type", 2)
-                                .eq("android_user_id", user.getId()));
+                                .eq("founder_id", user.getId()));
 
                         PerformanceBO resvSuBO = new PerformanceBO();
                         resvSuBO.setStype("resv");
@@ -698,7 +702,7 @@ public class OrderService {
                                 .ge("resv_date", performanceDTO.getStartTime())
                                 .eq("status", 4)
                                 .eq("device_type", 2)
-                                .eq("android_user_id", user.getId()));
+                                .eq("founder_id", user.getId()));
 
 
                         PerformanceBO backSuBO = new PerformanceBO();
