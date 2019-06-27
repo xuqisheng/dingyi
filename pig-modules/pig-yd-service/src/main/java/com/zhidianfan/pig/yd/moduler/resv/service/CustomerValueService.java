@@ -74,7 +74,7 @@ public class CustomerValueService {
     @Autowired
     private DataSourceTransactionManager transactionManager;
 
-    public void getCustomerValueBaseInfo2(CustomerValueTask customerValueTask, int groupNum, ConfigTaskExec configTaskExec) {
+    public void getCustomerValueBaseInfo2(CustomerValueTask customerValueTask, int groupNum, ConfigTaskExec configTaskExec, List<LossValueConfig> lossValueConfigs) {
         LocalTime startTime1 = configTaskExec.getStartTime();
         LocalTime startTime2 = configTaskExec.getEndTime();
         while (!(LocalTime.now().isAfter(startTime1) || LocalTime.now().isBefore(startTime2))) {
@@ -110,7 +110,7 @@ public class CustomerValueService {
                 .ifPresent(map1 -> {
                     map1.forEach((k, v) -> {
                         try {
-                            execute(v, configTaskExec, customerValueTask);
+                            execute(v, configTaskExec, customerValueTask, lossValueConfigs);
                         } catch (Exception e) {
                             log.error(e.getMessage(), e);
                             customerValueTaskService.updateTaskStatus(taskId, CustomerValueConstants.EXECUTE_EXCEPTION, startTime, LocalDateTime.now(), StringUtils.EMPTY);
@@ -169,7 +169,7 @@ public class CustomerValueService {
      *
      * @param vips vip 信息
      */
-    public void execute(List<Vip> vips, ConfigTaskExec configTaskExec, CustomerValueTask customerValueTask) {
+    public void execute(List<Vip> vips, ConfigTaskExec configTaskExec, CustomerValueTask customerValueTask, List<LossValueConfig> lossValueConfigs) {
 
         LocalDateTime startTime = LocalDateTime.now();
         List<Integer> vipIds = vips.stream().map(Vip::getId).collect(Collectors.toList());
@@ -186,7 +186,7 @@ public class CustomerValueService {
         // Map<Integer, CustomerValueList> oldValueListMap = customerValueListService.getOldCustomerValueList(vips);
 
         // 获取所有的消费订单列表，包括 预订订单和退订订单, map : k -> vipId, v -> 消费订单列表
-        Map<Integer, CustomerValueList> customerValueList = customerValueListService.getCustomerValueList(vips, resvOrders, masterCustomerVipMappings);
+        Map<Integer, CustomerValueList> customerValueList = customerValueListService.getCustomerValueList(vips, resvOrders, masterCustomerVipMappings, lossValueConfigs);
 
         Map<Integer, VipConsumeActionTotal> vipConsumeActionTotal = vipConsumeActionTotalService.getVipConsumeActionTotal(vips, resvOrders, masterCustomerVipMappings);
 

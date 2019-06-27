@@ -64,7 +64,8 @@ public class CustomerValueListService {
      * @param resvOrdersMap 订单列表
      * @return CustomerValueList
      */
-    public Map<Integer, CustomerValueList> getCustomerValueList(List<Vip> vips, Map<Integer, List<ResvOrder>> resvOrdersMap, List<MasterCustomerVipMapping> masterCustomerVipMappingList) {
+    public Map<Integer, CustomerValueList> getCustomerValueList(List<Vip> vips, Map<Integer, List<ResvOrder>> resvOrdersMap, List<MasterCustomerVipMapping> masterCustomerVipMappingList,
+                                                                List<LossValueConfig> lossValueConfigs) {
         Map<Integer, CustomerValueList> map = new HashMap<>();
         for (Vip vip : vips) {
             try {
@@ -87,7 +88,7 @@ public class CustomerValueListService {
                         resvOrderList.removeAll(manOrderList);
                     }
                 }
-                CustomerValueList customerValueList = getCustomerValueList(vip, resvOrderList);
+                CustomerValueList customerValueList = getCustomerValueList(vip, resvOrderList, lossValueConfigs);
                 map.put(vip.getId(), customerValueList);
             }catch (Exception e){
                 log.error(e.getMessage(),e);
@@ -145,7 +146,7 @@ public class CustomerValueListService {
         return count > 0;
     }
 
-    public CustomerValueList getCustomerValueList(Vip vip, List<ResvOrder> resvOrders) {
+    public CustomerValueList getCustomerValueList(Vip vip, List<ResvOrder> resvOrders, List<LossValueConfig> lossValueConfigs) {
         Integer businessId = vip.getBusinessId();
         // 消费次数
         int customerCount = getCustomerCount(resvOrders, vip);
@@ -158,7 +159,7 @@ public class CustomerValueListService {
         // 一级价值，意向客户、活跃客户、沉睡客户、流失客户
         int firstValue = getFirstValue(resvOrders, businessId);
         // 细分价值
-        Long lossValue = getLossValue(resvOrders, businessId, vip);
+        Long lossValue = getLossValue(resvOrders, vip, lossValueConfigs);
         // 自定义分类
         String customerClass = vip.getVipClassName();
         customerClass = Optional.ofNullable(customerClass).orElse(StringUtils.EMPTY);
@@ -436,19 +437,21 @@ public class CustomerValueListService {
      * 细分价值
      *
      * @param resvOrders 用户id
-     * @param hotelId    酒店id
      * @return 1-4 的取值
      */
-    private Long getLossValue(List<ResvOrder> resvOrders, Integer hotelId, Vip vip) {
-        List<LossValueConfig> lossValueConfigList = lossValueConfigService.getLossValueConfig(hotelId);
+    private Long getLossValue(List<ResvOrder> resvOrders, Vip vip,  List<LossValueConfig> lossValueConfigs) {
+        // List<LossValueConfig> lossValueConfigList = lossValueConfigService.getLossValueConfig(hotelId);
+        if (resvOrders == null) {
+            return -1L;
+        }
         // 排序小的在前面
-        lossValueConfigList.sort(Comparator.comparing(LossValueConfig::getSort));
+        lossValueConfigs.sort(Comparator.comparing(LossValueConfig::getSort));
 
         // 单位：分
         int personAvg = getPersonAvg(resvOrders, vip);
         double customerAmount = getCustomerAmount(resvOrders);
         int customerCount = getCustomerCount(resvOrders, vip);
-        for (LossValueConfig lossValueConfig : lossValueConfigList) {
+        for (LossValueConfig lossValueConfig : lossValueConfigs) {
             Long id = lossValueConfig.getId();
             // 单位:分
             Integer customerPersonAvgStart = lossValueConfig.getCustomerPersonAvgStart();
