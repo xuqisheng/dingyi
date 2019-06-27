@@ -13,4 +13,4 @@ docker.file=pigydservice-YXDockerfile
 # Docker镜像构建之后push的仓库地址
 docker.repo=registry.cn-hangzhou.aliyuncs.com/zhidianfan/pig-yd-service
 
-docker.tag=0.0.68-ydservice-release
+docker.tag=0.0.69-ydservice-release
