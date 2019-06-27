@@ -1,61 +1,156 @@
 package com.zhidianfan.pig.yd.moduler.common.dao.entity;
 
-import lombok.Data;
-
-import java.sql.Date;
+import com.baomidou.mybatisplus.enums.IdType;
+import java.util.Date;
+import com.baomidou.mybatisplus.annotations.TableId;
+import com.baomidou.mybatisplus.annotations.TableField;
+import com.baomidou.mybatisplus.activerecord.Model;
+import com.baomidou.mybatisplus.annotations.TableName;
+import java.io.Serializable;
 
 /**
- * 客户分析结果对象
+ * <p>
+ * 
+ * </p>
  *
- * @author wangyz
- * @version v 0.1 2019-03-19 14:28 wangyz Exp $
+ * @author qqx
+ * @since 2019-06-21
  */
-@Data
-public class BusinessCustomerAnalysis {
+@TableName("business_customer_analysis")
+public class BusinessCustomerAnalysis extends Model<BusinessCustomerAnalysis> {
 
-    /**
-     * 自增id
-     */
+    private static final long serialVersionUID = 1L;
+
+    @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
-    /**
-     * 保存日期  yyyy-MM
-     */
     private String date;
-    /**
-     * 酒店id
-     */
+    @TableField("business_id")
     private Integer businessId;
-    /**
-     * 活跃用户
-     */
+    @TableField("active_vip_count")
     private Integer activeVipCount;
-    /**
-     * 沉睡用户
-     */
+    @TableField("sleep_vip_count")
     private Integer sleepVipCount;
-    /**
-     * 流失用户
-     */
+    @TableField("flow_vip_count")
     private Integer flowVipCount;
-    /**
-     * 恶意用户
-     */
+    @TableField("evil_vip_count")
     private Integer evilVipCount;
-    /**
-     * 高价值用户
-     */
+    @TableField("high_value_vip_count")
     private Integer highValueVipCount;
-    /**
-     * 唤醒用户
-     */
+    @TableField("awaken_vip_count")
     private Integer awakenVipCount;
-    /**
-     * 新增用户
-     */
+    @TableField("new_vip_count")
     private Integer newVipCount;
-    /**
-     * 创建时间
-     */
+    @TableField("create_time")
     private Date createTime;
 
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public String getDate() {
+        return date;
+    }
+
+    public void setDate(String date) {
+        this.date = date;
+    }
+
+    public Integer getBusinessId() {
+        return businessId;
+    }
+
+    public void setBusinessId(Integer businessId) {
+        this.businessId = businessId;
+    }
+
+    public Integer getActiveVipCount() {
+        return activeVipCount;
+    }
+
+    public void setActiveVipCount(Integer activeVipCount) {
+        this.activeVipCount = activeVipCount;
+    }
+
+    public Integer getSleepVipCount() {
+        return sleepVipCount;
+    }
+
+    public void setSleepVipCount(Integer sleepVipCount) {
+        this.sleepVipCount = sleepVipCount;
+    }
+
+    public Integer getFlowVipCount() {
+        return flowVipCount;
+    }
+
+    public void setFlowVipCount(Integer flowVipCount) {
+        this.flowVipCount = flowVipCount;
+    }
+
+    public Integer getEvilVipCount() {
+        return evilVipCount;
+    }
+
+    public void setEvilVipCount(Integer evilVipCount) {
+        this.evilVipCount = evilVipCount;
+    }
+
+    public Integer getHighValueVipCount() {
+        return highValueVipCount;
+    }
+
+    public void setHighValueVipCount(Integer highValueVipCount) {
+        this.highValueVipCount = highValueVipCount;
+    }
+
+    public Integer getAwakenVipCount() {
+        return awakenVipCount;
+    }
+
+    public void setAwakenVipCount(Integer awakenVipCount) {
+        this.awakenVipCount = awakenVipCount;
+    }
+
+    public Integer getNewVipCount() {
+        return newVipCount;
+    }
+
+    public void setNewVipCount(Integer newVipCount) {
+        this.newVipCount = newVipCount;
+    }
+
+    public Date getCreateTime() {
+        return createTime;
+    }
+
+    public void setCreateTime(Date createTime) {
+        this.createTime = createTime;
+    }
+
+    @Override
+    protected Serializable pkVal() {
+        return this.id;
+    }
+
+    @Override
+    public String toString() {
+        return "BusinessCustomerAnalysis{" +
+        "id=" + id +
+        ", date=" + date +
+        ", businessId=" + businessId +
+        ", activeVipCount=" + activeVipCount +
+        ", sleepVipCount=" + sleepVipCount +
+        ", flowVipCount=" + flowVipCount +
+        ", evilVipCount=" + evilVipCount +
+        ", highValueVipCount=" + highValueVipCount +
+        ", awakenVipCount=" + awakenVipCount +
+        ", newVipCount=" + newVipCount +
+        ", createTime=" + createTime +
+        "}";
+    }
 }

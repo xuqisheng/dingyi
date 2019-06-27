@@ -43,16 +43,17 @@ public class CustomerValueTaskService {
      *
      * @return 酒店 id
      */
-    public CustomerValueTask getCustomerValueTask() {
+    public List<CustomerValueTask> getCustomerValueTask() {
         EntityWrapper<CustomerValueTask> wrapper = new EntityWrapper<>();
         wrapper.eq("flag", 0);
 
         List<CustomerValueTask> customerValueTasks = customerValueTaskMapper.selectList(wrapper);
-        Optional<CustomerValueTask> optionalCustomerValueTask = customerValueTasks.stream()
-                .max(Comparator.comparing(CustomerValueTask::getSort)
+        List<CustomerValueTask> valueTasks = customerValueTasks.stream()
+                .sorted(Comparator.comparing(CustomerValueTask::getSort)
                         .thenComparing(CustomerValueTask::getId, Comparator.reverseOrder())
-                );
-        return optionalCustomerValueTask.orElseThrow(RuntimeException::new);
+                )
+                .collect(Collectors.toList());
+        return valueTasks;
     }
 
     /**
@@ -64,7 +65,7 @@ public class CustomerValueTaskService {
     public List<CustomerValueTask> getCustomerValuesValueTask(LocalDate planTime) {
         EntityWrapper<CustomerValueTask> wrapper = new EntityWrapper<>();
         wrapper.eq("plan_time", planTime);
-        wrapper.in("flag", Arrays.asList(0,1,3));
+        wrapper.in("flag", Arrays.asList(0,3));
         wrapper.orderBy("sort", false);
 
         List<CustomerValueTask> customerValueTasks = customerValueTaskMapper.selectList(wrapper);

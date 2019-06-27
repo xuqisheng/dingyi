@@ -14,9 +14,11 @@ import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -72,47 +74,9 @@ public class CustomerValueService {
     @Autowired
     private DataSourceTransactionManager transactionManager;
 
-    //    @Async
-//    @Transactional(rollbackFor = Exception.class)
-//    public void getCustomerValueBaseInfo() {
-//        LocalDateTime startTime = LocalDateTime.now();
-//        CustomerValueTask customerValueTask = customerValueTaskService.getCustomerValueTask();
-//        log.info("获取到的任务编号：{}", customerValueTask.getId());
-//        // 1. 从任务表中取出酒店 id
-//        Long hotelId = customerValueTask.getHotelId();
-//        cleanData(hotelId);
-//        // 1.1 查询属于该酒店的所有客户
-//        List<Vip> vips = vipService.getVipList(hotelId);
-//
-//        Long taskId = customerValueTask.getId();
-//        log.info("任务开始，taskId：{}, 开始时间：{}", taskId, DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(startTime));
-//        // 任务执行标记,0-未开始,1-执行中,2-执行成功,3-执行异常
-//        customerValueTaskService.updateTaskStatus(taskId, CustomerValueConstants.EXECUTING, startTime, CustomerValueConstants.DEFAULT_END_TIME, StringUtils.EMPTY);
-//
-//        AtomicInteger count = new AtomicInteger(0);
-//
-//        Optional.ofNullable(vips)
-//                .ifPresent(vips1 -> {
-//                    vips1.parallelStream()
-//                            .forEach(vip -> {
-//                                try {
-//                                    execute(vip);
-//                                    log.info("当前执行进度,酒店：{},{}/{}", hotelId, count.addAndGet(1), vips.size());
-//                                } catch (Exception e) {
-//                                    customerValueTaskService.updateTaskStatus(taskId, CustomerValueConstants.EXECUTE_EXCEPTION, startTime, LocalDateTime.now(), StringUtils.EMPTY);
-//                                    log.error("任务发生异常，taskId: {}, 异常时间:{}", taskId, DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(LocalDateTime.now()), e);
-//                                }
-//                            });
-//                });
-//
-//        LocalDateTime endTime = LocalDateTime.now();
-//        customerValueTaskService.updateTaskStatus(taskId, CustomerValueConstants.EXECUTE_SUCCESS, startTime, endTime, StringUtils.EMPTY);
-//        log.info("任务结束，taskId: {}, 结束时间:{}", taskId, DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(endTime));
-//    }
-
-    public void getCustomerValueBaseInfo2(CustomerValueTask customerValueTask, int groupNum) {
-        LocalTime startTime1 = LocalTime.of(23, 0, 0);
-        LocalTime startTime2 = LocalTime.of(8, 0, 0);
+    public void getCustomerValueBaseInfo2(CustomerValueTask customerValueTask, int groupNum, ConfigTaskExec configTaskExec) {
+        LocalTime startTime1 = configTaskExec.getStartTime();
+        LocalTime startTime2 = configTaskExec.getEndTime();
         while (!(LocalTime.now().isAfter(startTime1) || LocalTime.now().isBefore(startTime2))) {
             log.info("非客户价值计算时间暂停执行======");
             try {
@@ -127,10 +91,15 @@ public class CustomerValueService {
         LocalDateTime startTime = LocalDateTime.now();
         // 1. 从任务表中取出酒店 id
         Long hotelId = customerValueTask.getHotelId();
+        // 清空结果表中酒店已存在的数据
         cleanData(hotelId);
         // 1.1 查询属于该酒店的所有客户
+        LocalDateTime now = LocalDateTime.now();
         List<Vip> vips = vipService.getVipList(hotelId);
-        //对vips分组，100个vip一组
+        LocalDateTime queryEndTime = LocalDateTime.now();
+        Duration duration = Duration.between(now, queryEndTime);
+        log.info("--------------------------------查询 VIP 表消耗时间：[{}] 秒--------------------------------", duration.getSeconds());
+        //对vips分组，1000个vip一组， k -> 序号0,1,2,3 v -> groupNum个Vip 列表
         Map<String, List<Vip>> map = getVipsMap(vips, groupNum);
 
         Long taskId = customerValueTask.getId();
@@ -141,7 +110,7 @@ public class CustomerValueService {
                 .ifPresent(map1 -> {
                     map1.forEach((k, v) -> {
                         try {
-                            execute(v);
+                            execute(v, configTaskExec);
                         } catch (Exception e) {
                             log.error(e.getMessage(), e);
                             customerValueTaskService.updateTaskStatus(taskId, CustomerValueConstants.EXECUTE_EXCEPTION, startTime, LocalDateTime.now(), StringUtils.EMPTY);
@@ -185,7 +154,8 @@ public class CustomerValueService {
     }
 
     // 清除脏数据
-    private void cleanData(Long hotelId) {
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void cleanData(Long hotelId) {
         if (hotelId == null) {
             return;
         }
@@ -197,39 +167,51 @@ public class CustomerValueService {
     /**
      * 执行任务的过程
      *
-     * @param vip vip 信息
+     * @param vips vip 信息
      */
-    public void execute(List<Vip> vip) {
+    public void execute(List<Vip> vips, ConfigTaskExec configTaskExec) {
 
-        List<Integer> vipIds = vip.stream().map(Vip::getId).collect(Collectors.toList());
+        LocalDateTime startTime = LocalDateTime.now();
+        List<Integer> vipIds = vips.stream().map(Vip::getId).collect(Collectors.toList());
 
         //获取客户的所有订单
-//        List<ResvOrder> resvOrders = getResvOrders(vip.getId());
         Map<Integer, List<ResvOrder>> resvOrders = getResvOrders(vipIds);
-//        List<ResvOrder> resvOrdersBy60days = getResvOrdersBy60day(vip.getId());
         Map<Integer, List<ResvOrder>> resvOrdersBy60days = getResvOrdersBy60day(vipIds);
 
-        Map<Integer, CustomerValueList> customerValueList = customerValueListService.getCustomerValueList(vip, resvOrders);
+        // 所有主客订单列表
+        List<MasterCustomerVipMapping> masterCustomerVipMappings = customerRecordService.manOrderList(vips);
+        // 所有宾客订单列表
+        List<GuestCustomerVipMapping> guestCustomerVipMappings = customerRecordService.guestOrderList(vips);
 
-        Map<Integer, VipConsumeActionTotal> vipConsumeActionTotal = vipConsumeActionTotalService.getVipConsumeActionTotal(vip, resvOrders);
+        // 获取所有的消费订单列表，包括 预订订单和退订订单, map : k -> vipId, v -> 消费订单列表
+        Map<Integer, CustomerValueList> customerValueList = customerValueListService.getCustomerValueList(vips, resvOrders, masterCustomerVipMappings);
 
-        Map<Integer, VipConsumeActionLast60> vipConsumeActionLast60 = vipConsumeActionLast60Service.getVipConsumeActionLast60(vip, resvOrdersBy60days);
+        Map<Integer, VipConsumeActionTotal> vipConsumeActionTotal = vipConsumeActionTotalService.getVipConsumeActionTotal(vips, resvOrders, masterCustomerVipMappings);
 
-        Map<Integer, List<CustomerRecord>> customerRecordList = customerRecordService.getCustomerRecord(vip, resvOrders, customerValueList);
+        Map<Integer, VipConsumeActionLast60> vipConsumeActionLast60 = vipConsumeActionLast60Service.getVipConsumeActionLast60(vips, resvOrdersBy60days, masterCustomerVipMappings);
 
-        Map<Integer, NowChangeInfo> nowChangeInfo = getProfile2(vip);
+        // 客户记录， map: k -> vipId, v -> CustomerRecord 客户纪录
+        Map<Integer, List<CustomerRecord>> customerRecordList = customerRecordService.getCustomerRecord(vips, resvOrders, customerValueList, masterCustomerVipMappings, guestCustomerVipMappings, configTaskExec);
 
+        Map<Integer, NowChangeInfo> nowChangeInfo = getProfile2(vips);
+
+        LocalDateTime endTime = LocalDateTime.now();
+        Duration duration = Duration.between(startTime, endTime);
+        log.info("--------------------------------计算任务消耗的时间为：[{}] 秒--------------------------------", duration.getSeconds());
+        LocalDateTime saveStartTime = LocalDateTime.now();
         DefaultTransactionDefinition def = new DefaultTransactionDefinition();
         def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW); // 定义事务传播
         TransactionStatus status = transactionManager.getTransaction(def);
         try {
             save(customerValueList, vipConsumeActionTotal, vipConsumeActionLast60, customerRecordList, nowChangeInfo);
-            log.info("插入 vip:[{}] 完成", vipIds);
             transactionManager.commit(status);
         } catch (Exception e) {
             log.error("发生异常--", e);
             transactionManager.rollback(status);
         }
+        LocalDateTime saveEndTime = LocalDateTime.now();
+        Duration duration1 = Duration.between(saveStartTime, saveEndTime);
+        log.info("--------------------------------持久化到数据库消耗的时间为:[{}]秒--------------------------------", duration1.getSeconds());
     }
 
 
@@ -237,45 +219,56 @@ public class CustomerValueService {
                      Map<Integer, VipConsumeActionLast60> vipConsumeActionLast60, Map<Integer, List<CustomerRecord>> customerRecordList,
                      Map<Integer, NowChangeInfo> nowChangeInfo) {
 
+        int batchNo = 500;
         Optional.ofNullable(customerValueList)
                 .ifPresent(map -> {
-                    map.forEach((k, v) -> {
-                        customerValueListMapper.insertOrUpdate(v);
-                    });
+                    List<CustomerValueList> customerValueLists = new ArrayList<>(map.values());
+                    customerValueListMapper.insertOrUpdateAllColumnBatch(customerValueLists, batchNo);
                 });
+
 
         Optional.ofNullable(vipConsumeActionTotal)
                 .ifPresent(map -> {
-                    map.forEach((k, v) -> {
-                        vipConsumeActionTotalMapper.insertOrUpdate(v);
-                    });
+                    List<VipConsumeActionTotal> vipConsumeActionTotals = new ArrayList<>(map.values());
+                    vipConsumeActionTotalMapper.insertOrUpdateAllColumnBatch(vipConsumeActionTotals, batchNo);
                 });
 
         Optional.ofNullable(vipConsumeActionLast60)
                 .ifPresent(map -> {
-                    map.forEach((k, v) -> {
-                        vipConsumeActionLast60Mapper.insertOrUpdate(v);
-                    });
+                    List<VipConsumeActionLast60> vipConsumeActionLast60List = new ArrayList<>(map.values());
+                    vipConsumeActionLast60Mapper.insertOrUpdateAllColumnBatch(vipConsumeActionLast60List, batchNo);
                 });
 
         Optional.ofNullable(customerRecordList)
                 .ifPresent(map -> {
                     map.forEach((k, v) -> {
                         if (v != null && v.size() != 0) {
-                            customerRecordMapper.insertBatch(v);
+                            customerRecordMapper.insertBatch(v, batchNo);
                         }
                     });
                 });
 
         Optional.ofNullable(nowChangeInfo)
                 .ifPresent(map -> {
-                    map.forEach((k, v) -> {
-                        if (v != null) {
-                            nowChangeInfoMapper.insertOrUpdate(v);
-                            log.info("客户资料完整度 [{}] 插入完成", v);
-                        }
-                    });
+                    List<NowChangeInfo> nowChangeInfoList = new ArrayList<>(map.values());
+                    nowChangeInfoMapper.insertOrUpdateAllColumnBatch(nowChangeInfoList, batchNo);
                 });
+    }
+
+    private List<CustomerValueList> batch(int batchNo, List<CustomerValueList> customerValueLists, int j) {
+        int startIndex = j * batchNo;
+        int endIndex = (j + 1) * batchNo;
+
+        if (startIndex >= customerValueLists.size()) {
+            return null;
+        }
+
+        if (endIndex > customerValueLists.size()) {
+            endIndex = customerValueLists.size();
+        }
+
+        List<CustomerValueList> subList = customerValueLists.subList(startIndex, endIndex);
+        return subList;
     }
 
     /**
@@ -316,14 +309,10 @@ public class CustomerValueService {
 
     private Map<Integer, NowChangeInfo> getProfile2(List<Vip> vips) {
 
-        Map<Integer, NowChangeInfo> map = new HashMap<>();
         Map<Integer, Integer> profile2 = vipService.getProfile2(vips);
 
         Map<Integer, NowChangeInfo> nowChangeInfoMap = vips.stream()
                 .filter(vip -> {
-                    if (vip == null) {
-                        log.error("getProfile2() vip 信息为空");
-                    }
                     return vip != null;
                 })
                 .map(vip -> {
@@ -365,7 +354,7 @@ public class CustomerValueService {
         wrapper.le("updated_at", now);
         wrapper.in("status", Arrays.asList(2, 3));
         List<ResvOrder> resvOrders = resvOrderMapper.selectList(wrapper);
-        Map<Integer, List<ResvOrder>> map = resvOrders.stream()
+        Map<Integer, List<ResvOrder>> map = resvOrders.parallelStream()
                 .collect(Collectors.groupingBy(ResvOrder::getVipId));
         return map;
     }
@@ -375,13 +364,13 @@ public class CustomerValueService {
      * vip 用户的所有订单
      *
      * @param vipIds vip 主键
-     * @return 所有的订单列表
+     * @return 所有的订单列表, Map : key -> vipId, v -> vipId 对应订单列表
      */
     private Map<Integer, List<ResvOrder>> getResvOrders(List<Integer> vipIds) {
         EntityWrapper<ResvOrder> wrapper = new EntityWrapper<>();
         wrapper.in("vip_id", vipIds);
         List<ResvOrder> resvOrders = resvOrderMapper.selectList(wrapper);
-        Map<Integer, List<ResvOrder>> map = resvOrders.stream()
+        Map<Integer, List<ResvOrder>> map = resvOrders.parallelStream()
                 .collect(Collectors.groupingBy(ResvOrder::getVipId));
         return map;
     }

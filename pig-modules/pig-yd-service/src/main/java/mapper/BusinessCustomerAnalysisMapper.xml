@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhidianfan.pig.yd.moduler.common.dao.mapper.BusinessCustomerAnalysisMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zhidianfan.pig.yd.moduler.common.dao.entity.BusinessCustomerAnalysis">
+        <id column="id" property="id" />
+        <result column="date" property="date" />
+        <result column="business_id" property="businessId" />
+        <result column="active_vip_count" property="activeVipCount" />
+        <result column="sleep_vip_count" property="sleepVipCount" />
+        <result column="flow_vip_count" property="flowVipCount" />
+        <result column="evil_vip_count" property="evilVipCount" />
+        <result column="high_value_vip_count" property="highValueVipCount" />
+        <result column="awaken_vip_count" property="awakenVipCount" />
+        <result column="new_vip_count" property="newVipCount" />
+        <result column="create_time" property="createTime" />
+    </resultMap>
+
+</mapper>

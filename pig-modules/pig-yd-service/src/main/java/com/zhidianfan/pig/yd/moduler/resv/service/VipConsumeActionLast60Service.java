@@ -1,21 +1,20 @@
 package com.zhidianfan.pig.yd.moduler.resv.service;
 
+import com.zhidianfan.pig.yd.moduler.common.dao.entity.MasterCustomerVipMapping;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.ResvOrder;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.Vip;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.VipConsumeActionLast60;
 import com.zhidianfan.pig.yd.moduler.resv.constants.CustomerValueConstants;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.velocity.runtime.parser.node.MathUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.OptionalInt;
+import java.util.*;
 
 import static java.util.stream.Collectors.groupingBy;
 
@@ -27,34 +26,58 @@ import static java.util.stream.Collectors.groupingBy;
 @Service
 public class VipConsumeActionLast60Service {
 
+    @Autowired
+    private CustomerRecordService customerRecordService;
 
-    public Map<Integer,VipConsumeActionLast60> getVipConsumeActionLast60(List<Vip> vips, Map<Integer,List<ResvOrder>> resvOrdersBy60daysMap) {
+    @Autowired
+    private CustomerValueListService customerValueListService;
+
+    public Map<Integer,VipConsumeActionLast60> getVipConsumeActionLast60(List<Vip> vips, Map<Integer,List<ResvOrder>> resvOrdersBy60daysMap, List<MasterCustomerVipMapping> masterCustomerVipMappingList) {
 
         Map<Integer,VipConsumeActionLast60> map = new HashMap<>();
 
         for (Vip vip:vips){
 
             try {
+                List<ResvOrder> resvOrderList = new ArrayList<>();
                 List<ResvOrder> resvOrdersBy60days = resvOrdersBy60daysMap.get(vip.getId());
+                // 主客订单
+                List<ResvOrder> manOrderList = customerRecordService.getManOrderList(vip, masterCustomerVipMappingList, resvOrdersBy60daysMap);
+
+                if (CollectionUtils.isNotEmpty(resvOrdersBy60days)) {
+                    resvOrderList.addAll(resvOrdersBy60days);
+                }
+                if (CollectionUtils.isNotEmpty(manOrderList)) {
+                    boolean manOrder = customerValueListService.isManOrder(vip, masterCustomerVipMappingList);
+                    if (manOrder) {
+                        resvOrderList.addAll(manOrderList);
+                    } else {
+                        resvOrderList.removeAll(manOrderList);
+                    }
+                }
+                if (resvOrdersBy60days != null) {
+                    resvOrdersBy60days.addAll(manOrderList);
+                }
+
                 VipConsumeActionLast60 vipConsumeActionLast60 = new VipConsumeActionLast60();
 
                 vipConsumeActionLast60.setVipId(vip.getId());
                 // 消费完成总订单数
-                vipConsumeActionLast60.setTotalOrderNo(getTotalOrderNo60(resvOrdersBy60days));
+                vipConsumeActionLast60.setTotalOrderNo(getTotalOrderNo60(resvOrderList));
                 // 消费完成总桌数
-                vipConsumeActionLast60.setTotalTableNo(getTotalTableNo60(resvOrdersBy60days));
+                vipConsumeActionLast60.setTotalTableNo(getTotalTableNo60(resvOrderList));
                 // 消费完成总人数
-                vipConsumeActionLast60.setTotalPersonNo(getTotalPersonNo60(resvOrdersBy60days));
+                vipConsumeActionLast60.setTotalPersonNo(getTotalPersonNo60(resvOrderList));
                 // 撤单桌数
-                vipConsumeActionLast60.setCancelTableNo(getCancelTableNo60(resvOrdersBy60days));
+                vipConsumeActionLast60.setCancelTableNo(getCancelTableNo60(resvOrderList));
                 // 消费总金额,单位:分
-                vipConsumeActionLast60.setTotalConsumeAmount(getTotalConsumeAmount60(resvOrdersBy60days));
+                vipConsumeActionLast60.setTotalConsumeAmount(getTotalConsumeAmount60(resvOrderList));
                 // 桌均消费,单位:分
-                vipConsumeActionLast60.setTableConsumeAvg(getTableConsumeAvg60(resvOrdersBy60days));
+                vipConsumeActionLast60.setTableConsumeAvg(getTableConsumeAvg60(resvOrderList));
                 // 人均消费,单位:分
-                vipConsumeActionLast60.setPersonConsumeAvg(getPersonConsumeAvg(resvOrdersBy60days));
+                vipConsumeActionLast60.setPersonConsumeAvg(getPersonConsumeAvg(resvOrderList));
                 // 消费频次
-                vipConsumeActionLast60.setConsumeFrequency(getConsumeFrequency60(resvOrdersBy60days));
+                vipConsumeActionLast60.setConsumeFrequency(getConsumeFrequency60(resvOrderList));
                 vipConsumeActionLast60.setCreateUserId(CustomerValueConstants.DEFAULT_USER_ID);
                 vipConsumeActionLast60.setCreateTime(LocalDateTime.now());
                 vipConsumeActionLast60.setUpdateUserId(CustomerValueConstants.DEFAULT_USER_ID);
@@ -131,14 +154,14 @@ public class VipConsumeActionLast60Service {
                     try {
                         personCount = Integer.parseInt(actualNum);
                     } catch (NumberFormatException e) {
-                        log.warn("用餐人数类型由 String -> int 转换失败,取预订人数, orderId:{}", order.getId());
+                        // log.warn("用餐人数类型由 String -> int 转换失败,取预订人数, orderId:{}", order.getId());
                     }
                     if (personCount <= 0) {
                         String resvNum = order.getResvNum();
                         try {
                             personCount = Integer.parseInt(resvNum);
                         } catch (NumberFormatException e) {
-                            log.warn("预订人数类型由 String -> int 转换失败，取 0， orderId:[{}]", order.getId());
+                            // log.warn("预订人数类型由 String -> int 转换失败，取 0， orderId:[{}]", order.getId());
                             personCount = 0;
                         }
                     }
@@ -163,7 +186,7 @@ public class VipConsumeActionLast60Service {
                 .filter(order -> "2".equals(order.getStatus()) || "3".equals(order.getStatus()))
                 .count();
         int customerCount = (int) count;
-        log.info("60天内消费次数：[{}]", count);
+        // log.info("60天内消费次数：[{}]", count);
         return customerCount;
     }
 

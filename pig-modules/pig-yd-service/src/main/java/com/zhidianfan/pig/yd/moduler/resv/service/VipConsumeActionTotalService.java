@@ -1,17 +1,18 @@
 package com.zhidianfan.pig.yd.moduler.resv.service;
 
+import com.zhidianfan.pig.yd.moduler.common.dao.entity.MasterCustomerVipMapping;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.ResvOrder;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.Vip;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.VipConsumeActionTotal;
 import com.zhidianfan.pig.yd.moduler.common.service.IVipConsumeActionTotalService;
 import com.zhidianfan.pig.yd.moduler.resv.constants.CustomerValueConstants;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.velocity.runtime.parser.node.MathUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -40,35 +41,52 @@ public class VipConsumeActionTotalService {
     @Autowired
     private CustomerValueListService customerValueListService;
 
-    public Map<Integer, VipConsumeActionTotal> getVipConsumeActionTotal(List<Vip> vips, Map<Integer, List<ResvOrder>> resvOrdersMap) {
+    @Autowired
+    private CustomerRecordService customerRecordService;
+
+    public Map<Integer, VipConsumeActionTotal> getVipConsumeActionTotal(List<Vip> vips, Map<Integer, List<ResvOrder>> resvOrdersMap, List<MasterCustomerVipMapping> masterCustomerVipMappingList) {
 
         Map<Integer, VipConsumeActionTotal> map = new HashMap<>();
         for (Vip vip : vips) {
             try {
+                // 主客订单
+                List<ResvOrder> resvOrderList = new ArrayList<>();
+                List<ResvOrder> manOrderList = customerRecordService.getManOrderList(vip, masterCustomerVipMappingList, resvOrdersMap);
                 List<ResvOrder> resvOrders = resvOrdersMap.get(vip.getId());
+                if (CollectionUtils.isNotEmpty(resvOrders)) {
+                    resvOrderList.addAll(resvOrders);
+                }
+                if (CollectionUtils.isNotEmpty(manOrderList)) {
+                    boolean manOrder = customerValueListService.isManOrder(vip, masterCustomerVipMappingList);
+                    if (manOrder) {
+                        resvOrderList.addAll(manOrderList);
+                    } else {
+                        resvOrderList.removeAll(manOrderList);
+                    }
+                }
                 // 消费订单总次数
                 VipConsumeActionTotal vipConsumeActionTotal = new VipConsumeActionTotal();
                 vipConsumeActionTotal.setVipId(vip.getId());
                 // 消费完成总订单数
-                vipConsumeActionTotal.setTotalOrderNo(customerValueListService.getCustomerCount(resvOrders, vip));
+                vipConsumeActionTotal.setTotalOrderNo(customerValueListService.getCustomerCount(resvOrderList, vip));
                 // 消费完成总桌数
-                vipConsumeActionTotal.setTotalTableNo(getCustomerTableCount(resvOrders));
+                vipConsumeActionTotal.setTotalTableNo(getCustomerTableCount(resvOrderList));
                 // 消费完成总人数
-                vipConsumeActionTotal.setTotalPersonNo(getCustomerPersonCount(resvOrders));
+                vipConsumeActionTotal.setTotalPersonNo(getCustomerPersonCount(resvOrderList));
                 // 撤单桌数
-                vipConsumeActionTotal.setCancelTableNo(getCancelOrderTable(resvOrders));
+                vipConsumeActionTotal.setCancelTableNo(getCancelOrderTable(resvOrderList));
                 // 消费总金额，单位：分
-                vipConsumeActionTotal.setTotalConsumeAvg(getConsumerTotalAmount(resvOrders));
+                vipConsumeActionTotal.setTotalConsumeAvg(getConsumerTotalAmount(resvOrderList));
                 // 桌均消费,单位:分
-                vipConsumeActionTotal.setTableConsumeAvg(getConsumerTableAmount(resvOrders));
+                vipConsumeActionTotal.setTableConsumeAvg(getConsumerTableAmount(resvOrderList));
                 // 人均消费,单位:分
-                vipConsumeActionTotal.setPersonConsumeAvg(getConsumerPersonAmount(resvOrders, vip));
+                vipConsumeActionTotal.setPersonConsumeAvg(getConsumerPersonAmount(resvOrderList, vip));
                 // 首次消费时间
-                vipConsumeActionTotal.setFirstConsumeTime(getFirstConsumerTime(resvOrders));
+                vipConsumeActionTotal.setFirstConsumeTime(getFirstConsumerTime(resvOrderList));
                 // 消费频次
-                vipConsumeActionTotal.setConsumeFrequency(getConsumerFrequency(resvOrders, vip));
+                vipConsumeActionTotal.setConsumeFrequency(getConsumerFrequency(resvOrderList, vip));
                 // 最近就餐时间
-                vipConsumeActionTotal.setLastConsumeTime(getLastEatTime(resvOrders));
+                vipConsumeActionTotal.setLastConsumeTime(getLastEatTime(resvOrderList));
                 vipConsumeActionTotal.setCreateUserId(CustomerValueConstants.DEFAULT_USER_ID);
                 vipConsumeActionTotal.setCreateTime(LocalDateTime.now());
                 vipConsumeActionTotal.setUpdateUserId(CustomerValueConstants.DEFAULT_USER_ID);
@@ -197,7 +215,9 @@ public class VipConsumeActionTotalService {
 
     private Optional<Date> getFirstCustomerMonth(List<ResvOrder> resvOrders) {
         return resvOrders.stream()
+                .filter(Objects::nonNull)
                 .filter(order -> "3".equals(order.getStatus()))
+                .filter(order -> Objects.nonNull(order.getUpdatedAt()))
                 .min(Comparator.comparing(ResvOrder::getUpdatedAt))
                 .map(ResvOrder::getUpdatedAt);
     }

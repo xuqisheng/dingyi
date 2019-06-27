@@ -60,4 +60,10 @@ public class XopMethod {
 	public static final String GET_POS_PRICES = "xmsopen.pos.xopgetposprices";
 	public static final String GET_TABLE_MENUS= "xmsopen.pos.xopgettablemenus";
 	public static final String GET_POS_RESERVER = "xmsopen.pos.xopgetposreserve";
+
+	public static final String GET_TABLE_MENU = "xmsopen.pos.xopgettablemenus";
+
+	public static final String GET_ORDER_STATUS = "xmsopen.pos.xopgetipadmenusta";
+
+	public static final String GET_ORDER_DISH = "xmsopen.pos.xopgetorderdishsone";
 }

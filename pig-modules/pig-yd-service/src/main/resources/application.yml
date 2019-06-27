@@ -161,7 +161,7 @@ spring:
     url: jdbc:mysql://192.168.3.202:3306/resv_sys?useSSL=false&autoReconnect=true&useUnicode=true&characterEncoding=utf8
 #    username: pigyiding
 #    password: s7iiVjNGl2F9
-#    url: jdbc:mysql://rm-bp1l550ay024yxoojo.mysql.rds.aliyuncs.com/resv_sys?useSSL=false&autoReconnect=true&useUnicode=true&characterEncoding=utf8
+#    url: jdbc:mysql://rm-bp1l550ay024yxoojo.mysql.rds.aliyuncs.com:3306/resv_sys?useSSL=false&autoReconnect=true&useUnicode=true&characterEncoding=utf8
     hikari:
       minimum-idle: 1
       maximum-pool-size: 5
