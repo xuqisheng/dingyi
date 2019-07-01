@@ -240,7 +240,9 @@ public class SmsController {
 
         Wrapper<BusinessMarketingSmsTemplate> wrapper = new EntityWrapper<BusinessMarketingSmsTemplate>()
                 .eq("business_id", queryTemplate.getBusinessId())
-                .eq("is_enable", 1);
+                .eq("is_enable", 1)
+                .and("(anniversary_type != 1 or anniversary_type is null)");
+
         //模板搜索
         String keyword = queryTemplate.getKeyword();
         if (StringUtils.isNotBlank(keyword)) {
