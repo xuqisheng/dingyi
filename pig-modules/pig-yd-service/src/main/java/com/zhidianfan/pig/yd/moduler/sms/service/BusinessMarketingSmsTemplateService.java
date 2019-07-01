@@ -101,6 +101,7 @@ public class BusinessMarketingSmsTemplateService {
 
         businessMarketingSmsTemplate.setUpdateAt(new Date());
 
+
         //1. 先查询出原先
         BusinessMarketingSmsTemplate orginalTemplate = ibusinessMarketingSmsTemplateService.selectOne(new EntityWrapper<BusinessMarketingSmsTemplate>()
                 .eq("id", businessMarketingSmsTemplate.getId()));
@@ -173,6 +174,7 @@ public class BusinessMarketingSmsTemplateService {
             smsMarketing.setAuditingAt(new Date());
             smsMarketing.setSmsNum(businessMarketingSmsTemplate.getNum());
             smsMarketing.setUpdatedAt(new Date());
+            smsMarketing.setTimer(new Date());
 
             smsMarketingService.updateById(smsMarketing);
         }
