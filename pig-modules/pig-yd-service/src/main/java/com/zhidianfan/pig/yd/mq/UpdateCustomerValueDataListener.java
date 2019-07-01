@@ -47,6 +47,7 @@ public class UpdateCustomerValueDataListener {
     @RabbitHandler
     @RabbitListener(queues = QueueName.CUSTOMER_VALUE_QUEUE)
     public void updateField(String content) {
+        log.debug("接收到 MQ 的消息，开始处理:[{}]", content);
         CustomerValueChangeFieldDTO customerValueChangeFieldDTO;
         try {
             customerValueChangeFieldDTO = JSON.parseObject(content, CustomerValueChangeFieldDTO.class);

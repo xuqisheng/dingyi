@@ -1,5 +1,7 @@
 package com.zhidianfan.pig.yd.moduler.resv.service;
 
+import com.baomidou.mybatisplus.mapper.EntityWrapper;
+import com.baomidou.mybatisplus.mapper.Wrapper;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.MasterCustomerVipMapping;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.ResvOrder;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.Vip;
@@ -334,9 +336,14 @@ public class VipConsumeActionTotalService {
      */
     public void updateCancelTableNo(Integer vipId, String value) {
         int cancelTableNo = Integer.parseInt(value);
+        Wrapper<VipConsumeActionTotal> wrapper = new EntityWrapper<>();
+        wrapper.eq("vip_id", vipId);
+        VipConsumeActionTotal vipConsumeActionTotal = vipConsumeActionTotalMapper.selectOne(wrapper);
+        Integer oldCancelTableNo = vipConsumeActionTotal.getCancelTableNo();
+        log.debug("原来的撤单桌数为:[{}], 现在的撤单桌数为:[{}]", oldCancelTableNo, cancelTableNo + oldCancelTableNo);
         VipConsumeActionTotal total = new VipConsumeActionTotal();
         total.setVipId(vipId);
-        total.setCancelTableNo(cancelTableNo);
+        total.setCancelTableNo(cancelTableNo + oldCancelTableNo);
         total.setUpdateTime(LocalDateTime.now());
         vipConsumeActionTotalMapper.updateById(total);
     }
