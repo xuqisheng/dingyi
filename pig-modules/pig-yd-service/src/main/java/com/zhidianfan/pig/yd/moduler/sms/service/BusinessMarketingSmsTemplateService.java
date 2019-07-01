@@ -174,7 +174,7 @@ public class BusinessMarketingSmsTemplateService {
             smsMarketing.setAuditingAt(new Date());
             smsMarketing.setSmsNum(businessMarketingSmsTemplate.getNum());
             smsMarketing.setUpdatedAt(new Date());
-            smsMarketing.setTimer(new Date());
+            smsMarketing.setCreatedAt(new Date());
 
             smsMarketingService.updateById(smsMarketing);
         }
