@@ -1,5 +1,6 @@
 package com.zhidianfan.pig.yd.mq;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.baomidou.mybatisplus.mapper.Wrapper;
 import com.zhidianfan.pig.yd.moduler.common.constant.QueueName;
@@ -45,7 +46,14 @@ public class UpdateCustomerValueDataListener {
 
     @RabbitHandler
     @RabbitListener(queues = QueueName.CUSTOMER_VALUE_QUEUE)
-    public void updateField(CustomerValueChangeFieldDTO customerValueChangeFieldDTO) {
+    public void updateField(String content) {
+        CustomerValueChangeFieldDTO customerValueChangeFieldDTO;
+        try {
+            customerValueChangeFieldDTO = JSON.parseObject(content, CustomerValueChangeFieldDTO.class);
+        } catch (Exception e) {
+            log.error("转换到 Object 异常：{}", content);
+            return;
+        }
         checkParam(customerValueChangeFieldDTO);
         String type = customerValueChangeFieldDTO.getType();
         Integer vipId = customerValueChangeFieldDTO.getVipId();

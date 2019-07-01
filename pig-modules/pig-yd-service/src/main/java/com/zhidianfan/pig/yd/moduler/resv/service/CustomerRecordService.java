@@ -913,11 +913,20 @@ public class CustomerRecordService {
         String resvNum = resvOrder.getResvNum();
         int resvNo = 0;
         if (NumberUtils.isCreatable(resvNum)) {
-            resvNo = Integer.parseInt(resvNum);
-        } else {
+            try {
+                resvNo = Integer.parseInt(resvNum);
+            } catch (NumberFormatException e) {
+                log.error("订单id:[{}] 用餐人数数据异常：[{}]", resvOrder.getId(), resvNum);
+            }
+        }
+        if (resvNo == 0){
             String actualNum = resvOrder.getActualNum();
             if (NumberUtils.isCreatable(actualNum)) {
-                resvNo = Integer.parseInt(actualNum);
+                try {
+                    resvNo = Integer.parseInt(actualNum);
+                } catch (NumberFormatException ignored) {
+                    log.error("订单id:[{}] 预订人数数据异常：[{}]", resvOrder.getId(), actualNum);
+                }
             }
         }
         return resvNo;
