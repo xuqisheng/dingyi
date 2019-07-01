@@ -135,7 +135,7 @@ public class BusinessMarketingSmsTemplateService {
         Object[] param = new String[sort.size()];
         for (int i = 0; i < sort.size(); i++) {
             if ("firstName".equals(sort.get(i))) {
-                param[i] = "某某";
+                param[i] = "张";
             } else if ("vipSex".equals(sort.get(i))) {
                 param[i] = "先生/女士";
             }

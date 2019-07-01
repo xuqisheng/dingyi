@@ -33,6 +33,7 @@
     <select id="selectTemplateWithVerifyStatus" resultType="com.zhidianfan.pig.yd.moduler.sms.dto.marketing.BusinessMarketingSmsTemplateDTO">
         SELECT
         b.id,
+        b.business_id as  businessId,
         b.template_title as  templateTitle,
         b.template_content as templateContent,
         b.template_variable as templateVariable,
@@ -47,15 +48,8 @@
         s.status
         when 1 then '待审核'
         when 2 then '已驳回'
-        when 3 then '已审核'
-        end as verifyStatus,
-        (SELECT
-            name
-         FROM
-            `anniversary_type`
-         WHERE
-            id = anniversary_type
-        ) AS anniversary_name
+        when 3 then '审核通过'
+        end as verifyStatus
         FROM
         business_marketing_sms_template b,sms_marketing s
         WHERE
