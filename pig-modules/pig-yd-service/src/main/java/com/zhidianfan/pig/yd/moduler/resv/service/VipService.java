@@ -689,7 +689,7 @@ public class VipService {
 
         // key-vipId, v-true, 该 vip 有纪念日
         Map<Integer, Boolean> existAnniversariesVip = distinctAnniversariesList.stream()
-                .collect(Collectors.toMap(Anniversary::getVipId, result -> result.getVipId() == null ? Boolean.TRUE : Boolean.FALSE));
+                .collect(Collectors.toMap(Anniversary::getVipId, result -> result.getVipId() == null ? Boolean.FALSE : Boolean.TRUE));
 
         Map<Integer, Integer> hash = new HashMap<>(vips.size());
         for (Vip vip : vips) {
