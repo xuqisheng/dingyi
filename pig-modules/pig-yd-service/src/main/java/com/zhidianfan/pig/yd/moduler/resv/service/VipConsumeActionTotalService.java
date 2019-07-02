@@ -346,9 +346,23 @@ public class VipConsumeActionTotalService {
         }
         log.debug("原来的撤单桌数为:[{}], 现在的撤单桌数为:[{}]", oldCancelTableNo, cancelTableNo + oldCancelTableNo);
         VipConsumeActionTotal total = new VipConsumeActionTotal();
+        total.setTotalOrderNo(0);
+        total.setTotalTableNo(0);
+        total.setTotalPersonNo(0);
+        total.setTotalConsumeAvg(0);
+        total.setTableConsumeAvg(0);
+        total.setPersonConsumeAvg(0);
+        total.setFirstConsumeTime(CustomerValueConstants.DEFAULT_FIRST_TIME);
+        total.setConsumeFrequency(0.0F);
+        total.setLastConsumeTime(LocalDateTime.now());
+        total.setCreateUserId(0L);
+        total.setCreateTime(LocalDateTime.now());
+        total.setUpdateUserId(0L);
+
         total.setVipId(vipId);
         total.setCancelTableNo(cancelTableNo + oldCancelTableNo);
         total.setUpdateTime(LocalDateTime.now());
+
         vipConsumeActionTotalMapper.insertOrUpdate(total);
     }
 
@@ -362,6 +376,19 @@ public class VipConsumeActionTotalService {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         LocalDateTime dateTime = LocalDateTime.parse(value, formatter);
         VipConsumeActionTotal total = new VipConsumeActionTotal();
+        total.setTotalOrderNo(0);
+        total.setTotalTableNo(0);
+        total.setTotalPersonNo(0);
+        total.setCancelTableNo(0);
+        total.setTotalConsumeAvg(0);
+        total.setTableConsumeAvg(0);
+        total.setPersonConsumeAvg(0);
+        total.setConsumeFrequency(0.0F);
+        total.setLastConsumeTime(CustomerValueConstants.DEFAULT_END_TIME);
+        total.setCreateUserId(100000L);
+        total.setCreateTime(LocalDateTime.now());
+        total.setUpdateUserId(100000L);
+
         total.setVipId(vipId);
         total.setFirstConsumeTime(dateTime);
         total.setUpdateTime(LocalDateTime.now());
