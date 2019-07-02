@@ -290,8 +290,11 @@ public class SmsController {
 
         Wrapper<SmsMarketing> wrapper = new EntityWrapper<SmsMarketing>()
                 .eq("business_id", marketingDTO.getBusinessId())
-                .and("(select anniversary_type from business_marketing_sms_template " +
-                        "where id =  template_id  ) != 1");
+                .andNew("((select anniversary_type from business_marketing_sms_template " +
+                        "where id =  template_id  )!= 1 " +
+                        "or  template_id is null)");
+
+        //((select anniversary_type from business_marketing_sms_template where id =  template_id  )!= 1 or  template_id is null)
         String status = marketingDTO.getStatus();
         if (StringUtils.isNotBlank(status)) {
             wrapper.eq("status", status);
@@ -311,7 +314,10 @@ public class SmsController {
     @GetMapping("/marketingPage")
     public ResponseEntity<Page<SmsMarketing>> marketingSmsPage(@Valid MarketingDTO marketingDTO) {
 
-        Wrapper<SmsMarketing> wrapper = new EntityWrapper<SmsMarketing>().eq("business_id", marketingDTO.getBusinessId());
+        Wrapper<SmsMarketing> wrapper = new EntityWrapper<SmsMarketing>().eq("business_id", marketingDTO.getBusinessId())
+                .andNew("((select anniversary_type from business_marketing_sms_template " +
+                "where id =  template_id  )!= 1 " +
+                "or  template_id is null)");
         String status = marketingDTO.getStatus();
         if (StringUtils.isNotBlank(status)) {
             wrapper.eq("status", status);
