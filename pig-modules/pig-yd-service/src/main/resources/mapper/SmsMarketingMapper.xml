@@ -14,6 +14,8 @@
         <result column="created_at" property="createdAt" />
         <result column="updated_at" property="updatedAt" />
         <result column="remark" property="remark" />
+        <result column="custom" property="custom" />
+        <result column="target_phones" property="targetPhones" />
         <result column="num" property="num" />
         <result column="sms_num" property="smsNum" />
         <result column="vip_value_id" property="vipValueId" />
@@ -23,7 +25,19 @@
         <result column="user_name" property="userName" />
         <result column="campaign_id" property="campaignId" />
         <result column="sex" property="sex" />
+        <result column="accept_custome" property="acceptCustome" />
+        <result column="version" property="version" />
+        <result column="client" property="client" />
+        <result column="is_refund" property="isRefund" />
+        <result column="template_id" property="templateId" />
+        <result column="sms_edit_type" property="smsEditType" />
+        <result column="app_user_id" property="appUserId" />
+        <result column="auditing_at" property="auditingAt" />
+        <result column="auditing_user_id" property="auditingUserId" />
+        <result column="msgid" property="msgid" />
+        <result column="error_msg" property="errorMsg" />
     </resultMap>
+
     <select id="sendSmsNum" resultType="java.lang.Integer">
 
         select if(sum(s.sms_num) is null,0,sum(s.sms_num))

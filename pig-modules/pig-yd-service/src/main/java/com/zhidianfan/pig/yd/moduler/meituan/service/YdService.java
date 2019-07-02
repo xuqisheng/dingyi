@@ -286,8 +286,20 @@ public class YdService {
         resvOrderThird.setVipSex(meituanOrderDTO.getGender() == 10 ? "女士" : "先生");
 
         JSONObject data = new JSONObject();
-        //插入第三方订单
-        boolean success = resvOrderThirdService.insert(resvOrderThird);
+
+
+        //只插入一次
+        boolean success  =false;
+        int count = resvOrderThirdService.selectCount(new EntityWrapper<ResvOrderThird>()
+                .eq("third_order_no", meituanOrderDTO.getOrderSerializedId()));
+
+        log.info("第三方订单单号的订单数: {}", count);
+
+        if (count ==  0) {
+            //插入第三方订单
+            success = resvOrderThirdService.insert(resvOrderThird);
+        }
+
         Business business = businessService.selectOne(new EntityWrapper<Business>().eq("id", resvOrderThird.getBusinessId()));
 
         if (success) {
@@ -347,8 +359,12 @@ public class YdService {
                     resvOrderAndroid.setBatchNo("pc" + orderNo);
                     resvOrderAndroid.setVipSex(meituanOrderDTO.getGender() == 10 ? "女" : "男");
 
-                    resvOrderAndroid.setExternalSourceName("2");
+                    resvOrderAndroid.setExternalSourceId(2);
                     resvOrderAndroid.setExternalSourceName(resvOrderThird.getSource());
+
+                    //设置为deviceType 为 1 默认为电话机
+                    resvOrderAndroid.setDeviceType("1");
+
 
                     resvOrderAndroid.setVipId(0);
                     boolean insert = iResvOrderAndroidService.insert(resvOrderAndroid);
@@ -392,7 +408,7 @@ public class YdService {
                         .eq("status", '1'));
 
                 for (Business business1 : businessList) {
-                    if (business1.getIsPcPush() == 1) {
+                    if (business1.getIsPcPush()!=null   && business1.getIsPcPush() == 1) {
                         jgPush.setType("WEB");
                         jgPush.setBusinessId(String.valueOf(business1.getId()));
                         log.info("pc版推送:{}", business1.getId());
@@ -403,8 +419,8 @@ public class YdService {
                 e.printStackTrace();
             }
         } else {
-            data.put("code", 30003);
-            data.put("message", "缺少订单参数");
+            data.put("code", 40002);
+            data.put("message", "订单已经存在");
             basicBO.setData(null);
             basicBO.setError(data);
         }
@@ -536,7 +552,12 @@ public class YdService {
         MeituanOrderUpdateDTO meituanOrderUpdateDTO = JSONObject.parseObject(orderDTO.getData(), MeituanOrderUpdateDTO.class);
         log.info("meituanOrderUpdateDTO:" + meituanOrderUpdateDTO);
 
-        resvOrderThird.setFlag(0);
+        //不是商户拒单,则设置为消息未读
+        if(meituanOrderUpdateDTO.getStatus() != 30) {
+            resvOrderThird.setFlag(0);
+            log.info("如果不是商户自己取消,则设置消息为未读: resvOrderThird.getFlag" +resvOrderThird.getFlag());
+        }
+
 
         //如果订单状态为30
 //        if (meituanOrderUpdateDTO.getStatus() == 30) {
@@ -618,6 +639,8 @@ public class YdService {
             }
             orderBO.setData("OK");
             orderBO.setError(null);
+
+
             JgPush jgPush = new JgPush();
             jgPush.setBusinessId(orderDTO.getEPoiId());
             jgPush.setMsgSeq(String.valueOf(getNextDateId("MT_ORDER")));
@@ -627,6 +650,7 @@ public class YdService {
             String orderMsg = JsonUtils.obj2Json(resvOrderThird).replaceAll("\r|\n", "").replaceAll("\\s*", "");
             jsonObject.put("data", orderMsg);
             jgPush.setMsg(jsonObject.toString());
+
             try {
                 pushFeign.pushMsg(jgPush.getType(), jgPush.getUsername(), jgPush.getMsgSeq(), jgPush.getBusinessId(), jgPush.getMsg());
                 jgPush.setType("ANDROID_PHONE");
@@ -894,13 +918,15 @@ public class YdService {
             resvOrderAndroid.setTableName(tableName);
             String orderNo = IdUtils.makeOrderNo();
             //增加ExternalSourceName  ID
-            resvOrderAndroid.setExternalSourceName("4");
+            resvOrderAndroid.setExternalSourceId(4);
             resvOrderAndroid.setExternalSourceName(resvOrderThird.getSource());
             resvOrderAndroid.setResvOrder(orderNo);
             resvOrderAndroid.setBatchNo("pc" + orderNo);
             resvOrderAndroid.setVipSex(resvOrderThird.getVipSex().equals("先生") ? "男" : "女");
             resvOrderAndroid.setVipId(vip1.getId());
 
+            //设置为deviceType 为 1 默认为电话机
+            resvOrderAndroid.setDeviceType("1");
 
             boolean insert = iResvOrderAndroidService.insert(resvOrderAndroid);
             //插入订单自动接单日志
@@ -1291,6 +1317,7 @@ public class YdService {
             resvOrderThird.setRemark("客户取消易订公众号订单");
             iResvOrderThirdService.updateById(resvOrderThird);
 
+            
             //根据有无订单是否修改订单状态
             List<ResvOrderAndroid> orderAndroidList = iResvOrderAndroidService.selectList(new EntityWrapper<ResvOrderAndroid>()
                     .eq("third_order_no", thirdOrderId));

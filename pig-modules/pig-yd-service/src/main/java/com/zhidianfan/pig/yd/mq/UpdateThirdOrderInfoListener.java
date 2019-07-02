@@ -2,19 +2,19 @@ package com.zhidianfan.pig.yd.mq;
 
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
-import com.rabbitmq.client.AMQP;
 import com.zhidianfan.pig.common.util.JsonUtils;
 import com.zhidianfan.pig.yd.moduler.common.constant.QueueName;
+import com.zhidianfan.pig.yd.moduler.common.dao.entity.AutoReceiptSmsConfig;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.ResvOrderAndroid;
+import com.zhidianfan.pig.yd.moduler.common.service.IAutoReceiptSmsConfigService;
 import com.zhidianfan.pig.yd.moduler.common.service.IResvOrderAndroidService;
-import com.zhidianfan.pig.yd.moduler.common.service.IResvOrderThirdService;
 import com.zhidianfan.pig.yd.moduler.meituan.service.YdService;
 import com.zhidianfan.pig.yd.moduler.meituan.service.rmi.PushFeign;
 import com.zhidianfan.pig.yd.moduler.meituan.service.rmi.dto.JgPush;
+import com.zhidianfan.pig.yd.moduler.resv.service.AddOrderService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateFormatUtils;
-import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitHandler;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,13 +42,19 @@ public class UpdateThirdOrderInfoListener {
     @Autowired
     private RedisTemplate redisTemplate;
 
+    @Autowired
+    private AddOrderService addOrderService;
+
+    @Autowired
+    private IAutoReceiptSmsConfigService iAutoReceiptSmsConfigService;
+
 
     @RabbitHandler
     @RabbitListener(queues = QueueName.TRVIPINFO_AUTOUPDATE)
     public void onMessage(String orderNoString) {
 
         try {
-            log.info("\n\n\n\n\n\n\n\n\n\n\n\n第三方订单自动接单开始 :{} \n\n\n\n\n\n\n\n\n\n\n\n", orderNoString);
+            log.info("第三方订单自动接单开始 :{} ", orderNoString);
             //等自动接单动作完成
             Thread.sleep(1000);
             ydService.updateOrderAndVipInfo(orderNoString);
@@ -56,10 +62,36 @@ public class UpdateThirdOrderInfoListener {
             //自动接单只接单桌订单
             ResvOrderAndroid resvOrderAndroid = iResvOrderAndroidService.selectOne(new EntityWrapper<ResvOrderAndroid>()
                     .eq("third_order_no", orderNoString));
+
+            //推送 消息
             PushMes(resvOrderAndroid);
+
+            //查询是否自动发送短信发送
+            sendMes(resvOrderAndroid.getBusinessId(), resvOrderAndroid.getBatchNo());
+
         } catch (Exception e) {
-            log.info("自动接单失败：\n{}", e.getMessage());
+            log.info("自动接单失败：{}", e.getMessage());
         }
+    }
+
+
+    /**
+     * 自动接单是否发送短信
+     *
+     * @param businessId 酒店id
+     * @param batchNo    批次号id
+     */
+    private void sendMes(Integer businessId, String batchNo) {
+
+        // 1. 查询配置自动接单短信为发送
+        AutoReceiptSmsConfig autoReceiptSmsConfig = iAutoReceiptSmsConfigService.selectOne(new EntityWrapper<AutoReceiptSmsConfig>()
+                .eq("business_id", businessId));
+
+        // 2. 若为发送则根据订单信息发送
+        if (autoReceiptSmsConfig != null && autoReceiptSmsConfig.getStatus().equals(1)) {
+            addOrderService.sendResvMessage("order", batchNo);
+        }
+
     }
 
 

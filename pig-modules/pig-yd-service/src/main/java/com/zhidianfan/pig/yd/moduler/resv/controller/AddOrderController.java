@@ -490,7 +490,7 @@ public class AddOrderController {
     }
 
 
-    protected static ResponseEntity processResult(MessageResultBO messageResultBO, Tip tip) {
+    static ResponseEntity processResult(MessageResultBO messageResultBO, Tip tip) {
         Map<String, Object> map = Maps.newHashMap();
         map.put("code", tip.getCode());
         map.put("msg", tip.getMsg());

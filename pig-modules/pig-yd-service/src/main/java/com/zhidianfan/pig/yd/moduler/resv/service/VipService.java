@@ -77,6 +77,9 @@ public class VipService {
     @Autowired
     private IAnniversaryService anniversaryMapper;
 
+    @Autowired
+    private VipAllergenService vipAllergenService;
+
     /**
      * 根据酒店id与手机号更新或者新增Vip
      *
@@ -113,6 +116,7 @@ public class VipService {
                 sendMq(vip);
             }
         }
+
 
 
         return b;
@@ -154,7 +158,7 @@ public class VipService {
                 .eq("vip_phone", phone));
 
         if (vipInfo == null) {
-            return null;
+            return new VipInfoDTO();
         }
 
 
@@ -187,6 +191,118 @@ public class VipService {
         vipInfoDTO.setLastEatTime(lastEatTime);
 
         return vipInfoDTO;
+    }
+
+
+    /**
+     * 品牌酒店连锁查询客户信息.
+     *
+     * @param businessId 酒店id
+     * @param phone      酒店号码
+     * @return 客户连锁信息
+     */
+    private VipInfoDTO getBrandVipInfo(List<Business> brandBusinessList, Integer brandId,
+                                       Integer businessId, String phone) {
+
+
+        VipInfoDTO vipInfoDTO = new VipInfoDTO();
+
+        // 1. 先查询这个客户在这个酒店的信息
+        int selectCount = iVipService.selectCount(new EntityWrapper<Vip>()
+                .eq("business_id", businessId)
+                .eq("vip_phone", phone));
+
+
+        //这个酒店没这个客户的基本数据
+        if (selectCount == 0) {
+
+            for (Business business : brandBusinessList) {
+                selectCount = iVipService.selectCount(new EntityWrapper<Vip>()
+                        .eq("business_id", business.getId())
+                        .eq("vip_phone", phone));
+
+                //如果查询到连锁酒店下某个酒店有该客户信息 则返回
+                if (selectCount != 0) break;
+            }
+
+        } else {
+            //如果原始酒店 有该vip 数据,则查询这个酒店的客户信息就餐信息
+            vipInfoDTO = getVipInfo(businessId, phone);
+        }
+
+
+        //如果所有酒店都没这个客户数据, 则返回空的vipInfo
+        if (selectCount == 0) {
+            return vipInfoDTO;
+        }
+
+
+        List<Vip> vips = new ArrayList<>();
+        //查询该品牌下的该手机号码的客户
+        for (Business business : brandBusinessList) {
+            Vip vip = iVipService.selectOne(new EntityWrapper<Vip>()
+                    .eq("business_id", business.getId())
+                    .eq("vip_phone", phone));
+
+            if (vip != null)
+                vips.add(vip);
+
+        }
+
+
+        //总消费次数
+        Integer brandResvTimes = 0;
+        Integer brandactResvTimes = 0;
+
+        //遍历每个vip
+        for (Vip vip : vips) {
+
+            //1.查询客户预订次数
+            brandResvTimes += iResvOrderAndroidService.selectResvTimes(vip.getId(), null);
+            //2.查询实际消费次数
+            brandactResvTimes += iResvOrderAndroidService.selectResvTimes(vip.getId(), OrderStatus.SETTLE_ACCOUNTS.code);
+
+        }
+
+        ResvOrderAndroid resvOrderAndroid = iResvOrderAndroidService.selectBrandLastEatTime(phone, brandId);
+
+        // 上一次品牌就餐时间筛选
+        vipInfoDTO.setLastEatTime(resvOrderAndroid == null ? null : resvOrderAndroid.getResvDate());
+        // 上一次就餐门店筛选
+        vipInfoDTO.setLastBrandBusinessName(resvOrderAndroid == null ? null : resvOrderAndroid.getBusinessName());
+
+        //品牌总预定次数
+        vipInfoDTO.setBrandResvTimes(brandResvTimes);
+        //品牌总消费次数
+        vipInfoDTO.setBrandActResvTimes(brandactResvTimes);
+
+        return vipInfoDTO;
+    }
+
+
+    /**
+     * 来电弹屏客户信息展示
+     *
+     * @param brandId 品牌
+     * @param phone   手机号码
+     * @return 来电弹屏客户信息
+     */
+    public VipInfoDTO callscreenvipinfo(Integer brandId, Integer businessId, String phone) {
+
+
+        //1. 查询该酒店是否连锁酒店
+        List<Business> brandBusinessList = businessService.selectList(new EntityWrapper<Business>()
+                .eq("brand_id", brandId)
+                .eq("status", "1"));
+
+        //1.1 如果没有连锁酒店,则直接走单酒店查询道路
+        if (brandId.equals(0) || brandBusinessList.size() == 1) {
+            return getVipInfo(businessId, phone);
+        } else {
+            //1.2 如果是连锁酒店则走连锁酒店查询
+            return getBrandVipInfo(brandBusinessList, brandId, businessId, phone);
+        }
+
     }
 
 
@@ -261,8 +377,8 @@ public class VipService {
     /**
      * 根据id更新客户信息
      *
-     * @param vip
-     * @return
+     * @param vip vip信息
+     * @return 更新结果
      */
     public boolean updateVipInfo(Vip vip) {
 
@@ -281,9 +397,9 @@ public class VipService {
      *
      * @param businessId 酒店id
      * @param phone      号码
-     * @return
+     * @return 模糊查询
      */
-    public Page<Vip> fuzzyQueryVipList(Integer businessId, String phone) {
+    public Page<VipAllergenDTO> fuzzyQueryVipList(Integer businessId, String phone) {
 
         Page<Vip> page = new PageFactory().defaultPage();
 
@@ -294,8 +410,24 @@ public class VipService {
                 .orderBy("updated_at", false)
                 .orderBy("id", false));
 
-        return vipPage;
+        Page<VipAllergenDTO> page1 = new Page<>();
+        BeanUtils.copyProperties(page, page1);
+
+        List<Vip> records = vipPage.getRecords();
+        List<VipAllergenDTO> allergenDTOS = new ArrayList<>();
+
+        for (Vip v : records) {
+
+            VipAllergenDTO vipAllergenDTO = new VipAllergenDTO();
+            BeanUtils.copyProperties(v, vipAllergenDTO);
+            vipAllergenDTO.setAllergen(vipAllergenService.selectvipAllergen(v.getId()));
+            allergenDTOS.add(vipAllergenDTO);
+
+        }
+        page1.setRecords(allergenDTOS);
+        return page1;
     }
+
 
     public Page<StatisticsVipDTO> statisticsViplist(Integer businessId, String queryVal) {
         Page<StatisticsVipDTO> page = new PageFactory().defaultPage();
@@ -311,7 +443,7 @@ public class VipService {
      * 精细查询酒店客户
      *
      * @param vipInfoDTO 姓名 电话 客户分类 客户价值 预订次数 最近就餐
-     * @return
+     * @return 客户酒店
      */
     public Page<VipTableDTO> conditionFindVips(VipInfoDTO vipInfoDTO) {
 
@@ -322,12 +454,12 @@ public class VipService {
         return page;
     }
 
+
     public List<VipTableDTO> excelConditionFindVips(VipInfoDTO vipInfoDTO) {
 
-        List<VipTableDTO> vipInfoDTOS = iVipService.excelConditionFindVips(vipInfoDTO);
-
-        return vipInfoDTOS;
+        return iVipService.excelConditionFindVips(vipInfoDTO);
     }
+
 
     public void downloadexcel(List<VipTableDTO> records) {
 
@@ -381,12 +513,12 @@ public class VipService {
                     && (map.get("vipPhone") != null && !"".equals(map.get("vipPhone")))
                     && isMobileNO(map.get("vipPhone").toString())
                     && map.get("vipSex") != null && !"".equals(map.get("vipSex"))
-                    && ("男".equals(map.get("vipSex")) ||  "女".equals(map.get("vipSex")))
+                    && ("男".equals(map.get("vipSex")) || "女".equals(map.get("vipSex")))
 
             ) {
 
                 //剔除生日格式不正确的
-                if (map.get("vipBirthday") != null  && StringUtils.isNotEmpty(map.get("vipBirthday").toString())
+                if (map.get("vipBirthday") != null && StringUtils.isNotEmpty(map.get("vipBirthday").toString())
                         && !valiDateTimeWithLongFormat(map.get("vipBirthday").toString())) {
                     //加入录入失败的客户信息
                     failVips.add(vip);
@@ -571,6 +703,7 @@ public class VipService {
 
     /**
      * 根据酒店 id 查询 vip 表的用户信息
+     *
      * @param hotelId 酒店 id
      * @return 酒店所有 vip 列表
      */
@@ -614,6 +747,7 @@ public class VipService {
 
     /**
      * 根据主键 id 列表，查询 vip 的信息
+     *
      * @param idList 主键集合
      * @return Vip 信息列表
      */
@@ -626,6 +760,7 @@ public class VipService {
 
     /**
      * 计算客户资料完整度
+     *
      * @param vip vip 信息
      * @return 完整度，15% 的字样
      */
@@ -659,6 +794,7 @@ public class VipService {
 
     /**
      * 计算客户资料完整度
+     *
      * @param vips vip 信息
      * @return 完整度，15 的字样
      */
@@ -703,7 +839,8 @@ public class VipService {
 
     /**
      * 资料完整度
-     * @param vip vip 信息
+     *
+     * @param vip          vip 信息
      * @param profileCount 纪念日
      * @return 85% 字样
      */

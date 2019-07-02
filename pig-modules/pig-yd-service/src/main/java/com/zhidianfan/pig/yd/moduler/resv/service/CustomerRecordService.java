@@ -6,6 +6,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.*;
 import com.zhidianfan.pig.yd.moduler.common.service.ICustomerRecordService;
+import com.zhidianfan.pig.yd.moduler.common.service.ICustomerValueListService;
 import com.zhidianfan.pig.yd.moduler.common.service.IGuestCustomerVipMappingService;
 import com.zhidianfan.pig.yd.moduler.common.service.IMasterCustomerVipMappingService;
 import com.zhidianfan.pig.yd.moduler.resv.constants.CustomerValueConstants;
@@ -46,9 +47,8 @@ public class CustomerRecordService {
     private ICustomerRecordService customerRecordMapper;
 
 
-    public Map<Integer, List<CustomerRecord>> getCustomerRecord(List<Vip> vips, Map<Integer, List<ResvOrder>> resvOrdersMap, Map<Integer, CustomerValueList> customerValueListMap,
-                                                                List<MasterCustomerVipMapping> masterCustomerVipMappings, List<GuestCustomerVipMapping> guestCustomerVipMappings,
-                                                                ConfigTaskExec configTaskExec) {
+    public Map<Integer, List<CustomerRecord>> getCustomerRecord(List<Vip> vips, Map<Integer, List<ResvOrder>> resvOrdersMap, List<MasterCustomerVipMapping> masterCustomerVipMappings,
+                                                                List<GuestCustomerVipMapping> guestCustomerVipMappings, ConfigTaskExec configTaskExec, CustomerValueTask customerValueTask) {
 
         cleanData(vips, configTaskExec);
         Map<Integer, List<CustomerRecord>> map = new HashMap<>();
@@ -56,6 +56,8 @@ public class CustomerRecordService {
         List<AppUser> appUserList = businessCustomerAnalysisInfoService.getAppUserList(appUserIdList);
         List<Integer> vipIdList = getVipIdList(vips);
         Map<Integer, List<CustomerRecord>> nowChangeOrderInfo = getNowChangeOrderInfo(vips);
+        Map<Integer, CustomerRecord> nowChangeAppUser = getNowChangeAppUser(vips);
+        Map<Integer, CustomerRecord> oldCustomerRecord = getOldCustomerRecord(vips);
 
 
         for (Vip vip : vips) {
@@ -64,14 +66,15 @@ public class CustomerRecordService {
                 List<CustomerRecord> recordList = Lists.newArrayList();
 
                 LocalDateTime lastChangeTime = getLastChangeTime(nowChangeOrderInfo, vip);
-                CustomerRecord customerRecord = getCustomerRecord(vip, nowChangeOrderInfo.get(vip.getId()));
+                // CustomerRecord customerRecordAppUser = getCustomerRecord(vip, nowChangeAppUser.get(vip.getId()));
+                CustomerRecord customerRecordAppUser = nowChangeAppUser.get(vip.getId());
 
                 List<CustomerRecord> customerRecords = reserveOrderCustomer(vip, resvOrdersMap.get(vip.getId()), lastChangeTime);
                 List<CustomerRecord> customerRecords1 = reserveOrderESC(vip, resvOrdersMap.get(vip.getId()), lastChangeTime);
                 List<CustomerRecord> customerRecords2 = manOrder2(vip, masterCustomerVipMappings, resvOrdersMap, lastChangeTime);
                 List<CustomerRecord> customerRecords3 = guestOrder2(vip, guestCustomerVipMappings, resvOrdersMap, lastChangeTime);
-                CustomerRecord valueChangeRecord = valueChange(vip, customerValueListMap.get(vip.getId()), configTaskExec);
-                CustomerRecord userChangeRecord = appUserChange2(vip, customerValueListMap.get(vip.getId()), customerRecord, appUserList);
+                CustomerRecord valueChangeRecord = valueChange(vip, oldCustomerRecord.get(vip.getId()), configTaskExec, customerValueTask);
+                CustomerRecord userChangeRecord = appUserChange2(vip, customerRecordAppUser, appUserList, customerValueTask);
 
                 recordList.addAll(customerRecords);
                 recordList.addAll(customerRecords1);
@@ -92,6 +95,30 @@ public class CustomerRecordService {
         }
 
          return map;
+    }
+
+    public Map<Integer, CustomerRecord> getOldCustomerRecord(List<Vip> vips) {
+        List<Integer> vipIdList = getVipIdList(vips);
+        Wrapper<CustomerRecord> wrapper = new EntityWrapper<>();
+        wrapper.eq("vip_id", vipIdList);
+        wrapper.eq("log_type", 5);
+        List<CustomerRecord> customerRecordList = customerRecordMapper.selectList(wrapper);
+        Map<Integer, List<CustomerRecord>> customerRecordMap = customerRecordList.stream()
+                .collect(Collectors.groupingBy(CustomerRecord::getVipId));
+
+        Map<Integer, CustomerRecord> resultMap = new HashMap<>();
+        for (Map.Entry<Integer, List<CustomerRecord>> entry : customerRecordMap.entrySet()) {
+            Integer key = entry.getKey();
+            List<CustomerRecord> value = entry.getValue();
+            Optional<CustomerRecord> maxCustomerRecord = value.stream()
+                    .filter(Objects::nonNull)
+                    .filter(customerRecord -> Objects.nonNull(customerRecord.getUpdateTime()))
+                    .max(Comparator.comparing(CustomerRecord::getUpdateTime));
+
+            resultMap.put(key, maxCustomerRecord.orElse(new CustomerRecord()));
+        }
+
+        return resultMap;
     }
 
     private LocalDateTime getLastChangeTime(Map<Integer, List<CustomerRecord>> nowChangeOrderInfo, Vip vip) {
@@ -136,6 +163,38 @@ public class CustomerRecordService {
         }
         return recordList.stream()
                 .collect(Collectors.groupingBy(CustomerRecord::getVipId));
+    }
+
+    /**
+     *
+     * @param vips vip 列表
+     * @return
+     */
+    private Map<Integer, CustomerRecord> getNowChangeAppUser(List<Vip> vips) {
+        List<Integer> vipIdList = getVipIdList(vips);
+        Wrapper<CustomerRecord> wrapper = new EntityWrapper<>();
+        wrapper.in("vip_id", vipIdList.toArray());
+        wrapper.eq("log_type", 6);
+
+        List<CustomerRecord> recordList = customerRecordMapper.selectList(wrapper);
+        if (CollectionUtils.isEmpty(recordList)) {
+            return Maps.newHashMap();
+        }
+
+        Map<Integer, List<CustomerRecord>> customerRecordMap = recordList.stream()
+                .collect(Collectors.groupingBy(CustomerRecord::getVipId));
+        Map<Integer, CustomerRecord> resultMap = new HashMap<>();
+        for (Map.Entry<Integer, List<CustomerRecord>> entry : customerRecordMap.entrySet()) {
+            Integer key = entry.getKey();
+            List<CustomerRecord> value = entry.getValue();
+            Optional<CustomerRecord> maxCustomerRecord = value.stream()
+                    .filter(Objects::nonNull)
+                    .filter(customerRecord -> Objects.nonNull(customerRecord.getUpdateTime()))
+                    .max(Comparator.comparing(CustomerRecord::getUpdateTime));
+            resultMap.put(key, maxCustomerRecord.orElse(new CustomerRecord()));
+        }
+
+        return resultMap;
     }
 
     private List<Integer> getVipIdList(List<Vip> vips) {
@@ -238,11 +297,11 @@ public class CustomerRecordService {
         record.setVipId(vipId);
         Date updatedAt = order.getUpdatedAt();
         record.setLogType(type);
-        LocalDateTime logTime = getLocalDateTime(updatedAt);
-        record.setLogTime(logTime);
+        Date resvDate = order.getResvDate();
+        LocalDateTime resvDateLocalDateTime = getLocalDateTime(resvDate);
+        record.setLogTime(resvDateLocalDateTime);
         record.setResvOrder(order.getResvOrder());
-        LocalDateTime resvDate = getLocalDateTime(order.getResvDate());
-        record.setResvDate(resvDate);
+        record.setResvDate(resvDateLocalDateTime);
         record.setMealTypeId(order.getMealTypeId());
         record.setMealTypeName(order.getMealTypeName());
         Integer payAmount = getPayAmount(order);
@@ -337,7 +396,7 @@ public class CustomerRecordService {
         List<CustomerRecord> recordList = resvOrders.stream()
                 .filter(order -> isLastOrder(nowChange, order))
                 .filter(order -> "4".equals(order.getStatus()))
-                .map(order -> setCustomerRecord(order, vip, CustomerValueConstants.RECORD_TYPE_ESC))
+                .map(order -> setCustomerRecordESC(order, vip, CustomerValueConstants.RECORD_TYPE_ESC))
                 .collect(Collectors.toList());
 
         return recordList;
@@ -593,14 +652,14 @@ public class CustomerRecordService {
     /**
      * 价值变更，之前的价值变更与现在的价值进行对比
      */
-    private CustomerRecord valueChange(Vip vip, CustomerValueList customerValueList, ConfigTaskExec configTaskExec) {
+    private CustomerRecord valueChange(Vip vip, CustomerRecord customerRecord, ConfigTaskExec configTaskExec, CustomerValueTask customerValueTask) {
         LocalTime taskStartTime = configTaskExec.getStartTime();
         // 1-意向客户，2-活跃客户，3-沉睡客户，4-流失客户
         // 1活跃用户 2沉睡用户 3流失用户 4意向用户 5恶意用户 6高价值用户
         String customerValue = getCustomerValue(vip);
         Integer firstClassValue;
-        if (customerValueList != null) {
-            firstClassValue = customerValueList.getFirstClassValue();
+        if (customerRecord != null) {
+            firstClassValue = customerRecord.getNewFirstValue();
         } else {
             firstClassValue = 1;
         }
@@ -618,21 +677,14 @@ public class CustomerRecordService {
         if (StringUtils.isNotBlank(value) && value.length() >= 2) {
             lastValue = value.substring(0, 2);
         }
-        if (customerValueList != null && !customerValueNameS.equals(lastValue)) {
+        if (customerRecord != null && !customerValueNameS.equals(lastValue)) {
             CustomerRecord record = new CustomerRecord();
-            record.setVipId(customerValueList.getVipId());
+            record.setVipId(customerRecord.getVipId());
             record.setLogType(CustomerValueConstants.RECORD_TYPE_VALUE_CHANGE);
-
-            LocalDate nowDate = LocalDate.now();
-            LocalTime nowTime = LocalTime.now();
-            LocalDateTime dateTime;
-            // 没有超过 00 点，结束时间 + 1 天，超过了，开始时间 -1 天
-            if (nowTime.isAfter(taskStartTime) && nowTime.isBefore(LocalTime.MAX)) {
-                dateTime = LocalDateTime.of(nowDate, nowTime);
-            } else {
-                dateTime = LocalDateTime.of(nowDate.minusDays(1), nowTime);
-            }
-            record.setLogTime(dateTime);
+            // 取计划开始时间-1做为价值变更时间
+            LocalDate planTime = customerValueTask.getPlanTime();
+            LocalDateTime logTime = LocalDateTime.of(planTime.minusDays(1), LocalTime.MIN);
+            record.setLogTime(logTime);
             record.setResvOrder(StringUtils.EMPTY);
             record.setResvDate(LocalDateTime.now());
             record.setMealTypeId(0);
@@ -717,12 +769,11 @@ public class CustomerRecordService {
     /**
      * 营销经理变更
      * @param vip 当前 vip
-     * @param customerValueList 最后一条记录
      * @param customerRecord 最后一条客户记录，其中记录了最后一次经销经理
      * @param appUserList 所有的营销经理列表
      * @return CustomerRecord
      */
-    private CustomerRecord appUserChange2(Vip vip, CustomerValueList customerValueList, CustomerRecord customerRecord, List<AppUser> appUserList) {
+    private CustomerRecord appUserChange2(Vip vip, CustomerRecord customerRecord, List<AppUser> appUserList, CustomerValueTask customerValueTask) {
         if (vip == null) {
             return null;
         }
@@ -739,7 +790,7 @@ public class CustomerRecordService {
         Integer changeAppUserId = customerRecord.getAppUserId();
         for (AppUser appUser : appUserList) {
             if (!appUserId.equals(changeAppUserId)) {
-                return setAppUserCustomerRecord(vip, customerValueList, appUserId, appUser);
+                return setAppUserCustomerRecord(vip, appUserId, appUser, customerValueTask);
             }
         }
 
@@ -750,17 +801,17 @@ public class CustomerRecordService {
     /**
      * 设置营销经理变更的对象实体
      * @param vip
-     * @param customerValueList
      * @param appUserId
      * @param appUser
      * @return CustomerRecord
      */
-    private CustomerRecord setAppUserCustomerRecord(Vip vip, CustomerValueList customerValueList, Integer appUserId, AppUser appUser) {
+    private CustomerRecord setAppUserCustomerRecord(Vip vip, Integer appUserId, AppUser appUser, CustomerValueTask customerValueTask) {
         CustomerRecord customerRecord = new CustomerRecord();
-        customerRecord.setVipId(customerValueList.getVipId());
+        customerRecord.setVipId(vip.getId());
         customerRecord.setLogType(CustomerValueConstants.RECORD_TYPE_APP_USER_CHANGE);
-        LocalDateTime logTime = getLocalDateTime(vip.getUpdatedAt());
-        customerRecord.setLogTime(logTime);
+        LocalDate planTime = customerValueTask.getPlanTime();
+        LocalTime min = LocalTime.MIN;
+        customerRecord.setLogTime(LocalDateTime.of(planTime.minusDays(1), min));
         customerRecord.setResvOrder(StringUtils.EMPTY);
         customerRecord.setResvDate(LocalDateTime.now());
         customerRecord.setMealTypeId(0);
@@ -792,12 +843,51 @@ public class CustomerRecordService {
         CustomerRecord record = new CustomerRecord();
         record.setVipId(vip.getId());
         record.setLogType(type);
-        Date updatedAt = resvOrder.getUpdatedAt();
-        LocalDateTime logTime = getLocalDateTime(updatedAt);
-        record.setLogTime(logTime);
+        Date resvDate = resvOrder.getResvDate();
+        LocalDateTime resvLocalDateTime = getLocalDateTime(resvDate);
+        record.setLogTime(resvLocalDateTime);
         record.setResvOrder(resvOrder.getResvOrder());
-        LocalDateTime resvDate = getLocalDateTime(resvOrder.getResvDate());
-        record.setResvDate(resvDate);
+        // LocalDateTime resvDate = getLocalDateTime(resvDate);
+        record.setResvDate(resvLocalDateTime);
+        record.setMealTypeId(resvOrder.getMealTypeId());
+        record.setMealTypeName(resvOrder.getMealTypeName());
+        Integer payAmount = getPayAmount(resvOrder);
+        record.setConsumeAmount(payAmount);
+        int resvNo = getResvNo(resvOrder);
+        record.setPersonNo(resvNo);
+        record.setTableId(resvOrder.getTableId());
+        record.setTableName(resvOrder.getTableName());
+        record.setVipName(resvOrder.getVipName());
+        String vipPhone = resvOrder.getVipPhone();
+        record.setVipPhone(PhoneUtils.getPhone(vipPhone));
+        record.setAppUserName(resvOrder.getAppUserName());
+        record.setAppUserId(resvOrder.getAppUserId());
+        record.setOperationLog(StringUtils.EMPTY);
+        record.setCreateUserId(0L);
+        record.setCreateTime(LocalDateTime.now());
+        record.setUpdateUserId(0L);
+        record.setUpdateTime(LocalDateTime.now());
+        return record;
+    }
+
+    /**
+     * 退订订单
+     * @param resvOrder
+     * @param vip
+     * @param type
+     * @return
+     */
+    private CustomerRecord setCustomerRecordESC(ResvOrder resvOrder, Vip vip, int type) {
+        CustomerRecord record = new CustomerRecord();
+        record.setVipId(vip.getId());
+        record.setLogType(type);
+        Date resvDate = resvOrder.getResvDate();
+        Date updatedAt = resvOrder.getUpdatedAt();
+        LocalDateTime updateLocalDateTime = getLocalDateTime(updatedAt);
+        LocalDateTime resvLocalDateTime = getLocalDateTime(resvDate);
+        record.setLogTime(updateLocalDateTime);
+        record.setResvOrder(resvOrder.getResvOrder());
+        record.setResvDate(resvLocalDateTime);
         record.setMealTypeId(resvOrder.getMealTypeId());
         record.setMealTypeName(resvOrder.getMealTypeName());
         Integer payAmount = getPayAmount(resvOrder);

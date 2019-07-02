@@ -62,4 +62,27 @@
          ORDER BY id
     </select>
 
+
+    <sql id="tableImageColumn">
+        id,table_type as tableType,table_area_id as tableAreaId,right_coordinate as rightCoordinate,left_coordinate as leftCoordinate,
+        bottom_coordinate as bottomCoordinate,top_coordinate as topCoordinate,table_image_type as tableImageType,business_id as businessId,
+        table_id as tableId,
+        update_person as updatePerson,update_time as updateTime,create_person as createPerson,create_time as createTime
+    </sql>
+    <select id="queryTableImage" parameterType="java.util.HashMap" resultType="com.zhidianfan.pig.yd.moduler.common.dao.entity.TableImageDO">
+        select <include refid="tableImageColumn"/> from table_image where table_area_id = #{tableAreaId} and business_id = #{businessId}
+    </select>
+
+    <sql id="tableAreaImageColumn">
+        id,table_area_id as tableAreaId,image_url as imageUrl,business_id as businessId,status as status,
+        update_person as updatePerson,update_time as updateTime,create_person as createPerson,create_time as createTime
+    </sql>
+    <select id="queryTableAreaImage" parameterType="java.util.HashMap" resultType="com.zhidianfan.pig.yd.moduler.common.dao.entity.TableAreaImageDO">
+        select <include refid="tableAreaImageColumn"/> from table_area_image where business_id = #{businessId} and `status` = 1
+    </select>
+
+    <select id="businessHotMapSwitch" resultType="java.lang.Integer" parameterType="java.lang.Integer">
+        select hot_map_switch from business where id = #{businessId}
+    </select>
+
 </mapper>

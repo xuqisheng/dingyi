@@ -114,6 +114,8 @@ public class Vip extends Model<Vip> {
     private Integer isLeap;
 
 
+
+
     public Integer getId() {
         return id;
     }
@@ -394,6 +396,8 @@ public class Vip extends Model<Vip> {
     public void setIsLeap(Integer isLeap) {
         this.isLeap = isLeap;
     }
+
+
 
     @Override
     protected Serializable pkVal() {

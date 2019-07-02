@@ -11,6 +11,7 @@ import com.zhidianfan.pig.yd.moduler.resv.bo.VipMealInfoBo;
 import com.zhidianfan.pig.yd.moduler.resv.bo.VipValueCountBo;
 import com.zhidianfan.pig.yd.moduler.resv.dto.*;
 import com.zhidianfan.pig.yd.moduler.resv.enums.OrderStatus;
+import com.zhidianfan.pig.yd.moduler.resv.service.VipAllergenService;
 import com.zhidianfan.pig.yd.moduler.resv.service.VipService;
 import com.zhidianfan.pig.yd.moduler.sms.service.SmsMarketingService;
 import io.swagger.annotations.Api;
@@ -51,6 +52,8 @@ public class VipController {
     @Resource
     private SmsMarketingService smsMarketingService;
 
+    @Autowired
+    private VipAllergenService vipAllergenService;
 
 
     /**
@@ -103,6 +106,10 @@ public class VipController {
                                      @RequestParam String phone) {
 
         VipInfoDTO vipInfo = vipService.getVipInfo(businessId, phone);
+        //过敏源查找
+        String allergen = vipAllergenService.selectvipAllergen(vipInfo.getId());
+        vipInfo.setAllergen(allergen);
+
         //Vip客户信息获取查询异常判断
         if (null == vipInfo) {
             ErrorTip tip = new ErrorTip();
@@ -114,6 +121,31 @@ public class VipController {
         }
         return ResponseEntity.ok(vipInfo);
     }
+
+
+
+    @ApiOperation(value="来电弹屏客户信息展示")
+    @GetMapping(value = "/callscreenvipinfo")
+    public ResponseEntity getCallscreenVipInfo(@RequestParam Integer brandId,
+                                          @RequestParam Integer businessId,
+                                     @RequestParam String phone) {
+
+        VipInfoDTO vipInfo = vipService.callscreenvipinfo(brandId,businessId, phone);
+
+        //Vip客户信息获取查询异常判断
+        if (null == vipInfo) {
+            ErrorTip tip = new ErrorTip();
+            //国际化
+            Locale locale = LocaleContextHolder.getLocale();
+            String msg = messageSource.getMessage("vipaf", null, locale);
+            tip.setMsg(msg);
+            return ResponseEntity.ok(tip);
+        }
+        return ResponseEntity.ok(vipInfo);
+
+    }
+
+
 
 
     /**
@@ -193,7 +225,7 @@ public class VipController {
     public ResponseEntity fuzzyQueryVipList(@RequestParam Integer businessId,
                                             @RequestParam String phone) {
 
-        Page<Vip> vipList = vipService.fuzzyQueryVipList(businessId, phone);
+        Page<VipAllergenDTO> vipList = vipService.fuzzyQueryVipList(businessId, phone);
 
         return ResponseEntity.ok(vipList);
     }
@@ -220,10 +252,14 @@ public class VipController {
      */
     @ApiOperation(value="新版门店后台客戶新增或者更新", notes="客户不存在则新增,否则更新")
     @PostMapping(value = "/vipinfo")
-    public ResponseEntity addVip(@RequestBody Vip vip) {
+    public ResponseEntity addVip(@RequestBody VipAllergenDTO vip) {
 
         //更新或者插入Vip信息
         boolean b = vipService.updateOrInsertVip(vip);
+        //更新或者插入Vip的过敏源信息
+        if (b){
+            vipAllergenService.editvipAllergenInfo(vip);
+        }
 
         //成功错误标志
         Tip tip;

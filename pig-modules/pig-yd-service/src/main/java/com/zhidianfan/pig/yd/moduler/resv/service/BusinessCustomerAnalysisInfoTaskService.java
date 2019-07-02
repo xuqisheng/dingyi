@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -52,7 +53,10 @@ public class BusinessCustomerAnalysisInfoTaskService {
         Wrapper<BusinessCustomerAnalysisInfoTask> wrapper = new EntityWrapper<>();
         List<BusinessCustomerAnalysisInfoTask> infoTasks = businessCustomerAnalysisInfoTaskList.stream()
                 .parallel()
-                .peek(task -> task.setUseTag(1))
+                .peek(task -> {
+                    task.setUseTag(1);
+//                    task.setUpdateTime(LocalDateTime.now());
+                })
                 .collect(Collectors.toList());
         infoTaskService.updateBatchById(infoTasks, 500);
     }

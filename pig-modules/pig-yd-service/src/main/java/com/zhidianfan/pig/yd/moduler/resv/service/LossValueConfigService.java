@@ -2,12 +2,16 @@ package com.zhidianfan.pig.yd.moduler.resv.service;
 
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.baomidou.mybatisplus.mapper.Wrapper;
+import com.google.common.collect.Maps;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.LossValueConfig;
 import com.zhidianfan.pig.yd.moduler.common.service.ILossValueConfigService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * @author sjl
@@ -30,5 +34,25 @@ public class LossValueConfigService {
                 .eq("flag", 1);
         return lossValueConfigMapper.selectList(wrapper);
     }
+
+
+    /**
+     * 查询所有酒店的配置
+     * @return map, k->businessId, v->配置项
+     */
+    public Map<Integer, List<LossValueConfig>> getLossValueConfigList() {
+        Wrapper<LossValueConfig> wrapper = new EntityWrapper<>();
+        wrapper.eq("flag", 1);
+        List<LossValueConfig> lossValueConfigList = lossValueConfigMapper.selectList(wrapper);
+        if (lossValueConfigList == null) {
+            return Maps.newHashMap();
+        }
+
+        Map<Integer, List<LossValueConfig>> configMap = lossValueConfigList.stream()
+                .collect(Collectors.groupingBy(LossValueConfig::getHotelId));
+        return configMap;
+    }
+
+
 
 }
