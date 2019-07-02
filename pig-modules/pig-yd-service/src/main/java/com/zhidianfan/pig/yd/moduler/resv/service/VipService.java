@@ -747,7 +747,7 @@ public class VipService {
             score += 15;
         }
 
-        if (profileCount >= 0) {
+        if (profileCount > 0) {
             score += 15;
         }
 
