@@ -8,6 +8,7 @@ import com.zhidianfan.pig.yd.moduler.common.service.*;
 import com.zhidianfan.pig.yd.moduler.resv.constants.CustomerValueConstants;
 import com.zhidianfan.pig.yd.moduler.resv.dto.CustomerValueChangeFieldDTO;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
@@ -226,14 +227,18 @@ public class CustomerValueService {
         Optional.ofNullable(customerValueList)
                 .ifPresent(map -> {
                     List<CustomerValueList> customerValueLists = new ArrayList<>(map.values());
-                    customerValueListMapper.insertOrUpdateAllColumnBatch(customerValueLists, batchNo);
+                    if (CollectionUtils.isNotEmpty(customerValueLists)) {
+                        customerValueListMapper.insertOrUpdateAllColumnBatch(customerValueLists, batchNo);
+                    }
                 });
 
 
         Optional.ofNullable(vipConsumeActionTotal)
                 .ifPresent(map -> {
                     List<VipConsumeActionTotal> vipConsumeActionTotals = new ArrayList<>(map.values());
-                    vipConsumeActionTotalMapper.insertOrUpdateAllColumnBatch(vipConsumeActionTotals, batchNo);
+                    if (CollectionUtils.isNotEmpty(vipConsumeActionTotals)) {
+                        vipConsumeActionTotalMapper.insertOrUpdateAllColumnBatch(vipConsumeActionTotals, batchNo);
+                    }
                 });
 
         Optional.ofNullable(vipConsumeActionLast60)
