@@ -338,14 +338,18 @@ public class VipConsumeActionTotalService {
         int cancelTableNo = Integer.parseInt(value);
         Wrapper<VipConsumeActionTotal> wrapper = new EntityWrapper<>();
         wrapper.eq("vip_id", vipId);
+
         VipConsumeActionTotal vipConsumeActionTotal = vipConsumeActionTotalMapper.selectOne(wrapper);
-        Integer oldCancelTableNo = vipConsumeActionTotal.getCancelTableNo();
+        Integer oldCancelTableNo = 0;
+        if (vipConsumeActionTotal != null) {
+            oldCancelTableNo = vipConsumeActionTotal.getCancelTableNo();
+        }
         log.debug("原来的撤单桌数为:[{}], 现在的撤单桌数为:[{}]", oldCancelTableNo, cancelTableNo + oldCancelTableNo);
         VipConsumeActionTotal total = new VipConsumeActionTotal();
         total.setVipId(vipId);
         total.setCancelTableNo(cancelTableNo + oldCancelTableNo);
         total.setUpdateTime(LocalDateTime.now());
-        vipConsumeActionTotalMapper.updateById(total);
+        vipConsumeActionTotalMapper.insertOrUpdate(total);
     }
 
     /**
@@ -361,6 +365,6 @@ public class VipConsumeActionTotalService {
         total.setVipId(vipId);
         total.setFirstConsumeTime(dateTime);
         total.setUpdateTime(LocalDateTime.now());
-        vipConsumeActionTotalMapper.updateById(total);
+        vipConsumeActionTotalMapper.insertOrUpdate(total);
     }
 }
