@@ -17,4 +17,9 @@ import org.springframework.stereotype.Service;
 @Service
 public class BusinessSyncAccountServiceImpl extends ServiceImpl<BusinessSyncAccountMapper, BusinessSyncAccount> implements IBusinessSyncAccountService {
 
+    @Override
+    public boolean updateSyncInfo(BusinessSyncAccount businessSyncAccount) {
+
+        return baseMapper.updateSyncInfo(businessSyncAccount);
+    }
 }

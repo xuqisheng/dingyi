@@ -2,6 +2,7 @@ package com.zhidianfan.pig.yd.moduler.resv.service;
 
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
+import com.baomidou.mybatisplus.mapper.Wrapper;
 import com.baomidou.mybatisplus.plugins.Page;
 import com.zhidianfan.pig.common.util.JsonUtils;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.Business;
@@ -63,13 +64,14 @@ public class OverTimeOrderService {
             int businessCurrentPage = 1;
             int businessPageSize = 100;
 
+            Wrapper<Business> statusWrapper = new EntityWrapper<Business>().eq("status", 1);
+
 
             while (true) {
                 //翻页查询酒店
                 Page<Business> businessPage = iBusinessService.selectPage(
                         new Page<>(businessCurrentPage, businessPageSize),
-                        new EntityWrapper<Business>().eq("status", 1)
-                );
+                        statusWrapper);
 
                 // 线程池更新订单状态,并且推送
                 executorService.execute(() -> new OverTimeOrderThread(this, businessPage.getRecords()).run());

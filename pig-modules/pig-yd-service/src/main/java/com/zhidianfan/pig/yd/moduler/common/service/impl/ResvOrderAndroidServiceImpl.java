@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.service.impl.ServiceImpl;
 import com.zhidianfan.pig.yd.moduler.resv.bo.DeskOrderBo;
 import com.zhidianfan.pig.yd.moduler.resv.bo.MessageOrderBO;
 import com.zhidianfan.pig.yd.moduler.resv.bo.OrderBO;
+import com.zhidianfan.pig.yd.moduler.resv.bo.PerformanceBO;
 import com.zhidianfan.pig.yd.moduler.resv.dto.*;
 import com.zhidianfan.pig.yd.moduler.resv.qo.AllResvOrderQO;
 import com.zhidianfan.pig.yd.moduler.resv.qo.LockTablQO;
@@ -21,7 +22,7 @@ import java.util.Map;
 
 /**
  * <p>
- *  服务实现类
+ * 服务实现类
  * </p>
  *
  * @author hzp
@@ -40,6 +41,7 @@ public class ResvOrderAndroidServiceImpl extends ServiceImpl<ResvOrderAndroidMap
     public List<OrderBO> getAllResvOrders(AllResvOrderQO allResvOrderQO) {
         return baseMapper.getAllResvOrders(allResvOrderQO);
     }
+
     @Override
     public void deleteResvOrders(ResvOrderDTO resvOrderDTO) {
         this.baseMapper.deleteResvOrders(resvOrderDTO);
@@ -47,12 +49,12 @@ public class ResvOrderAndroidServiceImpl extends ServiceImpl<ResvOrderAndroidMap
 
     @Override
     public List<DeskOrderBo> findDeskOrders(Page page, DeskOrderDTO deskOrderDTO) {
-        return baseMapper.findDeskOrders(page,deskOrderDTO);
+        return baseMapper.findDeskOrders(page, deskOrderDTO);
     }
 
     @Override
-    public List<DeskOrderBo> findOrders(DeskOrderDTO deskOrderDTO) {
-        return baseMapper.findOrders(deskOrderDTO);
+    public List<DeskOrderBo> findOrders(Page page,DeskOrderDTO deskOrderDTO) {
+        return baseMapper.findOrders(page,deskOrderDTO);
     }
 
     @Override
@@ -69,7 +71,7 @@ public class ResvOrderAndroidServiceImpl extends ServiceImpl<ResvOrderAndroidMap
 
     @Override
     public Date selectLastEatTime(Integer id, String status) {
-        Date eatTime =  baseMapper.selectLastEatTime(id, status);
+        Date eatTime = baseMapper.selectLastEatTime(id, status);
         return eatTime;
     }
 
@@ -86,19 +88,19 @@ public class ResvOrderAndroidServiceImpl extends ServiceImpl<ResvOrderAndroidMap
 
     @Override
     public void conditionQueryResvOrder(Page<ResvTableOrder> page, ResvOrderQueryDTO resvOrderQueryDTO) {
-        List<ResvTableOrder> resvOrders =  this.baseMapper.conditionQueryResvOrder(page, resvOrderQueryDTO);
+        List<ResvTableOrder> resvOrders = this.baseMapper.conditionQueryResvOrder(page, resvOrderQueryDTO);
         page.setRecords(resvOrders);
     }
 
 
     @Override
     public List<ResvTableOrder> excelConditionFindResvOrders(ResvOrderQueryDTO resvOrderQueryDTO) {
-        List<ResvTableOrder> resvTableOrders =  baseMapper.excelConditionFindResvOrders(resvOrderQueryDTO);
+        List<ResvTableOrder> resvTableOrders = baseMapper.excelConditionFindResvOrders(resvOrderQueryDTO);
         return resvTableOrders;
     }
 
     @Override
-    public String  getorderSucNum(Integer businessId) {
+    public String getorderSucNum(Integer businessId) {
         return baseMapper.getorderSucNum(businessId);
     }
 
@@ -110,14 +112,14 @@ public class ResvOrderAndroidServiceImpl extends ServiceImpl<ResvOrderAndroidMap
     @Override
     public void conditionQueryLockRecord(Page<LockTablDTO> page, LockTablQO lockTablQO) {
 
-        List<LockTablDTO> lockTablDTOS =  baseMapper.conditionQueryLockRecord(page,lockTablQO);
+        List<LockTablDTO> lockTablDTOS = baseMapper.conditionQueryLockRecord(page, lockTablQO);
 
         page.setRecords(lockTablDTOS);
 
     }
 
     @Override
-    public boolean checkoutBills(CheckoutBillDTO checkoutBillDTO,Integer userId,String userName) {
+    public boolean checkoutBills(CheckoutBillDTO checkoutBillDTO, Integer userId, String userName) {
         boolean b = baseMapper.checkoutBills(checkoutBillDTO, userId, userName);
         return b;
     }
@@ -135,11 +137,11 @@ public class ResvOrderAndroidServiceImpl extends ServiceImpl<ResvOrderAndroidMap
     @Override
     public List<Map<String, Integer>> getOrderDistribution(Integer businessId, String calDate) {
 
-        return baseMapper.getOrderDistribution(businessId,calDate);
+        return baseMapper.getOrderDistribution(businessId, calDate);
     }
 
     @Override
-    public  List<Map<String, Object>> getAllWeChatThirdOrder(LocalDateTime localDateTime){
+    public List<Map<String, Object>> getAllWeChatThirdOrder(LocalDateTime localDateTime) {
         return baseMapper.getAllWeChatThirdOrder(localDateTime);
     }
 
@@ -157,6 +159,18 @@ public class ResvOrderAndroidServiceImpl extends ServiceImpl<ResvOrderAndroidMap
     public void updateAndroidOrderStatus2TO3(Integer intervalNum) {
         baseMapper.updateAndroidOrderStatus2TO3(intervalNum);
     }
+
+    @Override
+    public List<DeskOrderBo> selectListWithAllergen(String batchNo) {
+        return baseMapper.selectListWithAllergen(batchNo);
+    }
+
+    @Override
+    public ResvOrderAndroid selectBrandLastEatTime(String phone, Integer brandId) {
+        return baseMapper.selectBrandLastEatTime(phone, brandId);
+    }
+
+
 
 
 }
