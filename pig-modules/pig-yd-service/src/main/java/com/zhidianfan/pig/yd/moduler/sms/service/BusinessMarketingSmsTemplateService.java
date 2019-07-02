@@ -51,6 +51,7 @@ public class BusinessMarketingSmsTemplateService {
      */
     public boolean insertBirthTemplate(BusinessMarketingSmsTemplateDTO businessMarketingSmsTemplateDTO) {
 
+
         Integer businessId = businessMarketingSmsTemplateDTO.getBusinessId();
         Business business = businessService.selectById(businessId);
 
@@ -69,6 +70,7 @@ public class BusinessMarketingSmsTemplateService {
 
 
         //没有模板的时候在插入,新增生日自动发送短信模板
+        businessMarketingSmsTemplateDTO.setAnniversaryType(1);
         BusinessMarketingSmsTemplate businessMarketingSmsTemplate = ibusinessMarketingSmsTemplateService.insertBirthTemplate(businessMarketingSmsTemplateDTO);
 
         //--------新建送审--------
