@@ -87,9 +87,9 @@ public class BusinessCustomerAnalysisTask {
             task.setUseTag(0);
             task.setUpdateTime(LocalDateTime.now());
             list.add(task);
-            if (CollectionUtils.isNotEmpty(list)) {
-                iTaskService.insertBatch(list, 500);
-            }
+        }
+        if (CollectionUtils.isNotEmpty(list)) {
+            iTaskService.insertBatch(list, 500);
         }
     }
 

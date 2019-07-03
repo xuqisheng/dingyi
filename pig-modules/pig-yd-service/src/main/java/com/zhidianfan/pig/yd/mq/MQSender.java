@@ -1,5 +1,6 @@
 package com.zhidianfan.pig.yd.mq;
 
+import com.alibaba.fastjson.JSON;
 import com.zhidianfan.pig.yd.moduler.common.constant.QueueName;
 import com.zhidianfan.pig.yd.moduler.resv.dto.CustomerValueChangeFieldDTO;
 import org.slf4j.Logger;
@@ -22,6 +23,7 @@ public class MQSender {
 
     public void sendMQ(CustomerValueChangeFieldDTO customerValueChangeFieldDTO) {
         log.info("客户价值实时更新字段,更新内容:[{}]", customerValueChangeFieldDTO);
-        rabbitTemplate.convertAndSend(QueueName.CUSTOMER_VALUE_DIRECT_EXCHANGE, QueueName.CUSTOMER_VALUE_ROUTINGKEY, customerValueChangeFieldDTO);
+        String content = JSON.toJSONString(customerValueChangeFieldDTO);
+        rabbitTemplate.convertAndSend(QueueName.CUSTOMER_VALUE_DIRECT_EXCHANGE, QueueName.CUSTOMER_VALUE_ROUTINGKEY, content);
     }
 }

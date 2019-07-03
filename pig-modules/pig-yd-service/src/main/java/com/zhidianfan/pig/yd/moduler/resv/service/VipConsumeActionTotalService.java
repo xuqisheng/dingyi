@@ -1,5 +1,7 @@
 package com.zhidianfan.pig.yd.moduler.resv.service;
 
+import com.baomidou.mybatisplus.mapper.EntityWrapper;
+import com.baomidou.mybatisplus.mapper.Wrapper;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.MasterCustomerVipMapping;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.ResvOrder;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.Vip;
@@ -334,11 +336,34 @@ public class VipConsumeActionTotalService {
      */
     public void updateCancelTableNo(Integer vipId, String value) {
         int cancelTableNo = Integer.parseInt(value);
-        VipConsumeActionTotal total = new VipConsumeActionTotal();
-        total.setVipId(vipId);
-        total.setCancelTableNo(cancelTableNo);
-        total.setUpdateTime(LocalDateTime.now());
-        vipConsumeActionTotalMapper.updateById(total);
+        Wrapper<VipConsumeActionTotal> wrapper = new EntityWrapper<>();
+        wrapper.eq("vip_id", vipId);
+
+        VipConsumeActionTotal vipConsumeActionTotal = vipConsumeActionTotalMapper.selectOne(wrapper);
+        Integer oldCancelTableNo = 0;
+        if (vipConsumeActionTotal != null) {
+            oldCancelTableNo = vipConsumeActionTotal.getCancelTableNo();
+        } else {
+            vipConsumeActionTotal = new VipConsumeActionTotal();
+            vipConsumeActionTotal.setVipId(vipId);
+            vipConsumeActionTotal.setTotalOrderNo(0);
+            vipConsumeActionTotal.setTotalTableNo(0);
+            vipConsumeActionTotal.setTotalPersonNo(0);
+            vipConsumeActionTotal.setTotalConsumeAvg(0);
+            vipConsumeActionTotal.setTableConsumeAvg(0);
+            vipConsumeActionTotal.setPersonConsumeAvg(0);
+            vipConsumeActionTotal.setFirstConsumeTime(CustomerValueConstants.DEFAULT_FIRST_TIME);
+            vipConsumeActionTotal.setConsumeFrequency(0.0F);
+            vipConsumeActionTotal.setLastConsumeTime(LocalDateTime.now());
+            vipConsumeActionTotal.setCreateUserId(0L);
+            vipConsumeActionTotal.setCreateTime(LocalDateTime.now());
+            vipConsumeActionTotal.setUpdateUserId(0L);
+        }
+        vipConsumeActionTotal.setCancelTableNo(cancelTableNo + oldCancelTableNo);
+        vipConsumeActionTotal.setUpdateTime(LocalDateTime.now());
+
+        log.debug("原来的撤单桌数为:[{}], 现在的撤单桌数为:[{}]", oldCancelTableNo, cancelTableNo + oldCancelTableNo);
+        vipConsumeActionTotalMapper.insertOrUpdate(vipConsumeActionTotal);
     }
 
     /**
@@ -350,10 +375,31 @@ public class VipConsumeActionTotalService {
     public void updateFirstConsumeTime(Integer vipId, String value) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         LocalDateTime dateTime = LocalDateTime.parse(value, formatter);
-        VipConsumeActionTotal total = new VipConsumeActionTotal();
-        total.setVipId(vipId);
-        total.setFirstConsumeTime(dateTime);
-        total.setUpdateTime(LocalDateTime.now());
-        vipConsumeActionTotalMapper.updateById(total);
+
+        Wrapper<VipConsumeActionTotal> wrapper = new EntityWrapper<>();
+        wrapper.eq("vip_id", vipId);
+        VipConsumeActionTotal vipConsumeActionTotal = vipConsumeActionTotalMapper.selectOne(wrapper);
+
+        if (vipConsumeActionTotal != null) {
+            vipConsumeActionTotal.setFirstConsumeTime(dateTime);
+        } else {
+            vipConsumeActionTotal = new VipConsumeActionTotal();
+            vipConsumeActionTotal.setTotalOrderNo(0);
+            vipConsumeActionTotal.setTotalTableNo(0);
+            vipConsumeActionTotal.setTotalPersonNo(0);
+            vipConsumeActionTotal.setCancelTableNo(0);
+            vipConsumeActionTotal.setTotalConsumeAvg(0);
+            vipConsumeActionTotal.setTableConsumeAvg(0);
+            vipConsumeActionTotal.setPersonConsumeAvg(0);
+            vipConsumeActionTotal.setConsumeFrequency(0.0F);
+            vipConsumeActionTotal.setLastConsumeTime(CustomerValueConstants.DEFAULT_END_TIME);
+            vipConsumeActionTotal.setCreateUserId(100000L);
+            vipConsumeActionTotal.setCreateTime(LocalDateTime.now());
+            vipConsumeActionTotal.setUpdateUserId(100000L);
+            vipConsumeActionTotal.setVipId(vipId);
+            vipConsumeActionTotal.setFirstConsumeTime(dateTime);
+        }
+        vipConsumeActionTotal.setUpdateTime(LocalDateTime.now());
+        vipConsumeActionTotalMapper.insertOrUpdate(vipConsumeActionTotal);
     }
 }

@@ -825,7 +825,7 @@ public class VipService {
 
         // key-vipId, v-true, 该 vip 有纪念日
         Map<Integer, Boolean> existAnniversariesVip = distinctAnniversariesList.stream()
-                .collect(Collectors.toMap(Anniversary::getVipId, result -> Boolean.TRUE));
+                .collect(Collectors.toMap(Anniversary::getVipId, result -> result.getVipId() == null ? Boolean.FALSE : Boolean.TRUE));
 
         Map<Integer, Integer> hash = new HashMap<>(vips.size());
         for (Vip vip : vips) {
@@ -884,7 +884,7 @@ public class VipService {
             score += 15;
         }
 
-        if (profileCount >= 0) {
+        if (profileCount > 0) {
             score += 15;
         }
 
@@ -936,6 +936,7 @@ public class VipService {
             Boolean b = entry.getValue();
             if (vip.getId().equals(vipId) && b) {
                 score += 15;
+                break;
             }
         }
 
