@@ -375,23 +375,31 @@ public class VipConsumeActionTotalService {
     public void updateFirstConsumeTime(Integer vipId, String value) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         LocalDateTime dateTime = LocalDateTime.parse(value, formatter);
-        VipConsumeActionTotal total = new VipConsumeActionTotal();
-        total.setTotalOrderNo(0);
-        total.setTotalTableNo(0);
-        total.setTotalPersonNo(0);
-        total.setCancelTableNo(0);
-        total.setTotalConsumeAvg(0);
-        total.setTableConsumeAvg(0);
-        total.setPersonConsumeAvg(0);
-        total.setConsumeFrequency(0.0F);
-        total.setLastConsumeTime(CustomerValueConstants.DEFAULT_END_TIME);
-        total.setCreateUserId(100000L);
-        total.setCreateTime(LocalDateTime.now());
-        total.setUpdateUserId(100000L);
 
-        total.setVipId(vipId);
-        total.setFirstConsumeTime(dateTime);
-        total.setUpdateTime(LocalDateTime.now());
-        vipConsumeActionTotalMapper.insertOrUpdate(total);
+        Wrapper<VipConsumeActionTotal> wrapper = new EntityWrapper<>();
+        wrapper.eq("vip_id", vipId);
+        VipConsumeActionTotal vipConsumeActionTotal = vipConsumeActionTotalMapper.selectOne(wrapper);
+
+        if (vipConsumeActionTotal != null) {
+            vipConsumeActionTotal.setFirstConsumeTime(dateTime);
+        } else {
+            vipConsumeActionTotal = new VipConsumeActionTotal();
+            vipConsumeActionTotal.setTotalOrderNo(0);
+            vipConsumeActionTotal.setTotalTableNo(0);
+            vipConsumeActionTotal.setTotalPersonNo(0);
+            vipConsumeActionTotal.setCancelTableNo(0);
+            vipConsumeActionTotal.setTotalConsumeAvg(0);
+            vipConsumeActionTotal.setTableConsumeAvg(0);
+            vipConsumeActionTotal.setPersonConsumeAvg(0);
+            vipConsumeActionTotal.setConsumeFrequency(0.0F);
+            vipConsumeActionTotal.setLastConsumeTime(CustomerValueConstants.DEFAULT_END_TIME);
+            vipConsumeActionTotal.setCreateUserId(100000L);
+            vipConsumeActionTotal.setCreateTime(LocalDateTime.now());
+            vipConsumeActionTotal.setUpdateUserId(100000L);
+            vipConsumeActionTotal.setVipId(vipId);
+            vipConsumeActionTotal.setFirstConsumeTime(dateTime);
+        }
+        vipConsumeActionTotal.setUpdateTime(LocalDateTime.now());
+        vipConsumeActionTotalMapper.insertOrUpdate(vipConsumeActionTotal);
     }
 }
