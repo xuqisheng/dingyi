@@ -359,11 +359,10 @@ public class VipConsumeActionTotalService {
             vipConsumeActionTotal.setCreateTime(LocalDateTime.now());
             vipConsumeActionTotal.setUpdateUserId(0L);
         }
-        log.debug("原来的撤单桌数为:[{}], 现在的撤单桌数为:[{}]", oldCancelTableNo, cancelTableNo + oldCancelTableNo);
-
         vipConsumeActionTotal.setCancelTableNo(cancelTableNo + oldCancelTableNo);
         vipConsumeActionTotal.setUpdateTime(LocalDateTime.now());
 
+        log.debug("原来的撤单桌数为:[{}], 现在的撤单桌数为:[{}]", oldCancelTableNo, cancelTableNo + oldCancelTableNo);
         vipConsumeActionTotalMapper.insertOrUpdate(vipConsumeActionTotal);
     }
 
