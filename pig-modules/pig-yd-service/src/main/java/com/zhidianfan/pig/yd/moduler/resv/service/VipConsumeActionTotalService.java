@@ -343,27 +343,27 @@ public class VipConsumeActionTotalService {
         Integer oldCancelTableNo = 0;
         if (vipConsumeActionTotal != null) {
             oldCancelTableNo = vipConsumeActionTotal.getCancelTableNo();
+        } else {
+            vipConsumeActionTotal = new VipConsumeActionTotal();
+            vipConsumeActionTotal.setTotalOrderNo(0);
+            vipConsumeActionTotal.setTotalTableNo(0);
+            vipConsumeActionTotal.setTotalPersonNo(0);
+            vipConsumeActionTotal.setTotalConsumeAvg(0);
+            vipConsumeActionTotal.setTableConsumeAvg(0);
+            vipConsumeActionTotal.setPersonConsumeAvg(0);
+            vipConsumeActionTotal.setFirstConsumeTime(CustomerValueConstants.DEFAULT_FIRST_TIME);
+            vipConsumeActionTotal.setConsumeFrequency(0.0F);
+            vipConsumeActionTotal.setLastConsumeTime(LocalDateTime.now());
+            vipConsumeActionTotal.setCreateUserId(0L);
+            vipConsumeActionTotal.setCreateTime(LocalDateTime.now());
+            vipConsumeActionTotal.setUpdateUserId(0L);
         }
         log.debug("原来的撤单桌数为:[{}], 现在的撤单桌数为:[{}]", oldCancelTableNo, cancelTableNo + oldCancelTableNo);
-        VipConsumeActionTotal total = new VipConsumeActionTotal();
-        total.setTotalOrderNo(0);
-        total.setTotalTableNo(0);
-        total.setTotalPersonNo(0);
-        total.setTotalConsumeAvg(0);
-        total.setTableConsumeAvg(0);
-        total.setPersonConsumeAvg(0);
-        total.setFirstConsumeTime(CustomerValueConstants.DEFAULT_FIRST_TIME);
-        total.setConsumeFrequency(0.0F);
-        total.setLastConsumeTime(LocalDateTime.now());
-        total.setCreateUserId(0L);
-        total.setCreateTime(LocalDateTime.now());
-        total.setUpdateUserId(0L);
 
-        total.setVipId(vipId);
-        total.setCancelTableNo(cancelTableNo + oldCancelTableNo);
-        total.setUpdateTime(LocalDateTime.now());
+        vipConsumeActionTotal.setCancelTableNo(cancelTableNo + oldCancelTableNo);
+        vipConsumeActionTotal.setUpdateTime(LocalDateTime.now());
 
-        vipConsumeActionTotalMapper.insertOrUpdate(total);
+        vipConsumeActionTotalMapper.insertOrUpdate(vipConsumeActionTotal);
     }
 
     /**
