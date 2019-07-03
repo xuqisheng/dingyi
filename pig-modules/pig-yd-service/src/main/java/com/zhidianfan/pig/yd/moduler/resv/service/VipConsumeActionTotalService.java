@@ -345,6 +345,7 @@ public class VipConsumeActionTotalService {
             oldCancelTableNo = vipConsumeActionTotal.getCancelTableNo();
         } else {
             vipConsumeActionTotal = new VipConsumeActionTotal();
+            vipConsumeActionTotal.setVipId(vipId);
             vipConsumeActionTotal.setTotalOrderNo(0);
             vipConsumeActionTotal.setTotalTableNo(0);
             vipConsumeActionTotal.setTotalPersonNo(0);
