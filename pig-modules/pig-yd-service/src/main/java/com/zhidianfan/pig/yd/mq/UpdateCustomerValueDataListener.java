@@ -47,6 +47,14 @@ public class UpdateCustomerValueDataListener {
     @RabbitHandler
     @RabbitListener(queues = QueueName.CUSTOMER_VALUE_QUEUE)
     public void updateField(String content) {
+        try {
+            consumerMessage(content);
+        } catch (Exception e) {
+            log.error("消费 MQ 消息发生异常, 消息内容为:[{}]",content, e);
+        }
+    }
+
+    private void consumerMessage(String content) {
         log.debug("接收到 MQ 的消息，开始处理:[{}]", content);
         CustomerValueChangeFieldDTO customerValueChangeFieldDTO;
         try {
