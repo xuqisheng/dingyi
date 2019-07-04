@@ -165,6 +165,10 @@ public class CustomerValueInitService {
             deleteSubValueConfigByBusinessId(businessId);
             log.info("-------------初始化指定酒店：[{}]-------------", businessId);
             Business business = getBusinessesById(businessId);
+            if (business == null) {
+                log.error("-------------- business 表中数据为空:businessid:[{}] -----------", businessId);
+                return;
+            }
             List<Business> businessList = Collections.singletonList(business);
             List<LossValueConfig> lossValueConfigList = getLossValueConfigList(businessList, 2);
             lossValueConfigMapper.insertBatch(lossValueConfigList);

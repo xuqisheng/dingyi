@@ -57,6 +57,9 @@ public class CustomerValueListService {
     @Autowired
     private ICustomerValueListService iCustomerValueListService;
 
+    @Autowired
+    private CustomerValueInitService customerValueInitService;
+
     /**
      * 获取客户价值列表实体对象
      *
@@ -373,8 +376,9 @@ public class CustomerValueListService {
         // 获取每个酒店自己的配置
         Map<String, String> hotelConfig = configHotelService.getConfig(hotelId);
         if (hotelConfig == null) {
-            log.error("hotelId:{}, 查询不到一级价值的配置-----", hotelId);
-            return -1;
+            log.error("hotelId:{}, 查询不到一级价值的配置,添加默认配置-----", hotelId);
+            customerValueInitService.initFirstValue(String.valueOf(hotelId));
+            hotelConfig = configHotelService.getConfig(hotelId);
         }
         String activeSleepBetween = hotelConfig.get(ACTIVE_SLEEP_BETWEEN_K);
         String sleepLossBetween = hotelConfig.get(SLEEP_LOSS_BETWEEN_K);

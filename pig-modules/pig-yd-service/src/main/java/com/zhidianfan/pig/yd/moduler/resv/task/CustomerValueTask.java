@@ -8,11 +8,9 @@ import com.zhidianfan.pig.yd.moduler.common.dao.entity.ConfigTaskExec;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.LossValueConfig;
 import com.zhidianfan.pig.yd.moduler.common.service.IConfigTaskExecService;
 import com.zhidianfan.pig.yd.moduler.resv.constants.CustomerValueConstants;
-import com.zhidianfan.pig.yd.moduler.resv.service.BusinessCustomerAnalysisInfoService;
-import com.zhidianfan.pig.yd.moduler.resv.service.CustomerValueService;
-import com.zhidianfan.pig.yd.moduler.resv.service.CustomerValueTaskService;
-import com.zhidianfan.pig.yd.moduler.resv.service.LossValueConfigService;
+import com.zhidianfan.pig.yd.moduler.resv.service.*;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -52,6 +50,9 @@ public class CustomerValueTask {
 
     @Autowired
     private LossValueConfigService lossValueConfigService;
+
+    @Autowired
+    private CustomerValueInitService customerValueInitService;
 
 
     @Scheduled(cron = "0 30 20 * * ?")
@@ -105,7 +106,6 @@ public class CustomerValueTask {
                         for (int i = 0; i < customerValuesValueTask.size(); i++) {
                             com.zhidianfan.pig.yd.moduler.common.dao.entity.CustomerValueTask tmp = customerValuesValueTask.get(i);
                             Long hotelId = tmp.getHotelId();
-                            final List<LossValueConfig> lossValueConfigList;
                             int businessId = 0;
                             if (hotelId != null) {
                                 try {
@@ -113,7 +113,14 @@ public class CustomerValueTask {
                                 } catch (NumberFormatException ignored) {
                                 }
                             }
-                            lossValueConfigList = lossValueConfigMap.get(businessId);
+                            final List<LossValueConfig> lossValueConfigList;
+                            List<LossValueConfig> lossValueConfigListTmp = lossValueConfigMap.get(businessId);
+                            if (CollectionUtils.isEmpty(lossValueConfigListTmp)) {
+                                customerValueInitService.initSubValue(String.valueOf(hotelId));
+                                lossValueConfigList = lossValueConfigService.getLossValueConfig(businessId);
+                            } else {
+                                lossValueConfigList = lossValueConfigListTmp;
+                            }
                             CompletableFuture<Long> integerCompletableFuture = CompletableFuture.supplyAsync(() -> {
                                 customerValueService.getCustomerValueBaseInfo2(tmp, 2000, execTime, lossValueConfigList);
                                 return hotelId;
@@ -152,6 +159,8 @@ public class CustomerValueTask {
         }
 
     }
+
+
 
     private ConfigTaskExec getExecTime() {
         return iConfigTaskExecService.selectById(1);
