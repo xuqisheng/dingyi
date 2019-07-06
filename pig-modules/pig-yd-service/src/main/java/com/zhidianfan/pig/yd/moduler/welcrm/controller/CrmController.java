@@ -1,13 +1,14 @@
 package com.zhidianfan.pig.yd.moduler.welcrm.controller;
 
+import com.zhidianfan.pig.yd.moduler.common.dto.Tip;
 import com.zhidianfan.pig.yd.moduler.welcrm.bo.BasicBO;
+import com.zhidianfan.pig.yd.moduler.welcrm.dto.AppraiseDTO;
 import com.zhidianfan.pig.yd.moduler.welcrm.service.CrmService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.text.ParseException;
 
 /**
  * @Author qqx
@@ -23,7 +24,7 @@ public class CrmController {
     CrmService crmService;
 
     /**
-     *
+     * todo 来电弹屏
      * 会员信息接口
      * @param
      * @return
@@ -42,5 +43,17 @@ public class CrmController {
                                       @RequestParam String userName) throws Exception{
         BasicBO basicBO = crmService.setUserInfo(phone,businessId,sex,userName);
         return ResponseEntity.ok(basicBO);
+    }
+
+    /**
+     * 接收微生活评价
+     * @param appraiseDTO
+     * @return
+     * @throws Exception
+     */
+    @PostMapping(value = "/save/appraise")
+    public ResponseEntity saveAppraiseInfo(AppraiseDTO appraiseDTO) throws ParseException {
+        Tip tip = crmService.saveAppraiseInfo(appraiseDTO);
+        return ResponseEntity.ok(tip);
     }
 }

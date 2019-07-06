@@ -454,15 +454,18 @@ public class BusinessService {
         Business business = businessService.selectById(businessId);
         Integer brandId = business.getBrandId();
 
-        //查找集团下的酒店
-        List<Business> businessList = businessService.selectList(new EntityWrapper<Business>().eq("brand_id",brandId).eq("device",2).eq("status",'1'));
-
         List<BusinessBrandBo> list = new ArrayList();
-        for(Business business1 : businessList){
-            BusinessBrandBo businessBrandBo = new BusinessBrandBo();
-            businessBrandBo.setBusinessId(business1.getId());
-            businessBrandBo.setBusinessName(business1.getBusinessName());
-            list.add(businessBrandBo);
+
+        if(brandId != 0){
+            //查找集团下的酒店
+            List<Business> businessList = businessService.selectList(new EntityWrapper<Business>().eq("brand_id",brandId).eq("device",2).eq("status",'1'));
+
+            for(Business business1 : businessList){
+                BusinessBrandBo businessBrandBo = new BusinessBrandBo();
+                businessBrandBo.setBusinessId(business1.getId());
+                businessBrandBo.setBusinessName(business1.getBusinessName());
+                list.add(businessBrandBo);
+            }
         }
 
         return list;

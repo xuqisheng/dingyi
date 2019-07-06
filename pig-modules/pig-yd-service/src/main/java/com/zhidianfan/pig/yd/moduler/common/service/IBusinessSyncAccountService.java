@@ -13,4 +13,5 @@ import com.baomidou.mybatisplus.service.IService;
  */
 public interface IBusinessSyncAccountService extends IService<BusinessSyncAccount> {
 
+    boolean updateSyncInfo(BusinessSyncAccount businessSyncAccount);
 }

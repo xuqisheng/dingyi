@@ -79,4 +79,12 @@ public interface ResvOrderMapper extends BaseMapper<ResvOrder> {
      * @return
      */
     List<HotelMarketingStatistics> statisticsHotel(@Param("startDate") String startDate,@Param("endDate") String endDate,@Param("businessId") Integer businessId);
+
+    void updateOrderStatus1TO2(@Param("intervalNum")Integer intervalNum);
+
+    void updateOrderStatus1TO4(@Param("intervalNum")Integer intervalNum);
+
+    void updateOrderStatus2TO3(@Param("intervalNum")Integer intervalNum);
+
+    Integer selectOverTimeOrder(@Param("id")Integer id, @Param("time")String time,@Param("status") String status);
 }

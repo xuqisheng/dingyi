@@ -25,6 +25,10 @@
         <result column="open_id" property="openId"/>
         <result column="created_at" property="createdAt"/>
         <result column="updated_at" property="updatedAt"/>
+        <result column="is_send" property="isSend"/>
+        <result column="app_user_name" property="appUserName"/>
+        <result column="app_user_phone" property="appUserPhone"/>
+        <result column="app_user_code" property="appUserCode"/>
     </resultMap>
 
     <resultMap id="ResvOrderThirdBO" type="com.zhidianfan.pig.yd.moduler.resv.bo.ResvOrderThirdBO">
@@ -90,6 +94,13 @@
         <if test="null!=createtime and ''!=createtime">
             AND  SUBSTR(A.created_at,1,10) = #{createtime}
         </if>
+        <if test="null!=startDate and ''!=startDate">
+            AND  SUBSTR(A.created_at,1,10) >= #{startDate}
+        </if>
+        <if test="null!=endDate and ''!=endDate">
+            AND  SUBSTR(A.created_at,1,10) &lt;= #{endDate}
+        </if>
+
         ORDER BY A.created_at DESC
 
     </select>
@@ -106,7 +117,10 @@
         END  order_result,
         status
         FROM resv_order_third
-        WHERE  business_id = #{businessId}
+        WHERE  1=1
+        <if test="null!=businessId and ''!=businessId">
+            AND  business_id = #{businessId}
+        </if>
         <if test="null!=orderResult and ''!=orderResult">
             AND  `status` = #{orderResult}
         </if>

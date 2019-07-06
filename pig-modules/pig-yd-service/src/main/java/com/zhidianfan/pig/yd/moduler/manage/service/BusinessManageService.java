@@ -17,6 +17,7 @@ import com.zhidianfan.pig.yd.moduler.resv.dto.VipValueDTO;
 import com.zhidianfan.pig.yd.moduler.resv.service.BusinessEmployeeService;
 import com.zhidianfan.pig.yd.moduler.resv.service.BusinessService;
 import com.zhidianfan.pig.yd.moduler.sms.service.rmi.SmsFeign;
+import com.zhidianfan.pig.yd.utils.PasswordCheckUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -239,6 +240,9 @@ public class BusinessManageService {
      */
     @Transactional
     public Tip putApplyAgent(BusinessDTO businessDTO) {
+        if(!PasswordCheckUtils.checkSimplePassword(businessDTO.getLoginPassword())){
+            return new SuccessTip(4001,"密码过于简单!");
+        }
         SuccessTip successTip;
         Business business = new Business();
         BeanUtils.copyProperties(businessDTO,business);

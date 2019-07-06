@@ -19,4 +19,8 @@ public interface IResvMeetingOrderService extends IService<ResvMeetingOrder> {
     void deleteResvMeetingOrders(ResvMeetingOrderDTO resvMeetingOrderDTO);
 
     ResvMeetingOrderDto queryResvMeetingOrder(MessageDTO messageDTO);
+
+    void updateMeetingOrderStatus2TO3(Integer intervalNum);
+
+    void updateMeetingOrderStatus1TO6(Integer intervalNum);
 }

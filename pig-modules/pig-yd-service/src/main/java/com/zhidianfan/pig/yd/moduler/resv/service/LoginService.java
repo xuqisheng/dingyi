@@ -63,8 +63,12 @@ public class LoginService {
         byRoleName.setGroupName(roleName);
         byRoleName.setDingdingUse((byte)1);
         SellerGroup sellerGroup = iSellerGroupService.selectOne(new EntityWrapper<>(byRoleName));//or("group_code = 'sadmin'"));
+        //角色名称不存在
+        if(sellerGroup==null){
+            throw new RuntimeException("此账号角色已失效，请联系自己老板重新分配");
+        }
 
-        List<SellerGroupMenu> sellerGroupMenus = ddMenuService.getSellerGroupMenus(sellerGroup.getGroupCode());
+        List<SellerGroupMenu> sellerGroupMenus = ddMenuService.getSellerGroupMenus( sellerGroup.getGroupCode());
         //添加默认菜单
         if(sellerGroupMenus.size()==0){
             SellerGroupMenu sellerGroupMenu = new SellerGroupMenu();

@@ -5,6 +5,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.zhidianfan.pig.yd.moduler.wechat.vo.PushMessageVO;
 import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.Consts;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -20,10 +21,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URI;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+
+import static com.xiaoleilu.hutool.crypto.SecureUtil.sha1;
 
 /**
  * @author wangyz
@@ -65,6 +70,8 @@ public class WeChatUtils {
      * 获取微信access_token的url
      */
     private static final String WECHAT_GET_TOKEN_URL = "/cgi-bin/token";
+
+    private static final String WECHAT_GET_TICKET_URL = "/cgi-bin/ticket/getticket";
 
     /**
      * 推送微信公众号消息的url
@@ -121,6 +128,7 @@ public class WeChatUtils {
      * @return accessToken
      */
     public static AccessToken getAccessToken(Integer type, String code) {
+        //内部accessToken
         if (type.equals(1)) {
             if (accessToken == null || accessToken.getRefresh()) {
                 accessToken = getToken(getTokenUrl());
@@ -131,15 +139,15 @@ public class WeChatUtils {
                 accessToken = getToken(getTokenUrl());
 
             return accessToken;
-        } else {
-            //此token生效时间较短 重新生成一次30天的token数据
-            AccessToken token = getToken(getUserTokenUrl(code));
-            if (token != null && StringUtils.isNotEmpty(token.getRefreshToken()))
-                return getToken(getRefreshUserInfoUrl(token.getRefreshToken()));
-
-            return null;
+        } else if (type.equals(0)) {                //第一次获取用户token
+            return getToken(getUserTokenUrl(code));
+        } else if (type.equals(2)) {                //再次获取用户token
+            return getToken(getRefreshUserInfoUrl(code));
         }
+        return null;
     }
+
+
 
     /**
      * 验证token是否在有效期内
@@ -187,6 +195,83 @@ public class WeChatUtils {
     }
 
     /**
+     * 获取微信配置信息
+     * @param url
+     * @return
+     */
+    public static WxConfig getConfigSignature(String url){
+
+        String timestamp = (System.currentTimeMillis() / 1000) + "";
+
+        String jsapiTicket = getTicket();
+
+        String nonceStr = RandomStringUtils.randomAlphanumeric(10);
+
+        String signature = getSignature(timestamp,nonceStr,url,jsapiTicket);
+
+        WxConfig wxConfig = new WxConfig();
+
+        wxConfig.setAppId(APP_ID);
+        wxConfig.setNonceStr(nonceStr);
+        wxConfig.setSignature(signature);
+        wxConfig.setTimestamp(timestamp);
+
+        return wxConfig;
+    }
+
+    /**
+     * 获取ticket
+     * @return
+     */
+    private static String getTicket(){
+
+        String token = "";
+        if (accessToken == null || accessToken.getRefresh()) {
+            accessToken = getToken(getTokenUrl());
+        }
+
+        if (isExpiredToken(accessToken)){
+            accessToken = getToken(getTokenUrl());
+        }
+
+        token = accessToken.getAccessToken();
+
+        CloseableHttpClient httpClient = HttpClients.createDefault();
+        HttpGet httpGet = new HttpGet(getTicketUrl(token));
+        try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
+            String content = EntityUtils.toString(response.getEntity(), ENCODING);
+            JSONObject jsonObject = JSONObject.parseObject(content);
+            Integer errcode = MapUtils.getInteger(jsonObject, "errcode");
+            if (errcode != null && !errcode.equals(0)) {
+                logger.info("微信获取ticket返回失败!内容:" + content);
+                //获取失败,尝试重新获取
+                return "";
+            }else {
+                return MapUtils.getString(jsonObject, "ticket");
+            }
+        }catch (Exception e){
+            return "";
+        }
+    }
+
+    /**
+     * 获取jssdk签名
+     * @param timestamp
+     * @param nonceStr
+     * @param url
+     * @param jsapiTicket
+     * @return
+     */
+    public static String getSignature(String timestamp, String nonceStr, String url, String jsapiTicket) {
+        String string1 = "jsapi_ticket=" + jsapiTicket
+                + "&noncestr=" + nonceStr + "&timestamp=" + timestamp + "&url="
+                + url;
+
+        String signature = sha1(string1);
+        return signature;
+    }
+
+    /**
      * 拼装url
      *
      * @return 请求地址
@@ -200,6 +285,26 @@ public class WeChatUtils {
                     .addParameter("grant_type", WECHAT_GRANT_TYPE)
                     .addParameter("appid", APP_ID)
                     .addParameter("secret", APP_SECRET)
+                    .build();
+        } catch (Exception e) {
+            logger.error("生成微信uri异常:", e);
+        }
+        return null;
+    }
+
+    /**
+     * 拼装url
+     *
+     * @return 请求地址
+     */
+    private static URI getTicketUrl(String token) {
+        try {
+            return new URIBuilder()
+                    .setScheme("https")
+                    .setHost(WECHAT_URL)
+                    .setPath(WECHAT_GET_TICKET_URL)
+                    .addParameter("access_token", token)
+                    .addParameter("type", "jsapi")
                     .build();
         } catch (Exception e) {
             logger.error("生成微信uri异常:", e);

@@ -86,6 +86,20 @@ public class ResvOrderThird extends Model<ResvOrderThird> {
     @TableField("updated_at")
     private Date updatedAt;
 
+    private Integer isSend;
+
+    private String appUserCode;
+
+    /**
+     * 预订员手机号
+     */
+    private String appUserPhone;
+
+    /**
+     * 预订员姓名
+     */
+    private String appUserName;
+
 
     public Integer getId() {
         return id;
@@ -255,6 +269,38 @@ public class ResvOrderThird extends Model<ResvOrderThird> {
         this.updatedAt = updatedAt;
     }
 
+    public Integer getIsSend() {
+        return isSend;
+    }
+
+    public void setIsSend(Integer isSend) {
+        this.isSend = isSend;
+    }
+
+    public String getAppUserCode() {
+        return appUserCode;
+    }
+
+    public void setAppUserCode(String appUserCode) {
+        this.appUserCode = appUserCode;
+    }
+
+    public String getAppUserPhone() {
+        return appUserPhone;
+    }
+
+    public void setAppUserPhone(String appUserPhone) {
+        this.appUserPhone = appUserPhone;
+    }
+
+    public String getAppUserName() {
+        return appUserName;
+    }
+
+    public void setAppUserName(String appUserName) {
+        this.appUserName = appUserName;
+    }
+
     @Override
     protected Serializable pkVal() {
         return this.id;
@@ -284,6 +330,10 @@ public class ResvOrderThird extends Model<ResvOrderThird> {
         ", openId=" + openId +
         ", createdAt=" + createdAt +
         ", updatedAt=" + updatedAt +
+        ", isSend=" + isSend +
+        ", appUserName=" + appUserName +
+        ", appUserPhone=" + appUserPhone +
+        ", appUserCode=" + appUserCode +
         "}";
     }
 }

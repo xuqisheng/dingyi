@@ -44,4 +44,5 @@ public class OrderTem {
 	private String appUserCode;
 	private String isDish;
 	private String thirdOrderNo;
+	private Integer isTirdparty;
 }

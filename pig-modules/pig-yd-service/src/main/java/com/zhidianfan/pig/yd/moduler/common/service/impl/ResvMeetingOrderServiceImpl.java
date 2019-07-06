@@ -33,5 +33,15 @@ public class ResvMeetingOrderServiceImpl extends ServiceImpl<ResvMeetingOrderMap
         return this.baseMapper.queryResvMeetingOrder(messageDTO);
     }
 
+    @Override
+    public void updateMeetingOrderStatus2TO3(Integer intervalNum) {
+        baseMapper.updateMeetingOrderStatus2TO3(intervalNum);
+    }
+
+    @Override
+    public void updateMeetingOrderStatus1TO6(Integer intervalNum) {
+        baseMapper.updateMeetingOrderStatus1TO6(intervalNum);
+    }
+
 
 }

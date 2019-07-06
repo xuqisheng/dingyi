@@ -18,7 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
-import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -1165,5 +1164,113 @@ public class XopService {
 //            return false;
 //        }
         return true;
+    }
+
+    public TableMenuBO getMenuOrder(Integer businessId, String tableCode) {
+        XmsBusiness xms = getBusinessXms(businessId);
+        String session = getSession(xms.getBrandHotelId());
+        TableMenuOption option = new TableMenuOption();
+        option.setSession(session);
+        option.setHotelid(xms.getBrandHotelId());
+        HashMap<String,String> data = Maps.newHashMap();
+        data.put("hotelid",xms.getBrandHotelId());
+        data.put("pcid","PCID");
+        data.put("key",tableCode);
+        ArrayList<Map<String,String>> params = Lists.newArrayList();
+        params.add(data);
+        option.setParams(params);
+        String sign = createRequestSign(JsonUtils.obj2JsonObj(option), XopMethod.SECRET);
+        option.setSign(sign);
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Type", "application/json;charset=UTF-8");
+        HttpEntity<TableMenuOption> httpEntity = new HttpEntity<>(option, headers);
+        ResponseEntity<String> entity = null;
+        try {
+            if (checkTimes()) {
+                entity = restTemplate.postForEntity(XopMethod.URL, httpEntity, String.class);
+            }
+        } catch (RestClientException e) {
+            log.info("获取营业点接口调用异常");
+            log.error(e.getMessage(), e);
+        }
+
+        if (entity == null) {
+            TableMenuBO tableMenuBO = new TableMenuBO();
+            tableMenuBO.setSuccess(false);
+            return tableMenuBO;
+        }
+        return JSONObject.parseObject(entity.getBody(), TableMenuBO.class);
+    }
+
+    public OrderStatusBO getOrderStatus(Integer businessId, Set<String> menuOrders) {
+        XmsBusiness xms = getBusinessXms(businessId);
+        String session = getSession(xms.getBrandHotelId());
+        OrderStatusQueryOption option = new OrderStatusQueryOption();
+        option.setSession(session);
+        option.setHotelid(xms.getBrandHotelId());
+        List<Map<String,String>> params = Lists.newArrayList();
+        Map<String, String> data = Maps.newHashMap();
+        data.put("hotelid",xms.getBusinessHotelId());
+        data.put("menu",StringUtils.join(menuOrders,","));
+        params.add(data);
+        option.setParams(params);
+        String sign = createRequestSign(JsonUtils.obj2JsonObj(option), XopMethod.SECRET);
+        option.setSign(sign);
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Type", "application/json;charset=UTF-8");
+        HttpEntity<OrderStatusQueryOption> httpEntity = new HttpEntity<>(option, headers);
+        ResponseEntity<String> entity = null;
+        try {
+            if (checkTimes()) {
+                entity = restTemplate.postForEntity(XopMethod.URL, httpEntity, String.class);
+            }
+        } catch (RestClientException e) {
+            log.info("获取营业点接口调用异常");
+            log.error(e.getMessage(), e);
+        }
+
+        if (entity == null) {
+            OrderStatusBO orderStatus = new OrderStatusBO();
+            orderStatus.setSuccess(false);
+            return orderStatus;
+        }
+        return JSONObject.parseObject(entity.getBody(), OrderStatusBO.class);
+    }
+
+    public OrderDishBO getOrderDish(Integer businessId, String menu) {
+        XmsBusiness xms = getBusinessXms(businessId);
+        String session = getSession(xms.getBrandHotelId());
+        OrderDishQueryOption option = new OrderDishQueryOption();
+        option.setSession(session);
+        option.setHotelid(xms.getBrandHotelId());
+        List<Map<String,String>> params = Lists.newArrayList();
+        Map<String, String> data = Maps.newHashMap();
+        data.put("hotelid",xms.getBusinessHotelId());
+        data.put("menu",menu);
+        data.put("pcid","PCID");
+        data.put("type","1");
+        params.add(data);
+        option.setParams(params);
+        String sign = createRequestSign(JsonUtils.obj2JsonObj(option), XopMethod.SECRET);
+        option.setSign(sign);
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Type", "application/json;charset=UTF-8");
+        HttpEntity<OrderDishQueryOption> httpEntity = new HttpEntity<>(option, headers);
+        ResponseEntity<String> entity = null;
+        try {
+            if (checkTimes()) {
+                entity = restTemplate.postForEntity(XopMethod.URL, httpEntity, String.class);
+            }
+        } catch (RestClientException e) {
+            log.info("获取营业点接口调用异常");
+            log.error(e.getMessage(), e);
+        }
+
+        if (entity == null) {
+            OrderDishBO orderDishBO = new OrderDishBO();
+            orderDishBO.setSuccess(false);
+            return orderDishBO;
+        }
+        return JSONObject.parseObject(entity.getBody(), OrderDishBO.class);
     }
 }

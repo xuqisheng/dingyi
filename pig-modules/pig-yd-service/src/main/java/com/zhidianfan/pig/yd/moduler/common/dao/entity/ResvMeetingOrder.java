@@ -350,10 +350,22 @@ public class ResvMeetingOrder extends Model<ResvMeetingOrder> {
      */
     @TableField("confirm_remark")
     private String confirmRemark;
+    /**
+     * 天港订单是否同步
+     */
+    @TableField("tg_is_sync")
+    private Integer tgIsSync;
+    /**
+     * 天港订单号
+     */
+    @TableField("tg_order_no")
+    private String tgOrderNo;
 
 
     private Integer xmsUpdateStatus;
     private String thirdOrderNo;
+
+    private String menuOrder;
 
     public Integer getId() {
         return id;
@@ -1043,6 +1055,30 @@ public class ResvMeetingOrder extends Model<ResvMeetingOrder> {
         this.thirdOrderNo = thirdOrderNo;
     }
 
+    public String getMenuOrder() {
+        return menuOrder;
+    }
+
+    public void setMenuOrder(String menuOrder) {
+        this.menuOrder = menuOrder;
+    }
+
+    public Integer getTgIsSync() {
+        return tgIsSync;
+    }
+
+    public void setTgIsSync(Integer tgIsSync) {
+        this.tgIsSync = tgIsSync;
+    }
+
+    public String getTgOrderNo() {
+        return tgOrderNo;
+    }
+
+    public void setTgOrderNo(String tgOrderNo) {
+        this.tgOrderNo = tgOrderNo;
+    }
+
     @Override
     protected Serializable pkVal() {
         return this.id;
@@ -1135,6 +1171,9 @@ public class ResvMeetingOrder extends Model<ResvMeetingOrder> {
         ", printTime=" + printTime +
         ", serviceItems=" + serviceItems +
         ", confirmRemark=" + confirmRemark +
+        ", menuOrder=" + menuOrder +
+        ", tgOrderNo=" + tgOrderNo +
+        ", tgIsSync=" + tgIsSync +
         "}";
     }
 }

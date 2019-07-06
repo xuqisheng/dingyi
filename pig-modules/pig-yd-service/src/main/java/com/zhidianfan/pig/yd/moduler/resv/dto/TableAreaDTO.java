@@ -20,6 +20,8 @@ public class TableAreaDTO {
 
     private String tableAreaName;
 
+    private String areaCode;
+
     private String status;
 
     private Boolean delete;

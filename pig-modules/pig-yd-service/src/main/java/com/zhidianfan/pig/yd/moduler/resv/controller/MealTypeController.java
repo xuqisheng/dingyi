@@ -36,7 +36,7 @@ public class MealTypeController {
     /**
      *
      * @param id 酒店id
-     * @return
+     * @return 操作结果
      */
     @ApiOperation(value="酒店餐别查询", notes="根据酒店id查询订单")
     @ApiImplicitParam(paramType="query", name = "id", value = "酒店id", dataType = "String")
@@ -54,8 +54,8 @@ public class MealTypeController {
     }
 
     /**
-     * 修改餐别信息
-     * @return
+     * 修改餐别开始日期结束日期
+     * @return 操作结果是否成功
      */
     @ApiOperation(value="酒店餐别编辑")
     @PostMapping(value = "/info")
@@ -67,10 +67,11 @@ public class MealTypeController {
     }
 
 
+
     /**
      * 美团同步接口
      * @param businessId
-     * @return
+     * @return 操作结果
      */
     @ApiOperation(value="同步第三方餐时")
     @GetMapping(value = "/sync")

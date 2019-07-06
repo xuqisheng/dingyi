@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhidianfan.pig.yd.moduler.common.dao.mapper.CustomerValueBaseInfoMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zhidianfan.pig.yd.moduler.common.dao.entity.CustomerValueBaseInfo">
+        <id column="id" property="id" />
+        <result column="name" property="name" />
+        <result column="sex" property="sex" />
+        <result column="phone" property="phone" />
+        <result column="age" property="age" />
+        <result column="company" property="company" />
+        <result column="total_consume_count" property="totalConsumeCount" />
+        <result column="total_consume_amount" property="totalConsumeAmount" />
+        <result column="last_consume_time" property="lastConsumeTime" />
+        <result column="custom_profile" property="customProfile" />
+        <result column="first_level" property="firstLevel" />
+        <result column="classify_value" property="classifyValue" />
+        <result column="custom_classify" property="customClassify" />
+        <result column="app_user_name" property="appUserName" />
+        <result column="create_user_id" property="createUserId" />
+        <result column="cteate_time" property="cteateTime" />
+        <result column="update_user_id" property="updateUserId" />
+        <result column="update_time" property="updateTime" />
+    </resultMap>
+
+</mapper>

@@ -103,7 +103,7 @@ public class ResvLineController {
         //根据排队号更新排队信息
         Boolean b = resvLineService.updateLineInfo(lineInfoDTO);
 
-        Tip tip = (b != null ? SuccessTip.SUCCESS_TIP : ErrorTip.ERROR_TIP);
+        Tip tip = (b  ? SuccessTip.SUCCESS_TIP : ErrorTip.ERROR_TIP);
 
         return ResponseEntity.ok(tip);
     }

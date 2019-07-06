@@ -17,6 +17,7 @@ import com.zhidianfan.pig.yd.moduler.manage.feign.AuthFeign;
 import com.zhidianfan.pig.yd.moduler.manage.feign.SysDictFeign;
 import com.zhidianfan.pig.yd.moduler.manage.feign.WxPushFeign;
 import com.zhidianfan.pig.yd.moduler.sms.service.rmi.SmsFeign;
+import com.zhidianfan.pig.yd.utils.PasswordCheckUtils;
 import org.apache.commons.lang.time.DateFormatUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -149,6 +150,9 @@ public class AgentManageService {
      * @return
      */
     public Tip putAgent(AgentDTO agentDTO){
+        if(!PasswordCheckUtils.checkSimplePassword(agentDTO.getPassword())){
+            return new SuccessTip(4001,"密码过于简单!");
+        }
         Agent agent = new Agent();
         BeanUtils.copyProperties(agentDTO,agent);
         agent.setCreatedAt(new Date());

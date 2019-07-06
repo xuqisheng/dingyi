@@ -26,4 +26,34 @@ public class ResvOrderLogsServiceImpl extends ServiceImpl<ResvOrderLogsMapper, R
         List<ResvOrderLogsDTO> resvOrderLogs = baseMapper.selectOrderLogsByBatchNo(batchNo);
         return resvOrderLogs;
     }
+
+    @Override
+    public void insertMeetingOrderStatus2TO3(Integer intervalNum) {
+        baseMapper.insertMeetingOrderStatus2TO3(intervalNum);
+    }
+
+    @Override
+    public void insertMeetingOrderStatus1TO6(Integer intervalNum) {
+        baseMapper.insertMeetingOrderStatus1TO6(intervalNum);
+    }
+
+    @Override
+    public void insertOrderStatus1TO2(Integer intervalNum) {
+        baseMapper.insertOrderStatus1TO2(intervalNum);
+    }
+
+    @Override
+    public void insertOrderStatus2TO3(Integer intervalNum) {
+        baseMapper.insertOrderStatus2TO3(intervalNum);
+    }
+
+    @Override
+    public void insertAndroidOrderStatus1TO2(Integer intervalNum) {
+        baseMapper.insertAndroidOrderStatus1TO2(intervalNum);
+    }
+
+    @Override
+    public void insertAndroidOrderStatus2TO3(Integer intervalNum) {
+        baseMapper.insertAndroidOrderStatus2TO3(intervalNum);
+    }
 }

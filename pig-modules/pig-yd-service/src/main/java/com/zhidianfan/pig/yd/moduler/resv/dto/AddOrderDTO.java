@@ -234,7 +234,7 @@ public class AddOrderDTO {
     private String unorderReasonId;
 
     /**
-     * 安卓电话机用户信息
+     * 安卓电话机用户信息 或者小程序用户信息
      */
     private Integer androidUserId;
     private String androidUserName;
@@ -251,5 +251,8 @@ public class AddOrderDTO {
      * 2 为小程序
      */
     private String deviceType;
-
+    /**
+     * 订单创建者
+     */
+    private Integer founderId;
 }

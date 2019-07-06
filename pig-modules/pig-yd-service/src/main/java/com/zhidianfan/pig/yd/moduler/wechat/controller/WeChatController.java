@@ -1,10 +1,9 @@
 package com.zhidianfan.pig.yd.moduler.wechat.controller;
 
-import com.alibaba.fastjson.JSONObject;
+import com.zhidianfan.pig.yd.moduler.common.dto.SuccessTip;
+import com.zhidianfan.pig.yd.moduler.common.dto.Tip;
 import com.zhidianfan.pig.yd.moduler.common.service.IResvOrderAndroidService;
-import com.zhidianfan.pig.yd.moduler.wechat.util.AccessToken;
-import com.zhidianfan.pig.yd.moduler.wechat.util.OrderTemplate;
-import com.zhidianfan.pig.yd.moduler.wechat.util.WeChatUtils;
+import com.zhidianfan.pig.yd.moduler.wechat.util.*;
 import com.zhidianfan.pig.yd.moduler.wechat.vo.PushMessageVO;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -19,7 +18,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 微信
@@ -50,28 +51,29 @@ public class WeChatController {
      */
     private static final Logger logger = LoggerFactory.getLogger(WeChatController.class);
 
-    @PostMapping("pushMessage")
-    public String pushMessage(PushMessageVO pushMessageVO) {
-        return WeChatUtils.pushMessage(
-                pushMessageVO.getOpenId(),
-                pushMessageVO.getOrderTemplate().getCode(),
-                "",
-                WeChatUtils.getMessageContent(pushMessageVO));
-    }
-
     @GetMapping("getUserInfo")
     public String getUserInfo(String code, String openid) {
         AccessToken accessToken = null;
         if (StringUtils.isNotEmpty(openid))
             accessToken = redisTemplate.opsForValue().get(openid);
 
-        if (accessToken == null || WeChatUtils.isExpiredToken(accessToken)) {
-            accessToken = WeChatUtils.getAccessToken(0, code);
-            if (accessToken == null || StringUtils.isEmpty(accessToken.getAccessToken()))
-                return "code已失效";
-            else
-                redisTemplate.opsForValue().set(accessToken.getOpenid(), accessToken);
+        //token存在但是已经过期 重新刷新token
+        if (accessToken != null && WeChatUtils.isExpiredToken(accessToken)) {
+            logger.info("缓存token已经失效,尝试使用refreshToken:" + code + " 获取最新token");
+            accessToken = WeChatUtils.getAccessToken(2, accessToken.getRefreshToken());
         }
+
+        //token不存在 并且code不为空
+        if (accessToken == null && StringUtils.isNotBlank(code)) {
+            logger.info("缓存token已经失效,尝试使用code:" + code + " 获取最新token");
+            accessToken = WeChatUtils.getAccessToken(0, code);
+            if (accessToken != null && StringUtils.isNotBlank(accessToken.getAccessToken()))
+                //缓存数据  refreshToken的有效期为30天
+                redisTemplate.opsForValue().set(accessToken.getOpenid(), accessToken, 30, TimeUnit.DAYS);
+        }
+
+        if (accessToken == null)
+            return "获取accessToken失败";
 
         HttpGet httpGet = new HttpGet(WeChatUtils.getUserInfoUrl(accessToken.getOpenid(), accessToken.getAccessToken()));
         CloseableHttpClient httpClient = HttpClients.createDefault();
@@ -85,9 +87,8 @@ public class WeChatController {
         return "token已失效";
     }
 
-    @GetMapping("pushThirdOrder")
-    @Scheduled(cron = "0 0/30 * * * ?")
-    public void getThirdOrder() {
+    @PostMapping("pushMessageForThirdOrder")
+    public ResponseEntity<Tip> pushMessageForThirdOrder() {
         LocalDateTime now = LocalDateTime.now().withNano(0);
         //防止延迟
         if (now.getMinute() < 10)
@@ -96,8 +97,6 @@ public class WeChatController {
             now = now.withMinute(30).withSecond(0);
 
         List<Map<String, Object>> list = resvOrderAndroidService.getAllWeChatThirdOrder(now.plusHours(1));
-        logger.info("执行定时推送:" + list.size() + "行数据");
-        logger.info("内容:" + JSONObject.toJSONString(list));
         for (Map<String, Object> order : list) {
             PushMessageVO pushMessageVO = new PushMessageVO();
             pushMessageVO.setBusinessName(MapUtils.getString(order, "business_name"));
@@ -108,16 +107,36 @@ public class WeChatController {
             WeChatUtils.pushMessage(
                     MapUtils.getString(order, "openid"),
                     OrderTemplate.ORDER_RESV_REMIND.getCode(),
-                    "",
+                    "http://eding.zhidianfan.com/#/OrderDetail?id=" + MapUtils.getString(order, "third_order_no"),
                     WeChatUtils.getMessageContent(pushMessageVO));
         }
+        return ResponseEntity.ok(SuccessTip.SUCCESS_TIP);
     }
 
     @Bean("accessTokenTemplate")
     public RedisTemplate<String, AccessToken> accessTokenTemplate(RedisConnectionFactory redisConnectionFactory) {
         RedisTemplate<String, AccessToken> template = new RedisTemplate<>();
         template.setConnectionFactory(redisConnectionFactory);
+        template.setValueSerializer(new HessianRedisSerializer<AccessToken>());
+        template.setKeySerializer(new StringRedisSerializer());
+        template.afterPropertiesSet();
         return template;
+    }
+
+    /**
+     * 获取微信配置信息
+     * @param url
+     * @return
+     */
+    @GetMapping("/config")
+    public ResponseEntity getWxConfig(String url){
+
+        WxConfig wxConfig = new WxConfig();
+
+        wxConfig = WeChatUtils.getConfigSignature(url);
+
+        return ResponseEntity.ok(wxConfig);
+
     }
 
 }

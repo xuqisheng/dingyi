@@ -1,0 +1,8 @@
+FROM openjdk:8-jdk-alpine
+VOLUME /tmp
+ADD pig-visual/pig-monitor/target/pig-monitor.jar pig-monitor.jar
+RUN apk add --no-cache tzdata \
+   && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
+   && echo "Asia/Shanghai" > /etc/timezone
+ENV JAVA_OPTS=""
+ENTRYPOINT [ "sh", "-c", "java  $JAVA_OPTS -Djava.security.egd=file:/dev/./urandom -jar /pig-monitor.jar" ]

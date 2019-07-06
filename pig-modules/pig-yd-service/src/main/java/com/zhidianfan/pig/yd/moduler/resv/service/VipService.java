@@ -2,12 +2,11 @@ package com.zhidianfan.pig.yd.moduler.resv.service;
 
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
+import com.baomidou.mybatisplus.mapper.Wrapper;
 import com.baomidou.mybatisplus.plugins.Page;
+import com.google.common.collect.Maps;
 import com.zhidianfan.pig.common.util.PageFactory;
-import com.zhidianfan.pig.yd.moduler.common.dao.entity.Business;
-import com.zhidianfan.pig.yd.moduler.common.dao.entity.ResvOrderAndroid;
-import com.zhidianfan.pig.yd.moduler.common.dao.entity.ResvOrderRating;
-import com.zhidianfan.pig.yd.moduler.common.dao.entity.Vip;
+import com.zhidianfan.pig.yd.moduler.common.dao.entity.*;
 import com.zhidianfan.pig.yd.moduler.common.dto.ErrorTip;
 import com.zhidianfan.pig.yd.moduler.common.dto.SuccessTip;
 import com.zhidianfan.pig.yd.moduler.common.dto.Tip;
@@ -15,12 +14,15 @@ import com.zhidianfan.pig.yd.moduler.common.service.*;
 import com.zhidianfan.pig.yd.moduler.resv.bo.VipMealInfoBo;
 import com.zhidianfan.pig.yd.moduler.resv.bo.VipValueBo;
 import com.zhidianfan.pig.yd.moduler.resv.bo.VipValueCountBo;
+import com.zhidianfan.pig.yd.moduler.resv.constants.CustomerValueConstants;
 import com.zhidianfan.pig.yd.moduler.resv.dto.*;
 import com.zhidianfan.pig.yd.moduler.resv.enums.OrderStatus;
+import com.zhidianfan.pig.yd.mq.MQSender;
 import com.zhidianfan.pig.yd.utils.ExcelUtil;
 import com.zhidianfan.pig.yd.utils.Lunar;
 import com.zhidianfan.pig.yd.utils.LunarSolarConverter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.beans.BeanUtils;
@@ -34,6 +36,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.Period;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -65,6 +71,14 @@ public class VipService {
     @Resource
     private IResvOrderRatingService iResvOrderRatingService;
 
+    @Autowired
+    private MQSender mqSender;
+
+    @Autowired
+    private IAnniversaryService anniversaryMapper;
+
+    @Autowired
+    private VipAllergenService vipAllergenService;
 
     /**
      * 根据酒店id与手机号更新或者新增Vip
@@ -97,10 +111,39 @@ public class VipService {
             vip.setId(vipInfo.getId());
             vip.setUpdatedAt(new Date());
             b = iVipService.updateById(vip);
+            // todo 添加发送 MQ
+            if (b) {
+                sendMq(vip);
+            }
         }
 
 
+
         return b;
+    }
+
+    private void sendMq(Vip vip) {
+        try {
+            Integer vipId = vip.getId();
+            if (vipId == null) {
+                log.error("Vip id 为 null, 发送 MQ 不向 RabbitMQ 发送消息");
+                return;
+            }
+            CustomerValueChangeFieldDTO dto = new CustomerValueChangeFieldDTO();
+            int vipIdInt;
+            try {
+                vipIdInt = Math.toIntExact(vipId);
+            } catch (Exception e) {
+                log.error("转为 int 失败，不发送 MQ ");
+                return;
+            }
+            dto.setVipId(vipIdInt);
+            dto.setType(CustomerValueChangeFieldDTO.PROFILE);
+            dto.setValue(CustomerValueChangeFieldDTO.PROFILE);
+            mqSender.sendMQ(dto);
+        } catch (Exception e) {
+            log.error("发送 MQ 发生异常，不影响正常的执行", e);
+        }
     }
 
     /**
@@ -115,7 +158,7 @@ public class VipService {
                 .eq("vip_phone", phone));
 
         if (vipInfo == null) {
-            return null;
+            return new VipInfoDTO();
         }
 
 
@@ -148,6 +191,118 @@ public class VipService {
         vipInfoDTO.setLastEatTime(lastEatTime);
 
         return vipInfoDTO;
+    }
+
+
+    /**
+     * 品牌酒店连锁查询客户信息.
+     *
+     * @param businessId 酒店id
+     * @param phone      酒店号码
+     * @return 客户连锁信息
+     */
+    private VipInfoDTO getBrandVipInfo(List<Business> brandBusinessList, Integer brandId,
+                                       Integer businessId, String phone) {
+
+
+        VipInfoDTO vipInfoDTO = new VipInfoDTO();
+
+        // 1. 先查询这个客户在这个酒店的信息
+        int selectCount = iVipService.selectCount(new EntityWrapper<Vip>()
+                .eq("business_id", businessId)
+                .eq("vip_phone", phone));
+
+
+        //这个酒店没这个客户的基本数据
+        if (selectCount == 0) {
+
+            for (Business business : brandBusinessList) {
+                selectCount = iVipService.selectCount(new EntityWrapper<Vip>()
+                        .eq("business_id", business.getId())
+                        .eq("vip_phone", phone));
+
+                //如果查询到连锁酒店下某个酒店有该客户信息 则返回
+                if (selectCount != 0) break;
+            }
+
+        } else {
+            //如果原始酒店 有该vip 数据,则查询这个酒店的客户信息就餐信息
+            vipInfoDTO = getVipInfo(businessId, phone);
+        }
+
+
+        //如果所有酒店都没这个客户数据, 则返回空的vipInfo
+        if (selectCount == 0) {
+            return vipInfoDTO;
+        }
+
+
+        List<Vip> vips = new ArrayList<>();
+        //查询该品牌下的该手机号码的客户
+        for (Business business : brandBusinessList) {
+            Vip vip = iVipService.selectOne(new EntityWrapper<Vip>()
+                    .eq("business_id", business.getId())
+                    .eq("vip_phone", phone));
+
+            if (vip != null)
+                vips.add(vip);
+
+        }
+
+
+        //总消费次数
+        Integer brandResvTimes = 0;
+        Integer brandactResvTimes = 0;
+
+        //遍历每个vip
+        for (Vip vip : vips) {
+
+            //1.查询客户预订次数
+            brandResvTimes += iResvOrderAndroidService.selectResvTimes(vip.getId(), null);
+            //2.查询实际消费次数
+            brandactResvTimes += iResvOrderAndroidService.selectResvTimes(vip.getId(), OrderStatus.SETTLE_ACCOUNTS.code);
+
+        }
+
+        ResvOrderAndroid resvOrderAndroid = iResvOrderAndroidService.selectBrandLastEatTime(phone, brandId);
+
+        // 上一次品牌就餐时间筛选
+        vipInfoDTO.setLastEatTime(resvOrderAndroid == null ? null : resvOrderAndroid.getResvDate());
+        // 上一次就餐门店筛选
+        vipInfoDTO.setLastBrandBusinessName(resvOrderAndroid == null ? null : resvOrderAndroid.getBusinessName());
+
+        //品牌总预定次数
+        vipInfoDTO.setBrandResvTimes(brandResvTimes);
+        //品牌总消费次数
+        vipInfoDTO.setBrandActResvTimes(brandactResvTimes);
+
+        return vipInfoDTO;
+    }
+
+
+    /**
+     * 来电弹屏客户信息展示
+     *
+     * @param brandId 品牌
+     * @param phone   手机号码
+     * @return 来电弹屏客户信息
+     */
+    public VipInfoDTO callscreenvipinfo(Integer brandId, Integer businessId, String phone) {
+
+
+        //1. 查询该酒店是否连锁酒店
+        List<Business> brandBusinessList = businessService.selectList(new EntityWrapper<Business>()
+                .eq("brand_id", brandId)
+                .eq("status", "1"));
+
+        //1.1 如果没有连锁酒店,则直接走单酒店查询道路
+        if (brandId.equals(0) || brandBusinessList.size() == 1) {
+            return getVipInfo(businessId, phone);
+        } else {
+            //1.2 如果是连锁酒店则走连锁酒店查询
+            return getBrandVipInfo(brandBusinessList, brandId, businessId, phone);
+        }
+
     }
 
 
@@ -222,8 +377,8 @@ public class VipService {
     /**
      * 根据id更新客户信息
      *
-     * @param vip
-     * @return
+     * @param vip vip信息
+     * @return 更新结果
      */
     public boolean updateVipInfo(Vip vip) {
 
@@ -242,9 +397,9 @@ public class VipService {
      *
      * @param businessId 酒店id
      * @param phone      号码
-     * @return
+     * @return 模糊查询
      */
-    public Page<Vip> fuzzyQueryVipList(Integer businessId, String phone) {
+    public Page<VipAllergenDTO> fuzzyQueryVipList(Integer businessId, String phone) {
 
         Page<Vip> page = new PageFactory().defaultPage();
 
@@ -255,8 +410,24 @@ public class VipService {
                 .orderBy("updated_at", false)
                 .orderBy("id", false));
 
-        return vipPage;
+        Page<VipAllergenDTO> page1 = new Page<>();
+        BeanUtils.copyProperties(page, page1);
+
+        List<Vip> records = vipPage.getRecords();
+        List<VipAllergenDTO> allergenDTOS = new ArrayList<>();
+
+        for (Vip v : records) {
+
+            VipAllergenDTO vipAllergenDTO = new VipAllergenDTO();
+            BeanUtils.copyProperties(v, vipAllergenDTO);
+            vipAllergenDTO.setAllergen(vipAllergenService.selectvipAllergen(v.getId()));
+            allergenDTOS.add(vipAllergenDTO);
+
+        }
+        page1.setRecords(allergenDTOS);
+        return page1;
     }
+
 
     public Page<StatisticsVipDTO> statisticsViplist(Integer businessId, String queryVal) {
         Page<StatisticsVipDTO> page = new PageFactory().defaultPage();
@@ -272,7 +443,7 @@ public class VipService {
      * 精细查询酒店客户
      *
      * @param vipInfoDTO 姓名 电话 客户分类 客户价值 预订次数 最近就餐
-     * @return
+     * @return 客户酒店
      */
     public Page<VipTableDTO> conditionFindVips(VipInfoDTO vipInfoDTO) {
 
@@ -283,12 +454,12 @@ public class VipService {
         return page;
     }
 
+
     public List<VipTableDTO> excelConditionFindVips(VipInfoDTO vipInfoDTO) {
 
-        List<VipTableDTO> vipInfoDTOS = iVipService.excelConditionFindVips(vipInfoDTO);
-
-        return vipInfoDTOS;
+        return iVipService.excelConditionFindVips(vipInfoDTO);
     }
+
 
     public void downloadexcel(List<VipTableDTO> records) {
 
@@ -317,7 +488,7 @@ public class VipService {
         }
 
         //读取
-        List<Map<String, Object>> list = ExcelUtil.ReadExcel(file, "vip", 2);
+        List<Map<String, Object>> list = ExcelUtil.ReadExcel(file, "vip");
 
         //查询出酒店信息
         Business businessInfo = businessService.selectOne(new EntityWrapper<Business>()
@@ -336,12 +507,18 @@ public class VipService {
             org.apache.commons.beanutils.BeanUtils.populate(vip, map);
 
             //剔除名字和手机号码字段为空的
+            //性别为空的过滤
+            //性别为男或者女
             if ((map.get("vipName") != null && !"".equals(map.get("vipName")))
-                    && StringUtils.isNotEmpty(map.get("vipPhone").toString())
-                    && isMobileNO(map.get("vipPhone").toString())) {
+                    && (map.get("vipPhone") != null && !"".equals(map.get("vipPhone")))
+                    && isMobileNO(map.get("vipPhone").toString())
+                    && map.get("vipSex") != null && !"".equals(map.get("vipSex"))
+                    && ("男".equals(map.get("vipSex")) || "女".equals(map.get("vipSex")))
+
+            ) {
 
                 //剔除生日格式不正确的
-                if (StringUtils.isNotEmpty(map.get("vipBirthday").toString())
+                if (map.get("vipBirthday") != null && StringUtils.isNotEmpty(map.get("vipBirthday").toString())
                         && !valiDateTimeWithLongFormat(map.get("vipBirthday").toString())) {
                     //加入录入失败的客户信息
                     failVips.add(vip);
@@ -524,4 +701,245 @@ public class VipService {
         return false;
     }
 
+    /**
+     * 根据酒店 id 查询 vip 表的用户信息
+     *
+     * @param hotelId 酒店 id
+     * @return 酒店所有 vip 列表
+     */
+    public List<Vip> getVipList(long hotelId) {
+        Wrapper<Vip> wrapper = new EntityWrapper<>();
+        wrapper.eq("business_id", hotelId);
+        List<Vip> vips = iVipService.selectList(wrapper);
+        return vips;
+    }
+
+    /**
+     * 获取年龄
+     *
+     * @param vip vip 信息
+     * @return 不显示的年龄为 -1
+     */
+    public int getAge(Vip vip) {
+        Integer hideBirthdayYear = vip.getHideBirthdayYear();
+        if (hideBirthdayYear == null || hideBirthdayYear == 1) {
+            return CustomerValueConstants.DEFAULT_NON_AGE;
+        }
+        String vipBirthday = vip.getVipBirthday();
+        if (StringUtils.isBlank(vipBirthday)) {
+            return CustomerValueConstants.DEFAULT_NON_AGE;
+        }
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyy-MM-dd");
+        LocalDate localDate;
+        try {
+            localDate = LocalDate.parse(vipBirthday, dateTimeFormatter);
+        } catch (DateTimeParseException e) {
+            log.error("格式转换失败:{}", vipBirthday);
+            return CustomerValueConstants.DEFAULT_NON_AGE;
+        } catch (RuntimeException e) {
+            log.error("其他运行时的异常:{}", vipBirthday);
+            return CustomerValueConstants.DEFAULT_NON_AGE;
+        }
+        LocalDate now = LocalDate.now();
+        Period between = Period.between(localDate, now);
+        return between.getYears();
+    }
+
+    /**
+     * 根据主键 id 列表，查询 vip 的信息
+     *
+     * @param idList 主键集合
+     * @return Vip 信息列表
+     */
+    public List<Vip> getVipList(List<Integer> idList) {
+        if (CollectionUtils.isEmpty(idList)) {
+            return new ArrayList<>();
+        }
+        return iVipService.selectBatchIds(idList);
+    }
+
+    /**
+     * 计算客户资料完整度
+     *
+     * @param vip vip 信息
+     * @return 完整度，15% 的字样
+     */
+    public int getProfile(Vip vip) {
+        // 查询 vip 表
+        if (vip == null) {
+            log.error("vip 信息不存在");
+            return 0;
+        }
+        Integer vipId = vip.getId();
+        log.info("开始计算客户资料完整度:[{}]", vipId);
+        if (vipId == null) {
+            return 0;
+        }
+
+        // -1 查询不到，不作处理
+        // 查询纪念日表
+        Wrapper<Anniversary> wrapper = new EntityWrapper<>();
+        wrapper.eq("vip_id", vipId);
+        int profileCount = anniversaryMapper.selectCount(wrapper);
+
+        // -1 查询不到不作处理
+        // 计算资料完整度
+        int profileScore = getProfileScore(vip, profileCount);
+        log.info("客户资料完整度，[{}],[{}]", vipId, profileCount);
+        return profileScore;
+
+        // 转换成 String
+        // 返回结果
+    }
+
+    /**
+     * 计算客户资料完整度
+     *
+     * @param vips vip 信息
+     * @return 完整度，15 的字样
+     */
+    public Map<Integer, Integer> getProfile2(List<Vip> vips) {
+        // 查询 vip 表
+        if (vips == null) {
+            log.error("vip 信息不存在");
+            return Maps.newHashMap();
+        }
+
+        Object[] vipIdArray = vips.stream()
+                .filter(vip -> vip.getId() != null)
+                .map(Vip::getId)
+                .toArray();
+
+        // -1 查询不到，不作处理
+        // 查询纪念日表
+        Wrapper<Anniversary> wrapper = new EntityWrapper<>();
+        wrapper.in("vip_id", vipIdArray);
+        List<Anniversary> anniversaries = anniversaryMapper.selectList(wrapper);
+        // 去除相同的 vipId,每个 vipId 只有一条信息
+        ArrayList<Anniversary> distinctAnniversariesList = anniversaries.stream()
+                .collect(Collectors.collectingAndThen(
+                        Collectors.toCollection(
+                                () -> new TreeSet<>(Comparator.comparing(Anniversary::getVipId))
+                        ), ArrayList::new
+                ));
+
+        // key-vipId, v-true, 该 vip 有纪念日
+        Map<Integer, Boolean> existAnniversariesVip = distinctAnniversariesList.stream()
+                .collect(Collectors.toMap(Anniversary::getVipId, result -> result.getVipId() == null ? Boolean.FALSE : Boolean.TRUE));
+
+        Map<Integer, Integer> hash = new HashMap<>(vips.size());
+        for (Vip vip : vips) {
+            Integer id = vip.getId();
+            int profileScore2 = getProfileScore2(vip, existAnniversariesVip);
+            hash.put(id, profileScore2);
+        }
+
+        return hash;
+    }
+
+    /**
+     * 资料完整度
+     *
+     * @param vip          vip 信息
+     * @param profileCount 纪念日
+     * @return 85% 字样
+     */
+    private int getProfileScore(Vip vip, int profileCount) {
+        int score = 0;
+        String vipName = vip.getVipName();
+        if (StringUtils.isNotBlank(vipName)) {
+            score += 10;
+        }
+
+        String vipPhone = vip.getVipPhone();
+        if (StringUtils.isNotBlank(vipPhone)) {
+            score += 10;
+        }
+
+        String hobby = vip.getHobby();
+        if (StringUtils.isNotBlank(hobby)) {
+            score += 15;
+        }
+
+        String detest = vip.getDetest();
+        if (StringUtils.isNotBlank(detest)) {
+            score += 15;
+        }
+
+        String tag = vip.getTag();
+        if (StringUtils.isNotBlank(tag)) {
+            score += 10;
+        }
+
+        String vipCompany = vip.getVipCompany();
+        if (StringUtils.isNotBlank(vipCompany)) {
+            score += 10;
+        }
+
+        String vipBirthday = vip.getVipBirthday();
+        String vipBirthdayNl = vip.getVipBirthdayNl();
+        if (StringUtils.isNotBlank(vipBirthday)) {
+            score += 15;
+        } else if (StringUtils.isNotBlank(vipBirthdayNl)) {
+            score += 15;
+        }
+
+        if (profileCount > 0) {
+            score += 15;
+        }
+
+        return score;
+    }
+
+    private int getProfileScore2(Vip vip, Map<Integer, Boolean> anniversariesMap) {
+        int score = 0;
+        String vipName = vip.getVipName();
+        if (StringUtils.isNotBlank(vipName)) {
+            score += 10;
+        }
+
+        String vipPhone = vip.getVipPhone();
+        if (StringUtils.isNotBlank(vipPhone)) {
+            score += 10;
+        }
+
+        String hobby = vip.getHobby();
+        if (StringUtils.isNotBlank(hobby)) {
+            score += 15;
+        }
+
+        String detest = vip.getDetest();
+        if (StringUtils.isNotBlank(detest)) {
+            score += 15;
+        }
+
+        String tag = vip.getTag();
+        if (StringUtils.isNotBlank(tag)) {
+            score += 10;
+        }
+
+        String vipCompany = vip.getVipCompany();
+        if (StringUtils.isNotBlank(vipCompany)) {
+            score += 10;
+        }
+
+        String vipBirthday = vip.getVipBirthday();
+        String vipBirthdayNl = vip.getVipBirthdayNl();
+        if (StringUtils.isNotBlank(vipBirthday)) {
+            score += 15;
+        } else if (StringUtils.isNotBlank(vipBirthdayNl)) {
+            score += 15;
+        }
+
+        for (Map.Entry<Integer, Boolean> entry : anniversariesMap.entrySet()) {
+            Integer vipId = entry.getKey();
+            Boolean b = entry.getValue();
+            if (vip.getId().equals(vipId) && b) {
+                score += 15;
+                break;
+            }
+        }
+
+        return score;
+    }
 }

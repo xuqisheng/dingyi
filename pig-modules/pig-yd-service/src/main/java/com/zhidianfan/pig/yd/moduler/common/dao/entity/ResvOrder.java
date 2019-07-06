@@ -263,7 +263,6 @@ public class ResvOrder extends Model<ResvOrder> {
     @TableField("unorder_reason_id")
     private String unorderReasonId;
 
-
     /**
      * 安卓电话机用户id
      */
@@ -271,7 +270,6 @@ public class ResvOrder extends Model<ResvOrder> {
     private Integer androidUserId;
     @TableField("android_user_name")
     private String androidUserName;
-
     @Override
     public String toString() {
         return new ToStringBuilder(this)

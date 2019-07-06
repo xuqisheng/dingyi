@@ -76,6 +76,8 @@
         <result column="unorder_reason_id" property="unorderReasonId" />
         <result column="android_user_id" property="androidUserId" />
         <result column="android_user_name" property="androidUserName" />
+        <result column="device_type" property="deviceType" />
+        <result column="founder_id" property="founderId" />
     </resultMap>
 
     <resultMap id="getMessageOrderResultMap" type="com.zhidianfan.pig.yd.moduler.resv.bo.MessageOrderBO">
@@ -231,7 +233,6 @@
         v.vip_value_name as vipValueName,
         v.vip_class_name as vipClassName,
         ror.id as orderRatingId
-
         from resv_order_android o
         left join vip v on v.id=o.vip_id
         left join resv_order_rating ror on ror.batch_no=o.batch_no
@@ -735,10 +736,55 @@
     </select>
 
     <select id="getAllWeChatThirdOrder" parameterType="java.util.Map" resultType="java.util.Map">
-        select r.open_id as openid,o.vip_name as vip_name,o.business_name as business_name,r.resv_date as resv_date,o.table_name,o.table_area_name,b.business_address as business_addr
+        select r.open_id as openid,o.vip_name as vip_name,o.business_name as business_name,r.third_order_no as third_order_no,DATE_FORMAT(r.resv_date,'%Y-%m-%d %H:%i') as resv_date,o.table_name,o.table_area_name,b.business_address as business_addr
         from resv_order_third r,resv_order_android o,business b
         where r.open_id is not null  and o.batch_no = r.batch_no and b.id = o.business_id
         and r.resv_date = #{resvDate}
     </select>
+
+    <update id="updateAndroidOrderStatus1TO2">
+        UPDATE resv_order_android SET `status` = 2,updated_at=now() WHERE `status`=1 AND resv_date &lt;= DATE_SUB(CURDATE(),INTERVAL ${intervalNum} DAY) AND table_id != 0 AND table_area_id != 0 AND isRank != 1
+    </update>
+
+    <update id="updateAndroidOrderStatus1TO4">
+        UPDATE resv_order_android SET `status` = 4,updated_at=now(), unorder_reason = '系统取消' WHERE `status`=1 AND resv_date &lt;= DATE_SUB(CURDATE(),INTERVAL ${intervalNum} DAY) AND table_id = 0 AND table_area_id = 0 AND isRank = 1
+
+    </update>
+
+    <update id="updateAndroidOrderStatus2TO3">
+
+        UPDATE resv_order_android SET `status` = 3,updated_at=now() WHERE `status`=2 AND resv_date &lt;= DATE_SUB(CURDATE(),INTERVAL ${intervalNum} DAY) AND payamount IS NOT NULL AND payamount !=''
+
+    </update>
+
+
+    <select id="selectListWithAllergen"  resultType="com.zhidianfan.pig.yd.moduler.resv.bo.DeskOrderBo">
+        SELECT
+            r.*,
+			va.allergen
+            FROM
+            resv_order_android r
+            LEFT JOIN vip v ON r.vip_id = v.id
+			LEFT JOIN vip_allergen va  ON r.vip_id = va.vip_id
+        WHERE
+            batch_no = #{batchNo}
+    </select>
+
+
+    <select id="selectBrandLastEatTime" resultMap="BaseResultMap">
+        SELECT
+            *
+        FROM
+            resv_order_android
+        WHERE
+            vip_phone = #{phone}
+            AND business_id IN ( SELECT id FROM business WHERE brand_id = #{brandId} )
+            AND status = 3
+        ORDER BY
+            resv_date DESC
+            LIMIT 1
+    </select>
+
+
 
 </mapper>

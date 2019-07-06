@@ -243,10 +243,9 @@ public class ExcelUtil {
      * Excel 读取数据
      * @param file Excel文件
      * @param sign 读取的 行与值对应 标志
-     * @param firstRowIndex 从第几行开始读取数据
      * @return
      */
-    public static List<Map<String, Object>> ReadExcel(Part file, String sign,Integer firstRowIndex) {
+    public static List<Map<String, Object>> ReadExcel(Part file, String sign) {
 
 
         //cellName 为数据库字段 , cellNameC为excel中文字段名
@@ -269,7 +268,7 @@ public class ExcelUtil {
                 return list;
             }
 
-//            int firstRowIndex = sheet.getFirstRowNum();
+            int firstRowIndex = sheet.getFirstRowNum();
             int lastRowIndex = sheet.getLastRowNum();
             // 读取首行 即,表头
             Row firstRow = sheet.getRow(firstRowIndex);

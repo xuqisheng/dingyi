@@ -165,7 +165,7 @@ eureka:
 #认证服务器地址
 security:
   auth:
-    server: http://auth:3000
+    server: http://localhost:3000
   validate:
     code: false # 验证码开关 测试环境先关闭
     preview: false

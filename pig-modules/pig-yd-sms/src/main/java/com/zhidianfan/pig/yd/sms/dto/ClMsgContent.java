@@ -92,4 +92,18 @@ public class ClMsgContent {
     public void setUid(String uid) {
         this.uid = uid;
     }
+
+    @Override
+    public String toString() {
+        return "ClMsgContent{" +
+                "account='" + account + '\'' +
+                ", password='" + password + '\'' +
+                ", msg='" + msg + '\'' +
+                ", phone='" + phone + '\'' +
+                ", sendtime='" + sendtime + '\'' +
+                ", report='" + report + '\'' +
+                ", extend='" + extend + '\'' +
+                ", uid='" + uid + '\'' +
+                '}';
+    }
 }

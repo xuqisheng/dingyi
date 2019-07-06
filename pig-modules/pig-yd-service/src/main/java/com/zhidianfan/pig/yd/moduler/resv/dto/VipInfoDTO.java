@@ -116,11 +116,26 @@ public class VipInfoDTO {
      */
     private Integer resvTimes;
 
+
+    /**
+     * 连锁店总预定次数
+     */
+    private Integer brandResvTimes;
+
+
     /**
      * 实际消费次数
      */
     @ApiModelProperty(value="就餐次数(几次以上)")
     private Integer actResvTimes;
+
+    /**
+     * 连锁店总就餐次数
+     */
+    private Integer brandActResvTimes;
+
+
+    private String lastBrandBusinessName;
 
     /**
      *
@@ -179,5 +194,6 @@ public class VipInfoDTO {
 
     private Integer isLeap;
 
+    private String allergen;
 
 }

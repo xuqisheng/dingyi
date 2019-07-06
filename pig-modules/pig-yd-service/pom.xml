@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <groupId>com.zhidianfan.pig</groupId>
     <artifactId>pig-yd-service</artifactId>
-    <version>0.0.32</version>
+    <version>0.0.74-ydservice-release</version>
     <packaging>jar</packaging>
 
 
@@ -128,6 +128,11 @@
             <groupId>org.java-websocket</groupId>
             <artifactId>Java-WebSocket</artifactId>
             <version>1.3.5</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.caucho</groupId>
+            <artifactId>hessian</artifactId>
         </dependency>
 
     </dependencies>

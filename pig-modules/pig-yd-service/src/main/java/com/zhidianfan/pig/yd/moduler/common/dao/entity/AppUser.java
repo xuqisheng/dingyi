@@ -30,10 +30,10 @@ public class AppUser extends Model<AppUser> {
     private String appUserName;
 
     /**
-     * 姓名
+     * 姓名,与佳辉讨论，该字段用处尚不明确，建议注释
      */
-    @TableField("user_name")
-    private String userName;
+//    @TableField("user_name")
+//    private String userName;
     /**
      * 酒店id
      */
@@ -84,13 +84,13 @@ public class AppUser extends Model<AppUser> {
     private String tag;
 
 
-    public String getUserName() {
-        return userName;
-    }
+//    public String getUserName() {
+//        return userName;
+//    }
 
-    public void setUserName(String userName) {
-        this.userName = userName;
-    }
+//    public void setUserName(String userName) {
+//        this.userName = userName;
+//    }
 
     public Integer getId() {
         return id;
@@ -222,7 +222,7 @@ public class AppUser extends Model<AppUser> {
         return "AppUser{" +
         "id=" + id +
         ", appUserName=" + appUserName +
-                ", userName=" + userName +
+//                ", userName=" + userName +
         ", businessId=" + businessId +
         ", businessName=" + businessName +
         ", appTypeId=" + appTypeId +

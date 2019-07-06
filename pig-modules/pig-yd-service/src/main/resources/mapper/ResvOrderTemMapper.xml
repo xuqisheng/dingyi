@@ -70,6 +70,7 @@
         <result column="app_user_name" property="appUserName"/>
         <result column="app_user_code" property="appUserCode"/>
         <result column="is_dish" property="isDish"/>
+        <result column="isTirdparty" property="isTirdparty"/>
     </resultMap>
 
     <insert id="insertTemHHOrders" parameterType="integer">
@@ -236,16 +237,15 @@
                o.dest_time,
                (select app_user_name from app_user where id = o.app_user_id)       app_user_name,
                aubm.app_user_code,
-               (select count(batch_no) from resv_dish where batch_no = o.batch_no) is_dish
+               (select count(batch_no) from resv_dish where batch_no = o.batch_no) is_dish,
+               o.isTirdparty
         from resv_order o
                  left join `table` t on o.table_id = t.id
                  left join meal_type m on o.meal_type_id = m.id
                  left join app_user_business_mapping aubm
                      on o.app_user_id = aubm.app_user_id and o.business_id = aubm.business_id
         where o.business_id = #{businessId}
-          and <![CDATA[o.resv_date >= timestamp(date(sysdate()))]]>
-          and o.isTirdparty IS NULL
-          and o.`status` in (1, 2, 4, 6)
+          and o.resv_date >= now()
     </select>
 
 </mapper>

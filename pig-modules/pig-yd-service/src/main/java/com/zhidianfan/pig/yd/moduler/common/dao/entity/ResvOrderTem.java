@@ -154,6 +154,11 @@ public class ResvOrderTem extends Model<ResvOrderTem> {
     @TableField("third_order_no")
     private String thirdOrderNo;
 
+    /**
+     * 餐饮主单
+     */
+    private String menuOrder;
+
     public Long getId() {
         return id;
     }
@@ -426,6 +431,14 @@ public class ResvOrderTem extends Model<ResvOrderTem> {
         this.thirdOrderNo = thirdOrderNo;
     }
 
+    public String getMenuOrder() {
+        return menuOrder;
+    }
+
+    public void setMenuOrder(String menuOrder) {
+        this.menuOrder = menuOrder;
+    }
+
     @Override
     protected Serializable pkVal() {
         return this.id;
@@ -467,6 +480,7 @@ public class ResvOrderTem extends Model<ResvOrderTem> {
         ", appUserName=" + appUserName +
         ", isDish=" + isDish +
         ", thirdOrderNo=" + thirdOrderNo +
+        ", menuOrder=" + menuOrder +
         "}";
     }
 }

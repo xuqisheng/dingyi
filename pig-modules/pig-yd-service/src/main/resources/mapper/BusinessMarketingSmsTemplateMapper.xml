@@ -6,12 +6,20 @@
     <resultMap id="BaseResultMap" type="com.zhidianfan.pig.yd.moduler.common.dao.entity.BusinessMarketingSmsTemplate">
         <id column="id" property="id" />
         <result column="business_id" property="businessId" />
+        <result column="template_title" property="templateTitle" />
         <result column="template_content" property="templateContent" />
         <result column="template_variable" property="templateVariable" />
         <result column="create_at" property="createAt" />
         <result column="update_at" property="updateAt" />
         <result column="is_enable" property="isEnable" />
         <result column="use_num" property="useNum" />
+        <result column="is_auto_send" property="isAutoSend" />
+        <result column="anniversary_type" property="anniversaryType" />
+        <result column="anniversary_obj" property="anniversaryObj" />
+        <result column="advance_day_num" property="advanceDayNum" />
+        <result column="send_time" property="sendTime" />
+        <result column="num" property="num" />
+        <result column="is_eat" property="isEat" />
     </resultMap>
     <update id="UpdateAddUseNum">
 
@@ -20,5 +28,35 @@
         where id=#{id}
 
     </update>
+
+
+    <select id="selectTemplateWithVerifyStatus" resultType="com.zhidianfan.pig.yd.moduler.sms.dto.marketing.BusinessMarketingSmsTemplateDTO">
+        SELECT
+        b.id,
+        b.business_id as  businessId,
+        b.template_title as  templateTitle,
+        b.template_content as templateContent,
+        b.template_variable as templateVariable,
+        b.use_num as useNum,
+        b.is_auto_send as isAutoSend,
+        b.advance_day_num as advanceDayNum,
+        b.send_time as sendTime,
+        b.is_eat as isEat,
+        b.is_enable as isEnable,
+        s.content as displayContent,
+        case
+        s.status
+        when 1 then '待审核'
+        when 2 then '已驳回'
+        when 3 then '审核通过'
+        end as verifyStatus
+        FROM
+        business_marketing_sms_template b,sms_marketing s
+        WHERE
+        b.id = s.template_id
+        and b.business_id = #{id}
+        and  b.anniversary_type = 1
+    </select>
+
 
 </mapper>
