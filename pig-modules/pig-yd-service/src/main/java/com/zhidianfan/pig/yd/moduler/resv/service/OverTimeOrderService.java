@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateFormatUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -29,6 +30,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  * @Author: hzp
@@ -37,6 +39,7 @@ import java.util.concurrent.Executors;
  */
 @Service
 @Slf4j
+@ConditionalOnProperty(name = "yd.task", havingValue = "true")
 public class OverTimeOrderService {
 
     @Autowired
@@ -52,7 +55,8 @@ public class OverTimeOrderService {
     @Autowired
     private RedisTemplate redisTemplate;
 
-    @Scheduled(cron = "0 0/5 * * * ?")
+
+    @Scheduled(fixedDelay = 60*5*1_000)
     public void statisticsOverTimeOrder() {
 
         log.info("statisticsOverTimeOrder------任务开始");
@@ -73,8 +77,9 @@ public class OverTimeOrderService {
                         statusWrapper);
 
                 // 线程池更新订单状态,并且推送
-                executorService.execute(() -> new OverTimeOrderThread(this, businessPage.getRecords()).run());
-
+                Future<?> submit = executorService.submit(new OverTimeOrderThread(this, businessPage.getRecords()));
+                // new OverTimeOrderThread(this, businessPage.getRecords()).run());
+                submit.get();
                 //business查询最后页退出循环
                 if (!businessPage.hasNext()) {
                     break;
@@ -85,6 +90,7 @@ public class OverTimeOrderService {
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
+
 
             //关闭线程池
             executorService.shutdown();
