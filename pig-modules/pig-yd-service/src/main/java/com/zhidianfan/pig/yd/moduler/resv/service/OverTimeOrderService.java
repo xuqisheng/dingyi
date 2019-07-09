@@ -6,11 +6,8 @@ import com.baomidou.mybatisplus.mapper.Wrapper;
 import com.baomidou.mybatisplus.plugins.Page;
 import com.zhidianfan.pig.common.util.JsonUtils;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.Business;
-import com.zhidianfan.pig.yd.moduler.common.dao.entity.ResvOrder;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.ResvOrderAndroid;
-import com.zhidianfan.pig.yd.moduler.common.dao.entity.ResvOrderLogs;
 import com.zhidianfan.pig.yd.moduler.common.service.IBusinessService;
-import com.zhidianfan.pig.yd.moduler.common.service.IResvOrderLogsService;
 import com.zhidianfan.pig.yd.moduler.common.service.IResvOrderService;
 import com.zhidianfan.pig.yd.moduler.meituan.service.rmi.PushFeign;
 import com.zhidianfan.pig.yd.moduler.meituan.service.rmi.dto.JgPush;
@@ -20,13 +17,11 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateFormatUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.scheduling.annotation.Async;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -53,7 +48,7 @@ public class OverTimeOrderService {
     private PushFeign pushFeign;
 
     @Autowired
-    private RedisTemplate redisTemplate;
+    private StringRedisTemplate redisTemplate;
 
 
     @Scheduled(fixedDelay = 60*5*1_000)
@@ -156,7 +151,7 @@ public class OverTimeOrderService {
     }
 
     /**
-     * 推送消息 (超时订单状态为8)
+     * 推送消息 (type 为9 作为超时订单推送类型)
      *
      * @param id 酒店id
      */
