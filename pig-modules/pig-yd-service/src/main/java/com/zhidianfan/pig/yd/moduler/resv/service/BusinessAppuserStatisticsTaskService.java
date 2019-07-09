@@ -43,34 +43,38 @@ public class BusinessAppuserStatisticsTaskService {
                 new EntityWrapper<Business>().eq("status", 1));
 
         // 清空上个月的统计
-        for (Business business : businessList){
-            int businessId =  business.getId();
+        for (Business business : businessList) {
+            int businessId = business.getId();
 
-            //删除这个酒店lastYearMonth 这个月份的营销经理数据
-            iBusinessAppuserStatisticsService.clearTodayStatistics(businessId,lastYearMonth);
+            try {
 
-
-            //删除临时表
-            iBusinessAppuserStatisticsService.dropTemporaryTable();
-
-            System.out.println("酒店id ======" + businessId);
+                //删除这个酒店lastYearMonth 这个月份的营销经理数据
+                iBusinessAppuserStatisticsService.clearTodayStatistics(businessId, lastYearMonth);
 
 
-            //统计
-            //1. 创建 临时表t_business_appuser_statistics_temporary
-            iBusinessAppuserStatisticsService.createTemporaryTable(businessId,lastYearMonth ,yearMonth );
+                //删除临时表
+                iBusinessAppuserStatisticsService.dropTemporaryTable();
+
+                System.out.println("酒店id ======" + businessId);
 
 
-            //2.  插入营销经理数据
-            iBusinessAppuserStatisticsService.insertAppuserStatistics(businessId,lastYearMonth ,yearMonth);
+                //统计
+                //1. 创建 临时表t_business_appuser_statistics_temporary
+                iBusinessAppuserStatisticsService.createTemporaryTable(businessId, lastYearMonth, yearMonth);
 
-            //3. 插入预订台数据
-            iBusinessAppuserStatisticsService.insertPadStatistics(businessId,lastYearMonth ,yearMonth);
 
+                //2.  插入营销经理数据
+                iBusinessAppuserStatisticsService.insertAppuserStatistics(businessId, lastYearMonth, yearMonth);
+
+                //3. 插入预订台数据
+                iBusinessAppuserStatisticsService.insertPadStatistics(businessId, lastYearMonth, yearMonth);
+            } catch (Exception e) {
+                log.error("更新酒店营销经理数据错误:" + businessId);
+            }
         }
 
         long currentTimeMillis = System.currentTimeMillis();
-        log.info("----任务结束,总耗时-----" + (currentTimeMillis - l) + "" );
+        log.info("----任务结束,总耗时-----" + (currentTimeMillis - l) + "");
 
     }
 }

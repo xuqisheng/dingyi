@@ -67,8 +67,6 @@ public class VipNextBirthDayAnniversaryService {
                 iVipService.update(vip, new EntityWrapper<Vip>().eq("id", vip.getId()));
             }catch (Exception e){
                 log.error("更新下次生日数据错误:" +vip);
-            }finally {
-                continue;
             }
         }
 
