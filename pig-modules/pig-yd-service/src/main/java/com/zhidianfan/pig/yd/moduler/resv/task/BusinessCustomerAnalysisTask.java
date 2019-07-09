@@ -81,7 +81,7 @@ public class BusinessCustomerAnalysisTask {
         for (Business business : businessList) {
             BusinessCustomerAnalysisInfoTask task = new BusinessCustomerAnalysisInfoTask();
             task.setBusinessId(business.getId());
-            LocalDate now = LocalDate.now();
+            LocalDate now = LocalDate.now().minusMonths(1);
             String date = DateTimeFormatter.ofPattern("yyyy-MM").format(now);
             task.setDate(date);
             task.setUseTag(0);
