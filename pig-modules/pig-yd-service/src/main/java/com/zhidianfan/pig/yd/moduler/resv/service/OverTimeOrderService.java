@@ -21,6 +21,7 @@ import org.apache.commons.lang.time.DateFormatUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -44,8 +45,6 @@ public class OverTimeOrderService {
     @Autowired
     private IResvOrderService iResvOrderService;
 
-    @Autowired
-    private IResvOrderLogsService iResvOrderLogsService;
 
     @Autowired
     private PushFeign pushFeign;
@@ -53,7 +52,7 @@ public class OverTimeOrderService {
     @Autowired
     private RedisTemplate redisTemplate;
 
-    @Async
+    @Scheduled(cron = "0 0/5 * * * ?")
     public void statisticsOverTimeOrder() {
 
         log.info("statisticsOverTimeOrder------任务开始");
