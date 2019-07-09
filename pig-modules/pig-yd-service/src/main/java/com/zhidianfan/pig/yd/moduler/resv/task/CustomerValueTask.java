@@ -1,17 +1,11 @@
 package com.zhidianfan.pig.yd.moduler.resv.task;
-import java.util.*;
 
-import com.baomidou.mybatisplus.mapper.EntityWrapper;
-import com.baomidou.mybatisplus.mapper.Wrapper;
-import com.google.common.collect.Lists;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.ConfigTaskExec;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.LossValueConfig;
 import com.zhidianfan.pig.yd.moduler.common.service.IConfigTaskExecService;
-import com.zhidianfan.pig.yd.moduler.resv.constants.CustomerValueConstants;
 import com.zhidianfan.pig.yd.moduler.resv.service.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.MapUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -22,10 +16,12 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 /**
  * @author sjl
@@ -170,7 +166,7 @@ public class CustomerValueTask {
     /**
      * 客户分析详情数据
      */
-    @Scheduled(cron = "0 30 0 * * ?")
+    @Scheduled(cron = "0 30 0 9 1/1 ?")
     public void customerAnalysis() {
         DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
         log.info("客户分析详情数据开始执行任务:[{}]", formatter.format(LocalDateTime.now()));
