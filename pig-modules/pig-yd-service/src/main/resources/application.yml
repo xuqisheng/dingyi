@@ -281,6 +281,7 @@ yd:
   task: true  #定时任务
   xms:
     times: 90
+    task: false # 西软定时任务开关
 
 
 eureka:

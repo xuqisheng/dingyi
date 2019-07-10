@@ -35,7 +35,7 @@ import java.util.*;
  * @author mikrotik
  */
 @Component
-@ConditionalOnProperty(name = "yd.task", havingValue = "true")
+@ConditionalOnProperty(name = "yd.xms.task", havingValue = "true")
 @Slf4j
 public class OrderTask {
     /**
