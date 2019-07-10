@@ -15,6 +15,7 @@ import com.zhidianfan.pig.yd.moduler.order.service.XopService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import java.math.BigDecimal;
@@ -26,7 +27,7 @@ import java.util.List;
  */
 //@Component
 @Slf4j
-//@ConditionalOnProperty(name = "yd.task", havingValue = "true")
+@ConditionalOnProperty(name = "yd.xms.task", havingValue = "true")
 public class MenuTask {
     /**
      * 西软业务逻辑类
