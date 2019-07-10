@@ -63,8 +63,8 @@ zuul:
       clients: pig-auth,pig-upms-service
   ignoredServices: '*'
   host:
-    connect-timeout-millis: 10000
-    socket-timeout-millis: 10000
+    connect-timeout-millis: 5000
+    socket-timeout-millis: 5000
   #    限流配置
   ratelimit:
     key-prefix: pig-ratelimite
