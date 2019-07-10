@@ -28,7 +28,7 @@ import java.util.Map;
  * @author danda
  */
 @Component
-@ConditionalOnProperty(name = "yd.task", havingValue = "true")
+@ConditionalOnProperty(name = "yd.xms.task", havingValue = "true")
 public class TableAreaTask {
     /**
      * 桌位区域数据接口

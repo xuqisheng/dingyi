@@ -6,11 +6,8 @@ import com.baomidou.mybatisplus.mapper.Wrapper;
 import com.baomidou.mybatisplus.plugins.Page;
 import com.zhidianfan.pig.common.util.JsonUtils;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.Business;
-import com.zhidianfan.pig.yd.moduler.common.dao.entity.ResvOrder;
 import com.zhidianfan.pig.yd.moduler.common.dao.entity.ResvOrderAndroid;
-import com.zhidianfan.pig.yd.moduler.common.dao.entity.ResvOrderLogs;
 import com.zhidianfan.pig.yd.moduler.common.service.IBusinessService;
-import com.zhidianfan.pig.yd.moduler.common.service.IResvOrderLogsService;
 import com.zhidianfan.pig.yd.moduler.common.service.IResvOrderService;
 import com.zhidianfan.pig.yd.moduler.meituan.service.rmi.PushFeign;
 import com.zhidianfan.pig.yd.moduler.meituan.service.rmi.dto.JgPush;
@@ -19,15 +16,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateFormatUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.scheduling.annotation.Async;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  * @Author: hzp
@@ -44,16 +43,16 @@ public class OverTimeOrderService {
     @Autowired
     private IResvOrderService iResvOrderService;
 
-    @Autowired
-    private IResvOrderLogsService iResvOrderLogsService;
 
     @Autowired
     private PushFeign pushFeign;
 
     @Autowired
-    private RedisTemplate redisTemplate;
+    private StringRedisTemplate redisTemplate;
 
-    @Async
+
+
+
     public void statisticsOverTimeOrder() {
 
         log.info("statisticsOverTimeOrder------任务开始");
@@ -74,8 +73,9 @@ public class OverTimeOrderService {
                         statusWrapper);
 
                 // 线程池更新订单状态,并且推送
-                executorService.execute(() -> new OverTimeOrderThread(this, businessPage.getRecords()).run());
-
+                Future<?> submit = executorService.submit(new OverTimeOrderThread(this, businessPage.getRecords()));
+                // new OverTimeOrderThread(this, businessPage.getRecords()).run());
+                submit.get();
                 //business查询最后页退出循环
                 if (!businessPage.hasNext()) {
                     break;
@@ -86,6 +86,7 @@ public class OverTimeOrderService {
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
+
 
             //关闭线程池
             executorService.shutdown();
@@ -151,7 +152,7 @@ public class OverTimeOrderService {
     }
 
     /**
-     * 推送消息 (超时订单状态为8)
+     * 推送消息 (type 为9 作为超时订单推送类型)
      *
      * @param id 酒店id
      */
