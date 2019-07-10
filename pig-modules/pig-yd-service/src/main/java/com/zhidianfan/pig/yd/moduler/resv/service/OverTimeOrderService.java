@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -34,7 +35,6 @@ import java.util.concurrent.Future;
  */
 @Service
 @Slf4j
-@ConditionalOnProperty(name = "yd.task", havingValue = "true")
 public class OverTimeOrderService {
 
     @Autowired
@@ -51,7 +51,8 @@ public class OverTimeOrderService {
     private StringRedisTemplate redisTemplate;
 
 
-    @Scheduled(fixedDelay = 60*5*1_000)
+
+
     public void statisticsOverTimeOrder() {
 
         log.info("statisticsOverTimeOrder------任务开始");
